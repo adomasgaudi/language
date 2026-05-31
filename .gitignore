@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.local
+.DS_Store
+# generated audio (kept out of git by default)
+app/public/audio/
+audio-build/out/
