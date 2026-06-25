@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.9 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.10 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -79,18 +79,12 @@
   .gloss{font-size:12px;color:var(--t500);margin-top:3px;font-style:italic}
   .show{display:flex;align-items:center;justify-content:center;width:100%;min-height:64px;border:1px solid var(--line2);border-radius:10px;padding:8px 20px;font-size:15px;font-weight:600;color:var(--t300);background:transparent}
   .show:hover{background:var(--line)} .show:active{transform:scale(.99)}
-  .slider .top{display:flex;align-items:center;justify-content:space-between;font-size:14px;margin-bottom:4px}
-  .slider .val{font-weight:600;color:var(--sky300);font-variant-numeric:tabular-nums}
-  .slider .val .due{color:var(--t500);font-weight:400}
-  /* three big "slide-to-open" knobs — one per band, crammed close */
-  .sliders{display:flex;flex-direction:column;gap:4px;margin:3px 0 8px}
-  .srow{display:flex;flex-direction:column;gap:1px;opacity:.6;transition:opacity .2s ease}
+  /* three bare "slide-to-open" knobs — chosen time sits on the thumb, ~10px apart */
+  .sliders{display:flex;flex-direction:column;gap:10px;margin:2px 0 10px}
+  .srow{position:relative;opacity:.6;transition:opacity .2s ease}
   .srow.active{opacity:1}
-  .slabel{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;padding:0 4px}
-  .sname{color:var(--t500)}
-  .srow.active .sname{color:var(--sky300);font-weight:600}
-  .schip{font-variant-numeric:tabular-nums;color:var(--t400);font-weight:600}
-  .srow.active .schip{color:var(--sky300)}
+  .knobval{position:absolute;top:0;height:40px;width:34px;display:flex;align-items:center;justify-content:center;
+    transform:translateX(-50%);pointer-events:none;font-size:10px;font-weight:700;color:#1a1a1f;font-variant-numeric:tabular-nums}
   input.knob{-webkit-appearance:none;appearance:none;width:100%;height:40px;border-radius:9999px;margin:0;touch-action:none;cursor:grab;
     background:var(--line);border:1px solid var(--line2);outline:none}
   .srow.active input.knob{background:linear-gradient(90deg,rgba(56,189,248,.42),rgba(56,189,248,.10));border-color:var(--sky500)}
@@ -102,12 +96,6 @@
   .srow.active input.knob::-moz-range-thumb{background:#fff;border-color:var(--sky400)}
   input.knob::-webkit-slider-runnable-track{height:40px;border-radius:9999px;background:transparent}
   input.knob::-moz-range-track{height:40px;border-radius:9999px;background:transparent}
-  /* 5 log-interval tick labels under each knob */
-  .ticks{display:flex;justify-content:space-between;padding:0 4px;font-size:10px;color:var(--t600);font-variant-numeric:tabular-nums}
-  .tick{flex:1;text-align:center}
-  .tick:first-child{text-align:left} .tick:last-child{text-align:right}
-  .srow.active .tick.on{color:var(--sky300);font-weight:700}
-  .tick.on{color:var(--t300);font-weight:600}
   .commit{background:var(--sky500);color:#fff;border-radius:10px;padding:13px;font-size:15px;font-weight:600;width:100%}
   .commit:hover{background:var(--sky400)} .commit:active{transform:scale(.98)}
   .maplabel{font-size:11px;color:var(--t500);margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -150,6 +138,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.10',sp:1,   note:'Strip slider labels/ticks/header; chosen time rides on the thumb; knobs 10px apart'},
   {v:'0.1.9', sp:0.5, note:'Round knob intervals to 20s/1m/5m/10m/30m · 10m/30m/4h/12h/48h · 12h/48h/5d/14d/30d'},
   {v:'0.1.8', sp:2,   note:'Compact one-view layout: halved margins, prev/next on sides, hide+delete atop card, crammed dots & knobs, collapsible key'},
   {v:'0.1.7', sp:1,   note:'Simplify map to 4 shapes: triangle/hexagon/circle, JWST 4-point star at 1mo+'},
@@ -534,36 +523,28 @@ function render(){
   }
   app.append(el('div',{class:'cardwrap'}, prevBtn, el('div',{class:'cardcol'}, cardEl), nextBtn));
 
-  /* review control — three big knobs, one per band; each snaps to 5 log steps.
-     The last-touched knob is the active choice. */
+  /* review control — three bare knobs; the chosen time rides on each thumb.
+     No labels, no ticks, no header. The last-touched knob is the choice. */
   if(cur){
     const chosen=()=>BAND_STEPS[S.bandIndex][S.stepByBand[S.bandIndex]];
-    // switch active band & repaint tick highlight without a full re-render (keeps a drag alive)
-    const setActive=(i)=>{ S.bandIndex=i; document.querySelectorAll('.srow').forEach((row,j)=>row.classList.toggle('active',j===i)); paintRow(i); refreshHead(); };
-    const paintRow=(i)=>{ document.querySelectorAll('#ticks'+i+' .tick').forEach((tk,j)=>tk.classList.toggle('on',j===S.stepByBand[i])); };
-    const refreshHead=()=>{ const mm=chosen(); const v=document.querySelector('.slider .val'); if(v) v.innerHTML=formatMinutes(mm)+' <span class="due">· '+dueLabel(mm,now())+'</span>'; };
+    const thumbLeft=(i)=>`calc((100% - 34px) * ${S.stepByBand[i]/(STEPS-1)} + 17px)`;
+    const paintRow=(i)=>{ const lab=document.getElementById('kv'+i); if(lab){ lab.textContent=formatMinutes(BAND_STEPS[i][S.stepByBand[i]]); lab.style.left=thumbLeft(i); } };
+    const setActive=(i)=>{ S.bandIndex=i; document.querySelectorAll('.srow').forEach((row,j)=>row.classList.toggle('active',j===i)); };
     const rows = BANDS.map((b,i)=>{
       const r=el('input',{type:'range',min:'0',max:String(STEPS-1),step:'1','aria-label':b.label+' interval',class:'knob'});
       r.value=String(S.stepByBand[i]);
       r.addEventListener('pointerdown',()=>{ if(S.bandIndex!==i) setActive(i); });
       r.addEventListener('input',e=>{
         S.stepByBand[i]=Number(e.target.value);
-        if(S.bandIndex!==i) setActive(i); else { paintRow(i); refreshHead(); }
+        if(S.bandIndex!==i) setActive(i);
+        paintRow(i);
       });
       r.addEventListener('change',()=>saveState());
-      const ticks=el('div',{class:'ticks',id:'ticks'+i},
-        BAND_STEPS[i].map((m,j)=>el('span',{class:'tick'+(j===S.stepByBand[i]?' on':'')}, formatMinutes(m))));
-      return el('div',{class:'srow'+(i===S.bandIndex?' active':'')},
-        el('div',{class:'slabel'}, el('span',{class:'sname'}, b.label)),
-        r, ticks,
-      );
+      const kv=el('span',{class:'knobval',id:'kv'+i}, formatMinutes(BAND_STEPS[i][S.stepByBand[i]]));
+      kv.style.left=thumbLeft(i);
+      return el('div',{class:'srow'+(i===S.bandIndex?' active':'')}, r, kv);
     });
-    const mNow=chosen();
     app.append(el('div',{class:'card slider'},
-      el('div',{class:'top'},
-        el('span',{style:{color:'var(--t400)'}},'Next review in'),
-        el('span',{class:'val'}, formatMinutes(mNow)+' ', el('span',{class:'due'}, '· '+dueLabel(mNow,t))),
-      ),
       el('div',{class:'sliders'}, rows),
       el('button',{class:'commit',onclick:()=>{
         const mm=chosen();
