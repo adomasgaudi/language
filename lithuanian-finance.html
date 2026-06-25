@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.27 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.28 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -187,11 +187,27 @@
 <script>
 "use strict";
 /* ============================================================================
+ * AUTO-DUE TUNING — adjust these to control which cards Auto-due surfaces.
+ * A card becomes reviewable once its REMAINING interval fraction drops to
+ * autoThreshold(interval). The threshold falls log-linearly with interval, so
+ * short/new cards may be reviewed EARLY (lots of time left) while long/mature
+ * cards wait until ALMOST DUE (little left) — reviewing them too early wastes
+ * retrieval gains. When nothing meets the threshold and no new cards remain,
+ * Auto-due shows "all reviewed".
+ *   eligible  ⇔  remaining_fraction ≤ autoThreshold(interval)
+ * ==========================================================================*/
+const AUTO_EARLY     = 0.50;   // newest/short cards: review once ≤50% of interval remains
+const AUTO_LATE      = 0.05;   // oldest/long cards: review only when ≤5% remains
+const AUTO_SHORT_MIN = 5;      // interval (minutes) at the "short" end of the ramp
+const AUTO_LONG_MIN  = 43200;  // interval (minutes) at the "long" end (30 days)
+
+/* ============================================================================
  * VERSION LOG — one continuous counter, bumped on every update/deploy (vz
  * BULD-02). Newest first; story points = effort, not LOC (BULD-03). The top
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.28',sp:1,   note:'Auto-due eligibility is now a tunable formula (constants at top): short cards reviewable early (≤50% left), long cards only near due (≤5% left), log-linear between; else shows none'},
   {v:'0.1.27',sp:0.5, note:'Card top now shows remaining / total interval (e.g. 5/30m), counting down to "due"'},
   {v:'0.1.26',sp:0.5, note:'Track history is now a continuous ramp — colour shifts (blue→indigo, darker) on every commit, ~10 shades instead of 3'},
   {v:'0.1.25',sp:0.5, note:'Auto-due locks onto the current card — it no longer switches mid-review (live repaint / decay); only commit or skip advances'},
@@ -737,15 +753,15 @@ function visibleCards(){ return activeCards().filter(c=>!S.deleted.includes(c.id
 function dueCards(t){ return visibleCards().filter(c=>isDue(recordFor(c.id),t)); }
 
 // --- Auto-due mode -----------------------------------------------------------
-// A scheduled card becomes eligible to surface once its freshness remaining drops
-// past a per-shape threshold: triangle ≤50% left, hexagon ≤75% left, circle/star
-// only when cold (0% left / fully due). If nothing scheduled is eligible, fall
-// back to new cards. Within the eligible set, coldest (most-due) first.
+// A scheduled card is eligible once its remaining-interval fraction drops to
+// autoThreshold(interval). Threshold ramps log-linearly from AUTO_EARLY (short
+// intervals → review early) down to AUTO_LATE (long intervals → review late).
+// Tune the constants at the top of this script. New cards are always eligible.
 function autoThreshold(rec){
-  const sh=bandFor(rec.interval).shape;
-  if(sh==='triangle') return 0.50;
-  if(sh==='hexagon')  return 0.75;
-  return 0; // circle & star: only when freshness hits 0 (cold/black)
+  const m=rec.interval;
+  if(m<=0) return 1; // brand-new card: always reviewable
+  const t=clamp((Math.log(m)-Math.log(AUTO_SHORT_MIN))/(Math.log(AUTO_LONG_MIN)-Math.log(AUTO_SHORT_MIN)),0,1);
+  return AUTO_EARLY + (AUTO_LATE-AUTO_EARLY)*t;
 }
 function autoOrder(t){
   const vis=visibleCards();
