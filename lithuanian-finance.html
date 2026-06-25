@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.20 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.21 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -180,6 +180,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.21',sp:1,   note:'Knob auto-pre-sets to one step above the card’s last interval (shaded track = last interval)'},
   {v:'0.1.20',sp:0.5, note:'Memory map: side padding + crammed dots (tighter horizontal spacing, smaller boxes)'},
   {v:'0.1.19',sp:2,   note:'Knob track filled to the card’s last-scheduled interval; tighter slider gaps + small (non-pill) corners; solid history popup; emoji replaced with minimalist line icons'},
   {v:'0.1.18',sp:1,   note:'Fixed-size clickable shape boxes (selecting no longer shifts the map); side prev/next replaced by swipe left/right on the card'},
@@ -451,6 +452,15 @@ const BAND_STEPS = [
   [10, 30, 240, 720, 2880],          // 10m · 30m · 4h · 12h · 48h
   [720, 2880, 7200, 20160, 43200],   // 12h · 48h · 5d · 14d · 30d
 ];
+// Global ladder of distinct intervals, ascending, each mapped to a band+step.
+// Used to pre-set the knob ONE STEP ABOVE a card's last interval.
+const LADDER = [
+  {m:1/3,b:0,s:0},{m:1,b:0,s:1},{m:5,b:0,s:2},{m:10,b:0,s:3},{m:30,b:0,s:4},
+  {m:240,b:1,s:2},{m:720,b:1,s:3},{m:2880,b:1,s:4},
+  {m:7200,b:2,s:2},{m:20160,b:2,s:3},{m:43200,b:2,s:4},
+];
+function suggestNext(interval){ for(const r of LADDER) if(r.m>interval+1e-9) return r; return LADDER[LADDER.length-1]; }
+function bandNextStep(i,interval){ const st=BAND_STEPS[i]; for(let j=0;j<STEPS;j++) if(st[j]>interval+1e-9) return j; return STEPS-1; }
 function formatMinutes(m){
   if(m<1) return Math.round(m*60)+'s';
   if(m<60) return Math.round(m)+'m';
@@ -615,7 +625,7 @@ if('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged=()=>{};
 // persisted choices win.
 const S = Object.assign({
   idx:0, revealed:false, stepByBand:[2,2,2], importOpen:false, importText:'', histOpen:false, legendOpen:false, settingsOpen:false, flashMsg:null, flashTimer:null,
-  deleted:[], purged:[], deckId:null, mode:'order', pick:null, seedStamp:null, showBoth:false,
+  deleted:[], purged:[], deckId:null, mode:'order', pick:null, seedStamp:null, showBoth:false, suggestedFor:null,
 }, loadState());
 
 function visibleCards(){ return activeCards().filter(c=>!S.deleted.includes(c.id) && !S.purged.includes(c.id)); }
@@ -852,6 +862,13 @@ function render(){
      No labels, no ticks, no header. The last-touched knob is the choice. */
   if(cur){
     const lastInt=recordFor(cur.id).interval; // the card's last-committed period
+    // When the card changes, pre-set each knob ONE STEP above the last interval;
+    // the shaded track still marks the last interval itself. Dragging then sticks.
+    if(S.suggestedFor!==cur.id){
+      if(lastInt<=0){ S.stepByBand=[2,2,2]; S.bandIndex=0; }       // new card -> 5m default
+      else { S.stepByBand=BANDS.map((b,i)=>bandNextStep(i,lastInt)); S.bandIndex=suggestNext(lastInt).b; }
+      S.suggestedFor=cur.id;
+    }
     // how far across band i the last interval sits (0..1), for the track fill
     const lastFrac=(i)=>{ const st=BAND_STEPS[i]; if(lastInt<=st[0]) return 0; if(lastInt>=st[STEPS-1]) return 1;
       for(let j=0;j<STEPS-1;j++) if(lastInt>=st[j]&&lastInt<=st[j+1]) return (j+(lastInt-st[j])/(st[j+1]-st[j]))/(STEPS-1); return 0; };
@@ -879,7 +896,7 @@ function render(){
     const doCommit=(verb)=>{
       const mm=chosen();
       S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now());
-      saveState(); S.revealed=false; S.stepByBand=[2,2,2]; S.pick=null; // auto advances
+      saveState(); S.revealed=false; S.suggestedFor=null; S.pick=null; // next card re-suggests; auto advances
       flash((verb||'Scheduled')+' · '+formatMinutes(mm));
     };
     app.append(el('div',{class:'card slider'},
@@ -1055,7 +1072,7 @@ function doUpload(){
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='TEXTAREA') return;
   const cur=current(now()); if(!cur) return;
-  if(e.key==='Enter'){ const mm=BAND_STEPS[S.bandIndex][S.stepByBand[S.bandIndex]]; S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now()); saveState(); S.revealed=false; S.stepByBand=[2,2,2]; S.pick=null; flash('Scheduled in '+formatMinutes(mm)); }
+  if(e.key==='Enter'){ const mm=BAND_STEPS[S.bandIndex][S.stepByBand[S.bandIndex]]; S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now()); saveState(); S.revealed=false; S.suggestedFor=null; S.pick=null; flash('Scheduled in '+formatMinutes(mm)); }
   else if(e.key===' '){ e.preventDefault(); S.revealed=!S.revealed; render(); }
   else if(e.key==='ArrowRight'){ go(1); }
   else if(e.key==='ArrowLeft'){ go(-1); }
