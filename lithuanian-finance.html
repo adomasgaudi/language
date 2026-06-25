@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.19 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.20 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -139,10 +139,10 @@
   .maplabel{font-size:11px;color:var(--t500);margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;gap:8px}
   .sortbtn{background:var(--line);color:var(--t300);border-radius:7px;padding:3px 8px;font-size:11px;font-weight:600;white-space:nowrap}
   .sortbtn:hover{filter:brightness(1.12)}
-  .map{display:flex;flex-wrap:wrap;align-items:flex-start;gap:5px 6px;padding:4px 0}
+  .map{display:flex;flex-wrap:wrap;align-items:flex-start;gap:3px 1px;padding:4px 10px}
   .dot{display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent}
   /* every shape gets the SAME fixed clickable box, so selecting never moves the layout */
-  .shapebox{position:relative;display:grid;place-items:center;width:26px;height:26px;border-radius:8px}
+  .shapebox{position:relative;display:grid;place-items:center;width:22px;height:22px;border-radius:7px}
   .shapebox.cur{background:color-mix(in srgb,var(--sky500) 14%,transparent)}
   .dot:hover .shapebox{background:color-mix(in srgb,var(--sky500) 8%,transparent)}
   .dot .glyph{display:block}
@@ -180,6 +180,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.20',sp:0.5, note:'Memory map: side padding + crammed dots (tighter horizontal spacing, smaller boxes)'},
   {v:'0.1.19',sp:2,   note:'Knob track filled to the card’s last-scheduled interval; tighter slider gaps + small (non-pill) corners; solid history popup; emoji replaced with minimalist line icons'},
   {v:'0.1.18',sp:1,   note:'Fixed-size clickable shape boxes (selecting no longer shifts the map); side prev/next replaced by swipe left/right on the card'},
   {v:'0.1.17',sp:1,   note:'Narrower sliders + right-hand column of Commit / Forgot / New buttons (all commit for now)'},
