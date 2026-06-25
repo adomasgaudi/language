@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.12 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.13 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -59,6 +59,14 @@
   .cardcol{flex:1;min-width:0}
   .side{flex:0 0 auto;width:36px;background:var(--line);color:var(--t300);border-radius:10px;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center}
   .side:hover{background:var(--line2)} .side:active{transform:scale(.96)}
+  .side.back{width:30px;height:30px;font-size:18px;border-radius:8px}
+  /* deck-picker cards */
+  .deckcard{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:14px 16px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+  .deckcard:hover{border-color:var(--sky500)} .deckcard:active{transform:scale(.99)}
+  .dtitle{font-size:17px;font-weight:700;color:var(--t50)}
+  .dsub{font-size:12px;color:var(--t500);margin-top:2px}
+  .dstat{display:flex;gap:14px;margin-top:8px;font-size:12px;color:var(--t500)}
+  .dstat .due{color:var(--sky300);font-weight:600}
   .meta{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px;color:var(--t500);margin-bottom:2px}
   .meta .k{text-transform:uppercase;letter-spacing:.04em}
   .acts{display:flex;align-items:center;gap:2px}
@@ -138,6 +146,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.13',sp:3,   note:'Intro deck-picker + 2nd deck (advanced rekvizitai finance, 30 cards); thin grey outline on shapes; legacy progress migrated'},
   {v:'0.1.12',sp:1.5, note:'Download/Upload progress as readable JSON; brighter white/yellow glow; greyer light-theme bg'},
   {v:'0.1.11',sp:0.5, note:'Per-shape colour caps: triangle→orange, hexagon→white, circle/star→blue'},
   {v:'0.1.10',sp:1,   note:'Strip slider labels/ticks/header; chosen time rides on the thumb; knobs 10px apart'},
@@ -160,7 +169,8 @@ document.title = 'Lithuanian finance v' + VERSION;
  * [lithuanian, english(natural), literal/note, pronunciation, tier]
  * Tiers: obvious (cognate) | easy | mid | hard
  * ==========================================================================*/
-const UNITS = [
+// ---- Deck 1: Data Explorer basics (the original deck) ----------------------
+const UNITS_CORE = [
   { id:'U1', title:'Pajamos ir apyvarta · Revenue & turnover', cards:[
     ['Apyvarta','turnover (revenue incl. pass-through ad spend)','the dashboard’s "Turnover (apyvarta)"','ah-pih-VAR-tah','mid'],
     ['Pajamos','income / revenue','plural noun, always','pah-YAH-mos','mid'],
@@ -207,15 +217,68 @@ const UNITS = [
   ]},
 ];
 
-/* Flatten into cards. */
-const CARDS = [];
-UNITS.forEach(u => u.cards.forEach((c, i) => {
-  CARDS.push({
-    id: u.id + '-' + (i+1),
-    unit: u.title,
-    target: c[0], natural: c[1], literal: c[2], gloss: c[3], tier: c[4],
-  });
-}));
+// ---- Deck 2: Advanced finance — rekvizitai financial statements & credit ----
+// Mined from the vz initial data (rek_tabs.json Finansai/Skolos/Įmonė tabs):
+// balance-sheet, P&L and creditworthiness line items. No simple words.
+const UNITS_ADV = [
+  { id:'U1', title:'Pelno (nuostolių) ataskaita · Profit & loss', cards:[
+    ['Pelnas prieš mokesčius','profit before tax','EBT, before the profit tax','PEL-nas pryesh MOH-kes-choos','hard'],
+    ['Pelnas (nuostoliai) prieš mokesčius','profit (loss) before tax','rekvizitai P&L line','','hard'],
+    ['Pelningumas','profitability / margin','pelnas → pelningumas','pel-NIN-goo-mas','hard'],
+    ['Grynasis pelningumas','net margin','net profit ÷ revenue','grih-NAH-sis pel-NIN-goo-mas','hard'],
+    ['Pelningumas prieš mokesčius','pre-tax margin','profit-before-tax ÷ revenue','','hard'],
+    ['Bendrasis pelnas','gross profit','revenue − cost of sales','BEN-drah-sis PEL-nas','mid'],
+    ['Savikaina','cost of sales / cost price','COGS','sah-vih-KY-nah','mid'],
+    ['Veiklos sąnaudos','operating expenses','OPEX','VAYK-los SAW-now-dos','mid'],
+  ]},
+  { id:'U2', title:'Balansas · Balance sheet', cards:[
+    ['Balansas','balance sheet','assets = equity + liabilities','bah-LAN-sas','mid'],
+    ['Turtas','assets','umbrella term','TOOR-tas','mid'],
+    ['Ilgalaikis turtas','non-current (fixed) assets','held over a year','il-gah-LY-kis TOOR-tas','hard'],
+    ['Trumpalaikis turtas','current assets','held under a year','troom-pah-LY-kis TOOR-tas','hard'],
+    ['Nuosavas kapitalas','equity (own capital)','assets − liabilities','noo-OH-sah-vas kah-pih-TAH-las','hard'],
+    ['Įstatinis kapitalas','share / authorised capital','registered capital','is-tah-TIH-nis kah-pih-TAH-las','hard'],
+    ['Įsipareigojimai','liabilities','what the firm owes','i-sih-pah-ray-go-YEE-my','hard'],
+    ['Mokėtinos sumos ir įsipareigojimai','payables & liabilities','rekvizitai balance line','','hard'],
+    ['Atsargos','inventories / stock','goods on hand','aht-SAR-gos','mid'],
+    ['Pinigų srautas','cash flow','pinigai = money','PIH-nih-goo SROW-tas','hard'],
+  ]},
+  { id:'U3', title:'Kreditas, skolos, registras · Credit, debt, registry', cards:[
+    ['Kreditingumas','creditworthiness','the Juris LT rating','kreh-dih-TIN-goo-mas','hard'],
+    ['Įvertinimas','rating / assessment','a score','i-ver-TIH-nih-mas','mid'],
+    ['Kreditavimo rizika','lending / credit risk','rekvizitai field','','mid'],
+    ['Registruotos skolos','registered debts','officially recorded','reh-gis-TROO-oh-tos SKOH-los','hard'],
+    ['Skolų pokyčių įrašai','debt-change records','history of debt moves','','hard'],
+    ['Skola VMI','debt to the tax office','owed to VMI','SKOH-lah VEH-EM-EE','mid'],
+    ['VMI','State Tax Inspectorate','Valstybinė mokesčių inspekcija','VEH-EM-EE','mid'],
+    ['Mokestinė nepriemoka','tax arrears','overdue tax owed','moh-kes-TIH-neh neh-pryeh-MOH-kah','hard'],
+    ['Įmonės kodas','company registration code','the legal-entity code','IM-oh-nehs KOH-das','mid'],
+    ['PVM mokėtojo kodas','VAT payer code','VAT registration no.','','mid'],
+    ['Apdraustųjų skaičius','number of insured (employees)','Sodra-insured headcount','ahp-drows-TOO-yoo SKY-choos','hard'],
+    ['Finansinė ataskaita','financial statement','the annual accounts','fih-nan-SIH-neh ah-tahs-KY-tah','mid'],
+  ]},
+];
+
+const DECKS = [
+  {id:'d1', title:'Finance basics', subtitle:'Data Explorer terms · 34 cards', units:UNITS_CORE},
+  {id:'d2', title:'Advanced finance', subtitle:'Financial statements & credit · 30 cards', units:UNITS_ADV},
+];
+
+// Build a deck's cards once, with globally-unique ids (deck-prefixed).
+function buildDeckCards(deck){
+  if(deck._cards) return deck._cards;
+  const out=[];
+  deck.units.forEach(u => u.cards.forEach((c,i)=> out.push({
+    id: deck.id+':'+u.id+'-'+(i+1), deck: deck.id, unit: u.title,
+    target:c[0], natural:c[1], literal:c[2], gloss:c[3], tier:c[4],
+  })));
+  deck._cards=out; return out;
+}
+const deckById=(id)=>DECKS.find(d=>d.id===id);
+const allCards=()=>DECKS.flatMap(buildDeckCards);
+const cardById=(id)=>allCards().find(c=>c.id===id);
+// Cards of the deck currently open (empty on the intro page).
+function activeCards(){ const d=deckById(S.deckId); return d?buildDeckCards(d):[]; }
 
 /* ============================================================================
  * ENGINE — manual SRS (ported from app/src/engine/srs.ts & interval.ts)
@@ -359,9 +422,14 @@ function loadState(){
     const raw=localStorage.getItem(KEY);
     if(raw){
       const o=JSON.parse(raw);
+      // Migrate legacy single-deck ids (U1-1) to the deck-prefixed form (d1:U1-1)
+      // so progress saved before multi-deck carries over to the basics deck.
+      const fix = k => /^U\d/.test(k) ? 'd1:'+k : k;
+      const recs={}; for(const k in (o.records||{})) recs[fix(k)]=o.records[k];
       return {
-        records:o.records||{}, deleted:o.deleted||[], purged:o.purged||[],
+        records:recs, deleted:(o.deleted||[]).map(fix), purged:(o.purged||[]).map(fix),
         // remembered UI choices
+        deckId:o.deckId||null,
         freeScroll:!!o.freeScroll, hideTarget:!!o.hideTarget,
         bandIndex:Number.isInteger(o.bandIndex)?o.bandIndex:1,
         sortMode:['due','longevity','topic'].includes(o.sortMode)?o.sortMode:'due',
@@ -369,12 +437,12 @@ function loadState(){
       };
     }
   }catch(e){}
-  return {records:{},deleted:[],purged:[],freeScroll:false,hideTarget:false,bandIndex:1,sortMode:'due',theme:'dark'};
+  return {records:{},deleted:[],purged:[],deckId:null,freeScroll:false,hideTarget:false,bandIndex:1,sortMode:'due',theme:'dark'};
 }
 function saveState(){
   try{
     localStorage.setItem(KEY,JSON.stringify({
-      records:S.records, deleted:S.deleted, purged:S.purged,
+      records:S.records, deleted:S.deleted, purged:S.purged, deckId:S.deckId,
       freeScroll:S.freeScroll, hideTarget:S.hideTarget, bandIndex:S.bandIndex,
       sortMode:S.sortMode, theme:S.theme,
     }));
@@ -406,10 +474,10 @@ if('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged=()=>{};
 // persisted choices win.
 const S = Object.assign({
   idx:0, revealed:false, stepByBand:[2,2,2], importOpen:false, importText:'', histOpen:false, legendOpen:false, flashMsg:null, flashTimer:null,
-  deleted:[], purged:[],
+  deleted:[], purged:[], deckId:null,
 }, loadState());
 
-function visibleCards(){ return CARDS.filter(c=>!S.deleted.includes(c.id) && !S.purged.includes(c.id)); }
+function visibleCards(){ return activeCards().filter(c=>!S.deleted.includes(c.id) && !S.purged.includes(c.id)); }
 function dueCards(t){ return visibleCards().filter(c=>isDue(recordFor(c.id),t)); }
 function pool(t){ return S.freeScroll ? visibleCards() : dueCards(t); }
 function current(t){ const p=pool(t); if(!p.length) return null; if(S.idx>=p.length) S.idx=0; if(S.idx<0) S.idx=p.length-1; return p[S.idx]; }
@@ -444,20 +512,70 @@ function el(tag,props,...kids){
   return n;
 }
 
+// Intro / deck-picker page.
+function renderIntro(app,t){
+  app.append(el('header',null,
+    el('div',null,
+      el('h1',null,'Lithuanian finance'),
+      el('p',{class:'sub'},'Pick a deck to study'),
+    ),
+    el('button',{class:'pill'+(S.theme==='light'?' on':''),onclick:()=>{S.theme=S.theme==='light'?'dark':'light';saveState();render();}}, S.theme==='light'?'☀ Light':'🌙 Dark'),
+  ));
+  DECKS.forEach(d=>{
+    const cards=buildDeckCards(d);
+    const vis=cards.filter(c=>!S.deleted.includes(c.id) && !S.purged.includes(c.id));
+    const dueN=vis.filter(c=>isDue(recordFor(c.id),t)).length;
+    const learnedN=cards.filter(c=>(S.records[c.id]||{reps:0}).reps>0).length;
+    app.append(el('button',{class:'deckcard',onclick:()=>{S.deckId=d.id;S.idx=0;S.revealed=false;saveState();render();}},
+      el('div',{class:'dtitle'}, d.title),
+      el('div',{class:'dsub'}, d.subtitle),
+      el('div',{class:'dstat'},
+        el('span',{class:'due'}, dueN+' due'),
+        el('span',null, learnedN+'/'+cards.length+' learned'),
+      ),
+    ));
+  });
+  app.append(el('div',{class:'row',style:{marginTop:'4px'}},
+    el('button',{class:'pill',onclick:doDownload},'⬇ Download'),
+    el('button',{class:'pill',onclick:doUpload},'⬆ Upload'),
+  ));
+  app.append(el('footer',null,
+    el('span',null, el('span',{class:'ver'},'v'+VERSION), ' · ',
+      el('button',{onclick:()=>{S.histOpen=!S.histOpen;render();}},'📋 history')),
+    el('span',null,''),
+  ));
+  if(S.histOpen){
+    app.append(el('div',{class:'hist'},
+      el('div',{class:'histhead'},'Version history · '+VERSIONS.reduce((a,e)=>a+e.sp,0)+' sp total'),
+      VERSIONS.map(e=>el('div',{class:'histrow'},
+        el('span',{class:'hv'},'v'+e.v), el('span',{class:'hn'},e.note), el('span',{class:'hs'},e.sp+' sp'))),
+    ));
+  }
+  if(S.flashMsg) app.append(el('div',{class:'flash'}, S.flashMsg));
+}
+
 function render(){
   const t=now();
   document.body.className = S.theme==='light' ? 'light' : '';
   const app=document.getElementById('app');
   app.innerHTML='';
+
+  // No deck chosen yet -> the intro / deck-picker page.
+  if(!deckById(S.deckId)){ renderIntro(app,t); return; }
+
   const cur=current(t);
   const due=dueCards(t).length;
   const vis=visibleCards();
+  const deck=deckById(S.deckId);
 
-  /* header */
+  /* header — back to decks + active deck title */
   app.append(el('header',null,
-    el('div',null,
-      el('h1',null,'Lithuanian finance'),
-      el('p',{class:'sub'},'vz Data Explorer terms · LT → EN · manual SRS'),
+    el('div',{style:{display:'flex',alignItems:'center',gap:'8px',minWidth:'0'}},
+      el('button',{class:'side back',title:'All decks',onclick:()=>{S.deckId=null;S.idx=0;saveState();render();}},'‹'),
+      el('div',{style:{minWidth:'0'}},
+        el('h1',null,deck.title),
+        el('p',{class:'sub'},'LT → EN · manual SRS'),
+      ),
     ),
     el('div',{class:'stat'},
       el('div',{class:'due'}, due+' due'),
@@ -568,30 +686,30 @@ function render(){
   sorted.forEach(c=>{
     const rec=recordFor(c.id), s=dotStyle(rec,t), isCur=cur&&c.id===cur.id;
     const size=Math.max(s.diameter, isCur?25:14); // tap target; fit the 25px ring when current
+    // outer = thin grey rim (so shapes read apart); inner = the colour (or a
+    // hole for new cards, leaving just the outline).
     const glyph=el('span',{class:'glyph'});
     Object.assign(glyph.style,{
       position:'relative',
       width:s.diameter+'px', height:s.diameter+'px', display:'block',
-      // new cards: hollow outline (no fill); others: heat-colour fill
-      background:s.isNew?'var(--outline)':s.color,
+      background:'var(--outline)',
       clipPath:s.clip||'none', WebkitClipPath:s.clip||'none',
       borderRadius:s.shape==='circle'?'9999px':'1px',
       // brighter/cooler shapes shine more — doubled drop-shadow scaled by freshness
       filter:s.glow?(()=>{ const b=(4+(s.glow-GLOW_AT)*14).toFixed(1); return `drop-shadow(0 0 ${b}px ${s.color}) drop-shadow(0 0 ${(b/2).toFixed(1)}px ${s.color})`; })():'none',
       opacity:s.due?0.45:1, // faded when due, otherwise full
-      transition:'background-color .6s ease, filter .6s ease, opacity .6s ease, transform .2s ease',
+      transition:'filter .6s ease, opacity .6s ease, transform .2s ease',
     });
-    if(s.isNew){
-      // punch a same-shape hole so the new card reads as an outline only
-      const hole=el('span');
-      Object.assign(hole.style,{
-        position:'absolute', left:'50%', top:'50%', transform:'translate(-50%,-50%)',
-        width:Math.max(s.diameter-3,2)+'px', height:Math.max(s.diameter-3,2)+'px',
-        background:'var(--bg)', clipPath:s.clip||'none', WebkitClipPath:s.clip||'none',
-        borderRadius:s.shape==='circle'?'9999px':'1px',
-      });
-      glyph.append(hole);
-    }
+    const inner=el('span');
+    Object.assign(inner.style,{
+      position:'absolute', left:'50%', top:'50%', transform:'translate(-50%,-50%)',
+      width:Math.max(s.diameter-2.5,2)+'px', height:Math.max(s.diameter-2.5,2)+'px',
+      background:s.isNew?'var(--bg)':s.color, // new = hole (outline only)
+      clipPath:s.clip||'none', WebkitClipPath:s.clip||'none',
+      borderRadius:s.shape==='circle'?'9999px':'1px',
+      transition:'background-color .6s ease',
+    });
+    glyph.append(inner);
     const btn=el('button',{class:'dot',title:c.target+' · '+s.shape+' · '+(s.due?'due':statusAt(rec,t)),style:{width:size+'px',height:size+'px'},
       onclick:()=>{ const p=pool(t); const i=p.findIndex(x=>x.id===c.id); if(i>=0){S.idx=i; S.revealed=false; render();} else flash('Hidden — in free scroll only'); }},
       glyph);
@@ -656,13 +774,12 @@ function doImport(){
   }catch(e){ flash('Import failed — incompatible string'); }
 }
 
-const cardById=(id)=>CARDS.find(c=>c.id===id);
 // Build a human-readable snapshot of everything you've learned/edited.
 function buildSnapshot(){
   const reviewed=Object.keys(S.records).map(id=>{
     const r=S.records[id], c=cardById(id); if(!c||r.reps<1) return null; // only actually-reviewed
     return {
-      id, lt:c.target, en:c.natural, tier:c.tier,
+      id, deck:c.deck, lt:c.target, en:c.natural, tier:c.tier,
       reps:r.reps, lapses:r.lapses, status:statusAt(r,now()),
       interval:formatMinutes(r.interval), intervalMin:Math.round(r.interval),
       lastReviewed:r.last?new Date(r.last).toISOString():null,
@@ -672,7 +789,7 @@ function buildSnapshot(){
   return {
     app:'lt-finance-tartaglia', version:VERSION, exportedAt:new Date().toISOString(),
     settings:{theme:S.theme, sortMode:S.sortMode, freeScroll:S.freeScroll, hideTarget:S.hideTarget},
-    counts:{total:CARDS.length, reviewed:reviewed.length, hidden:S.deleted.length, deleted:S.purged.length},
+    counts:{total:allCards().length, reviewed:reviewed.length, hidden:S.deleted.length, deleted:S.purged.length},
     reviewed,
     hidden:S.deleted.map(id=>({id, lt:(cardById(id)||{}).target})),
     deleted:S.purged.map(id=>({id, lt:(cardById(id)||{}).target})),
