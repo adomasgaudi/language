@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.16 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.17 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -124,8 +124,15 @@
   .srow.active input.knob::-moz-range-thumb{background:#fff;border-color:var(--sky400)}
   input.knob::-webkit-slider-runnable-track{height:28px;border-radius:9999px;background:transparent}
   input.knob::-moz-range-track{height:28px;border-radius:9999px;background:transparent}
-  .commit{background:var(--sky500);color:#fff;border-radius:10px;padding:13px;font-size:15px;font-weight:600;width:100%}
-  .commit:hover{background:var(--sky400)} .commit:active{transform:scale(.98)}
+  /* sliders on the left, a column of action buttons on the right */
+  .sliderwrap{display:flex;gap:8px;align-items:stretch}
+  .sliderwrap .sliders{flex:1;min-width:0;margin:0}
+  .actcol{display:flex;flex-direction:column;gap:5px;width:88px;flex:0 0 auto}
+  .actbtn{flex:1;border-radius:8px;font-size:12px;font-weight:700;color:#fff;min-height:28px}
+  .actbtn:active{transform:scale(.97)}
+  .actbtn.commit{background:var(--sky500)} .actbtn.commit:hover{background:var(--sky400)}
+  .actbtn.forgot{background:#b45309} .actbtn.forgot:hover{filter:brightness(1.1)}
+  .actbtn.new{background:var(--line2);color:var(--t100)} .actbtn.new:hover{filter:brightness(1.12)}
   .maplabel{font-size:11px;color:var(--t500);margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;gap:8px}
   .sortbtn{background:var(--line);color:var(--t300);border-radius:7px;padding:3px 8px;font-size:11px;font-weight:600;white-space:nowrap}
   .sortbtn:hover{filter:brightness(1.12)}
@@ -167,6 +174,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.17',sp:1,   note:'Narrower sliders + right-hand column of Commit / Forgot / New buttons (all commit for now)'},
   {v:'0.1.16',sp:0.5, note:'Slimmer review knobs (28px track / 24px thumb) and tighter spacing between them'},
   {v:'0.1.15',sp:7,   note:'Synonyms + flexible/exact badge on vocab cards; Auto-due mode (per-shape thresholds); review "Both" toggle; settings ⚙ menu; header card; version top + floating history; numbers below shapes; LT-specific job terms kept in Lithuanian; embedded progress snapshot'},
   {v:'0.1.14',sp:4,   note:'3 personalised decks (teacher job, fitness clients, website clients — Vilnius, researched); numbered shapes to track cards across re-sorts'},
@@ -828,14 +836,22 @@ function render(){
       kv.style.left=thumbLeft(i);
       return el('div',{class:'srow'+(i===S.bandIndex?' active':'')}, r, kv);
     });
+    // all three buttons commit the chosen interval for now (Forgot/New reserved)
+    const doCommit=(verb)=>{
+      const mm=chosen();
+      S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now());
+      saveState(); S.revealed=false; S.stepByBand=[2,2,2]; S.pick=null; // auto advances
+      flash((verb||'Scheduled')+' · '+formatMinutes(mm));
+    };
     app.append(el('div',{class:'card slider'},
-      el('div',{class:'sliders'}, rows),
-      el('button',{class:'commit',onclick:()=>{
-        const mm=chosen();
-        S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now());
-        saveState(); S.revealed=false; S.stepByBand=[2,2,2]; S.pick=null; // auto advances
-        flash('Scheduled in '+formatMinutes(mm));
-      }},'Commit ↵'),
+      el('div',{class:'sliderwrap'},
+        el('div',{class:'sliders'}, rows),
+        el('div',{class:'actcol'},
+          el('button',{class:'actbtn commit',onclick:()=>doCommit('Scheduled')},'Commit'),
+          el('button',{class:'actbtn forgot',onclick:()=>doCommit('Forgot')},'Forgot'),
+          el('button',{class:'actbtn new',onclick:()=>doCommit('New')},'New'),
+        ),
+      ),
     ));
   }
 
