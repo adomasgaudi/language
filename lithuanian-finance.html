@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Lithuanian finance — Tartaglia deck</title>
+<!--
+  Self-contained port of the "language" repo's Tartaglia learning app.
+  One file, no build, no network. Teaches the Lithuanian financial terms used
+  in the vz repo's Data Explorer (the Įmonės-analizei columns, MONEY_COLS and
+  the Finansai sub-tab): apyvarta, spėjamos pajamos, grynasis pelnas, DU
+  sąnaudos, …  Learning direction: Lithuanian -> English.
+
+  Engine is faithful to app/src/engine: manual interval slider (cube-root
+  bands), heat-coloured memory map, dot->crystal growth, freshness curve,
+  localStorage progress with export/import. Audio uses the browser's
+  Lithuanian speech synthesis when available (no recordings shipped).
+-->
+<style>
+  :root{
+    --bg:#09090b; --panel:rgba(24,24,27,.7); --panel-solid:#18181b;
+    --line:#27272a; --line2:#3f3f46;
+    --t50:#fafafa; --t100:#f4f4f5; --t200:#e4e4e7; --t300:#d4d4d8;
+    --t400:#a1a1aa; --t500:#71717a; --t600:#52525b;
+    --sky:#38bdf8; --sky300:#7dd3fc; --sky400:#38bdf8; --sky500:#0ea5e9;
+    --rose:#fb7185;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg); color:var(--t200);
+    font:14px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:580px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding:20px 16px 40px;min-height:100%}
+  header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  h1{font-size:18px;font-weight:700;color:var(--t50);margin:0}
+  .sub{font-size:12px;color:var(--t500);margin:2px 0 0}
+  .stat{text-align:right;font-size:12px;color:var(--t500);white-space:nowrap}
+  .stat .due{font-weight:600;color:var(--sky300)}
+  .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  button{font-family:inherit;cursor:pointer;border:0;color:inherit}
+  .pill{background:var(--line);color:var(--t300);border-radius:8px;padding:5px 10px;font-size:12px}
+  .pill.on{background:var(--sky500);color:#fff}
+  .pill:hover{filter:brightness(1.12)}
+  .card,.box{border:1px solid var(--line);background:var(--panel);border-radius:16px}
+  .card{padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .meta{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--t500);margin-bottom:4px}
+  .meta .k{text-transform:uppercase;letter-spacing:.04em}
+  .prompt{min-height:92px;padding:12px 0;text-align:center}
+  .term{font-size:30px;font-weight:600;line-height:1.2;color:var(--t50)}
+  .from{margin-top:6px;font-size:13px;color:var(--t500)}
+  .hidden-face{color:var(--t500)}
+  .hidden-face .eye{font-size:30px}
+  .audio{display:flex;justify-content:center;gap:8px;margin-top:4px}
+  .abtn{background:var(--line);color:var(--t200);border-radius:8px;padding:6px 12px;font-size:13px}
+  .abtn:hover{background:var(--line2)}
+  .answer{margin-top:16px;border-top:1px solid var(--line);padding-top:16px;text-align:center}
+  .natural{font-size:18px;color:var(--t100)}
+  .literal{font-size:13px;color:var(--t400);margin-top:6px}
+  .gloss{font-size:12px;color:var(--t500);margin-top:6px;font-style:italic}
+  .show{display:block;margin:0 auto;border:1px solid var(--line2);border-radius:8px;padding:8px 20px;font-size:13px;font-weight:500;color:var(--t300);background:transparent}
+  .show:hover{background:var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .nav .navbtn{background:var(--line);color:var(--t200);border-radius:8px;padding:8px 16px;font-size:14px}
+  .nav .navbtn:hover{background:var(--line2)}
+  .nav .hide{background:transparent;color:var(--t500);font-size:12px;padding:8px 12px}
+  .nav .hide:hover{color:var(--rose)}
+  .slider .top{display:flex;align-items:center;justify-content:space-between;font-size:14px;margin-bottom:8px}
+  .slider .val{font-weight:600;color:var(--sky300);font-variant-numeric:tabular-nums}
+  .slider .val .due{color:var(--t500);font-weight:400}
+  input[type=range]{width:100%;accent-color:var(--sky400);touch-action:none}
+  .bands{display:flex;gap:4px;background:var(--line);padding:4px;border-radius:8px}
+  .bands button{border-radius:6px;padding:5px 10px;font-size:12px;font-weight:500;color:var(--t400);background:transparent}
+  .bands button.on{background:var(--sky500);color:#fff}
+  .commit{margin-left:auto;background:var(--sky500);color:#fff;border-radius:8px;padding:9px 20px;font-size:14px;font-weight:600}
+  .commit:hover{background:var(--sky400)} .commit:active{transform:scale(.96)}
+  .controls{display:flex;align-items:center;gap:8px;margin-top:12px}
+  .maplabel{font-size:12px;color:var(--t500);margin-bottom:4px}
+  .map{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 0}
+  .dot{position:relative;display:grid;place-items:center;background:transparent}
+  .dot .glyph{display:block}
+  .dot .crack{position:absolute;pointer-events:none}
+  .dot .here{position:absolute;bottom:-4px;width:4px;height:4px;border-radius:9999px;background:var(--sky300)}
+  footer{margin-top:auto;display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--t600);padding-top:8px}
+  footer button{color:var(--t600);background:transparent}
+  footer button:hover{color:var(--t400)}
+  .empty{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:40px;text-align:center;color:var(--t400)}
+  textarea{width:100%;height:80px;resize:none;border-radius:6px;background:#0a0a0b;border:1px solid var(--line);color:var(--t200);padding:8px;font-size:12px;font-family:ui-monospace,monospace}
+  .apply{margin-top:6px;background:var(--sky500);color:#fff;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600}
+  .flash{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--t100);color:#18181b;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .legend{font-size:11px;color:var(--t600);line-height:1.7}
+  .legend b{color:var(--t400);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+"use strict";
+/* ============================================================================
+ * CONTENT — Lithuanian financial terms from the vz Data Explorer.
+ * [lithuanian, english(natural), literal/note, pronunciation, tier]
+ * Tiers: obvious (cognate) | easy | mid | hard
+ * ==========================================================================*/
+const UNITS = [
+  { id:'U1', title:'Pajamos ir apyvarta · Revenue & turnover', cards:[
+    ['Apyvarta','turnover (revenue incl. pass-through ad spend)','the dashboard’s "Turnover (apyvarta)"','ah-pih-VAR-tah','mid'],
+    ['Pajamos','income / revenue','plural noun, always','pah-YAH-mos','mid'],
+    ['Spėjamos pajamos','estimated revenue (fee income)','"Revenue (spėjamos pajamos)" — pass-through excluded','SPAY-yah-mos pah-YAH-mos','hard'],
+    ['Pardavimo pajamos','sales revenue','pardavimas = a sale','par-DAH-vih-mo pah-YAH-mos','hard'],
+    ['Apyvartos pokytis','turnover change (%)','pokytis = change','ah-pih-VAR-tos POH-kih-tis','mid'],
+  ]},
+  { id:'U2', title:'Pelnas ir sąnaudos · Profit & costs', cards:[
+    ['Pelnas','profit','','PEL-nas','easy'],
+    ['Grynasis pelnas','net profit','grynas = pure / net','grih-NAH-sis PEL-nas','mid'],
+    ['Nuostoliai','losses','the opposite of pelnas','noo-OST-oh-lyay','hard'],
+    ['Sąnaudos','costs / expenses','plural noun','SAW-now-dos','mid'],
+    ['DU sąnaudos','wage costs','DU = darbo užmokestis (payroll)','DEH-OO SAW-now-dos','hard'],
+    ['Ne-atlyginimų sąnaudos','non-salary costs','ne- = not, atlyginimų = of salaries','neh-at-lih-GIH-nih-moo SAW-now-dos','hard'],
+    ['Pelno mokestis','corporate income tax','tax on profit','PEL-no MOH-kes-tis','mid'],
+  ]},
+  { id:'U3', title:'Atlyginimai ir darbuotojai · Pay & employees', cards:[
+    ['Atlyginimas','salary / pay','','at-lih-GIH-nih-mas','mid'],
+    ['Atlyginimų vidurkis','average salary','vidurkis = average','at-lih-GIH-nih-moo VEE-door-kis','mid'],
+    ['Darbo užmokestis','wages (payroll)','darbas = work','DAR-bo OO-zhmo-kes-tis','hard'],
+    ['Darbuotojai','employees','darbuotojas = an employee','dar-boo-OH-toy-yay','mid'],
+    ['Darbuotojų skaičius','number of employees','skaičius = number / count','dar-boo-oh-TOH-yoo SKY-choos','mid'],
+    ['Vidurkis','average','','VEE-door-kis','easy'],
+    ['Pokytis','change (%)','year-on-year delta','POH-kih-tis','easy'],
+  ]},
+  { id:'U4', title:'Mokesčiai, skolos, rizika · Tax, debt & risk', cards:[
+    ['Mokestis','tax','','MOH-kes-tis','easy'],
+    ['PVM','VAT','pridėtinės vertės mokestis = value-added tax','PEH-VEH-EM','obvious'],
+    ['Skola','debt','','SKOH-lah','easy'],
+    ['Skola Sodrai','debt to Sodra (social security)','owed to the state fund','SKOH-lah SOD-rye','mid'],
+    ['Sodra','State Social Insurance Fund','the payroll-tax / pension body','SOD-rah','mid'],
+    ['Kredito rizika','credit risk','','KREH-dih-to RIH-zih-kah','obvious'],
+    ['Rizika','risk','','RIH-zih-kah','obvious'],
+    ['Įmonė','company','','im-oh-NEH','easy'],
+    ['Metai','year','plural form','MEH-tye','easy'],
+    ['Veikla','activity / line of business','what the firm does','VAYK-lah','mid'],
+  ]},
+  { id:'U5', title:'Rizikos lygiai · Credit-risk levels', cards:[
+    ['Žemiausia','lowest','best credit standing','zheh-MYOW-sya','hard'],
+    ['Žema','low','','ZHEH-mah','mid'],
+    ['Vidutinė','medium','','vih-doo-TIH-neh','mid'],
+    ['Aukšta','high','','OWK-shtah','mid'],
+    ['Aukščiausia','highest','worst credit standing','owk-SHCHOW-sya','hard'],
+  ]},
+];
+
+/* Flatten into cards. */
+const CARDS = [];
+UNITS.forEach(u => u.cards.forEach((c, i) => {
+  CARDS.push({
+    id: u.id + '-' + (i+1),
+    unit: u.title,
+    target: c[0], natural: c[1], literal: c[2], gloss: c[3], tier: c[4],
+  });
+}));
+
+/* ============================================================================
+ * ENGINE — manual SRS (ported from app/src/engine/srs.ts & interval.ts)
+ * ==========================================================================*/
+const MINUTE_MS = 60000;
+const now = () => Date.now();
+const clamp = (x,lo,hi)=> x<lo?lo : x>hi?hi : x;
+const cbrt = Math.cbrt;
+
+function newRecord(){ return {status:'new',due:0,last:null,interval:0,reps:0,lapses:0}; }
+function isDue(r,t){ return r.status==='new' || t>=r.due; }
+function statusAt(r,t){ return r.last===null ? 'new' : (t>=r.due?'due':'scheduled'); }
+function commitInterval(r,minutes,t){
+  const interval = Math.max(0,minutes);
+  const wasOverdue = r.last!==null && t>=r.due;
+  return {status:'scheduled',last:t,due:t+interval*MINUTE_MS,interval,reps:r.reps+1,lapses:r.lapses+(wasOverdue?1:0)};
+}
+function freshness(r,t){
+  if(r.last===null || r.interval<=0) return 0;
+  const f = 1 - (t-r.last)/(r.interval*MINUTE_MS);
+  return f<0?0:f>1?1:f;
+}
+
+const BANDS = [
+  {id:'short',label:'30s–30m',lo:0.5,hi:30},
+  {id:'mid',label:'10m–2d',lo:10,hi:2880},
+  {id:'long',label:'1d–30d',lo:1440,hi:43200},
+];
+function minutesFromPos(band,pos){
+  const p=clamp(pos,0,1);
+  const root=cbrt(band.lo)+(cbrt(band.hi)-cbrt(band.lo))*p;
+  return root**3;
+}
+function formatMinutes(m){
+  if(m<1) return Math.round(m*60)+'s';
+  if(m<60) return Math.round(m)+'m';
+  if(m<1440){ const h=m/60; return (h<10?h.toFixed(h%1?1:0):Math.round(h))+'h'; }
+  const d=m/1440; return (d<10?d.toFixed(d%1?1:0):Math.round(d))+'d';
+}
+function dueLabel(m,t){
+  const due=new Date(t+m*MINUTE_MS), sameDay=new Date(t).toDateString()===due.toDateString();
+  return sameDay
+    ? due.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+    : due.toLocaleDateString([], {month:'short',day:'numeric'});
+}
+
+/* memory map (ported from app/src/engine/memorymap.ts) */
+const SIZE_BASE=3.2, SIZE_EXP=1/3, SIZE_MIN=5, SIZE_MAX=40;
+const CRYSTAL_AT=240, GLOW_AT=0.72;
+const HEAT=[[1,[77,166,255]],[0.8,[235,245,255]],[0.6,[255,214,92]],[0.4,[255,138,30]],[0.2,[229,57,53]],[0,[58,42,42]]];
+const CRYSTAL=[
+  {material:'silver',minMinutes:240,mult:1.0},
+  {material:'gold',minMinutes:1440,mult:1.25},
+  {material:'ruby',minMinutes:10080,mult:1.5},
+  {material:'diamond',minMinutes:43200,mult:1.7},
+];
+const MATERIAL_BG={
+  silver:'linear-gradient(145deg,#e8eef5,#9aa6b5)',
+  gold:'linear-gradient(145deg,#ffe79a,#d4a017)',
+  ruby:'linear-gradient(145deg,#ff7a8a,#b3122b)',
+  diamond:'linear-gradient(145deg,#ffffff,#bfe9ff)',
+};
+function diameter(m){ return clamp(SIZE_BASE*Math.pow(Math.max(0,m),SIZE_EXP),SIZE_MIN,SIZE_MAX); }
+function heatColor(f){
+  const x=clamp(f,0,1);
+  for(let i=0;i<HEAT.length-1;i++){
+    const [hi,chi]=HEAT[i], [lo,clo]=HEAT[i+1];
+    if(x<=hi && x>=lo){
+      const t=hi===lo?0:(x-lo)/(hi-lo);
+      const r=Math.round(clo[0]+(chi[0]-clo[0])*t), g=Math.round(clo[1]+(chi[1]-clo[1])*t), b=Math.round(clo[2]+(chi[2]-clo[2])*t);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+  }
+  const last=HEAT[HEAT.length-1][1]; return `rgb(${last[0]}, ${last[1]}, ${last[2]})`;
+}
+function crystalFor(m){
+  if(m<CRYSTAL_AT) return null;
+  let chosen=CRYSTAL[0];
+  for(const tier of CRYSTAL) if(m>=tier.minMinutes) chosen=tier;
+  return {material:chosen.material,mult:chosen.mult};
+}
+function dotStyle(rec,t){
+  const f=freshness(rec,t), due=rec.status!=='new' && t>=rec.due;
+  const crystal=crystalFor(rec.interval), base=diameter(rec.interval);
+  return {
+    kind:crystal?'crystal':'dot', material:crystal?crystal.material:null,
+    diameter:crystal?base*crystal.mult:base, color:heatColor(f),
+    due, glow:!due && f>=GLOW_AT, cracked:!!crystal && due,
+  };
+}
+
+/* ============================================================================
+ * STORAGE
+ * ==========================================================================*/
+const KEY='lt-finance-tartaglia-v1';
+const FMT='ltfin1';
+function loadState(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){ const o=JSON.parse(raw); return {records:o.records||{},deleted:o.deleted||[]}; }
+  }catch(e){}
+  return {records:{},deleted:[]};
+}
+function saveState(){ try{ localStorage.setItem(KEY,JSON.stringify({records:S.records,deleted:S.deleted})); }catch(e){} }
+function recordFor(id){ return S.records[id] || (S.records[id]=newRecord()); }
+
+/* ============================================================================
+ * AUDIO — Lithuanian TTS when the platform offers it.
+ * ==========================================================================*/
+function speak(text){
+  if(!('speechSynthesis' in window)){ flash('No speech support on this device'); return; }
+  try{
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='lt-LT'; u.rate=0.9;
+    const v=(window.speechSynthesis.getVoices()||[]).find(v=>/lt/i.test(v.lang));
+    if(v) u.voice=v;
+    else flash('No Lithuanian voice installed — using default');
+    window.speechSynthesis.speak(u);
+  }catch(e){ flash('Could not play audio'); }
+}
+if('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged=()=>{};
+
+/* ============================================================================
+ * APP STATE + RENDER
+ * ==========================================================================*/
+const S = Object.assign(loadState(), {
+  idx:0, freeScroll:false, hideTarget:false, revealed:false,
+  bandIndex:1, pos:0.4, importOpen:false, importText:'', flashMsg:null, flashTimer:null,
+});
+
+function visibleCards(){ return CARDS.filter(c=>!S.deleted.includes(c.id)); }
+function dueCards(t){ return visibleCards().filter(c=>isDue(recordFor(c.id),t)); }
+function pool(t){ return S.freeScroll ? visibleCards() : dueCards(t); }
+function current(t){ const p=pool(t); if(!p.length) return null; if(S.idx>=p.length) S.idx=0; if(S.idx<0) S.idx=p.length-1; return p[S.idx]; }
+
+function flash(msg){
+  S.flashMsg=msg; render();
+  if(S.flashTimer) clearTimeout(S.flashTimer);
+  S.flashTimer=setTimeout(()=>{ S.flashMsg=null; render(); },2000);
+}
+
+function el(tag,props,...kids){
+  const n=document.createElement(tag);
+  if(props) for(const k in props){
+    if(k==='style' && typeof props[k]==='object') Object.assign(n.style,props[k]);
+    else if(k.startsWith('on')) n.addEventListener(k.slice(2).toLowerCase(),props[k]);
+    else if(k==='class') n.className=props[k];
+    else if(k==='html') n.innerHTML=props[k];
+    else n.setAttribute(k,props[k]);
+  }
+  for(const kid of kids.flat()) if(kid!=null && kid!==false) n.append(kid.nodeType?kid:document.createTextNode(kid));
+  return n;
+}
+
+function render(){
+  const t=now();
+  const app=document.getElementById('app');
+  app.innerHTML='';
+  const cur=current(t);
+  const due=dueCards(t).length;
+  const vis=visibleCards();
+
+  /* header */
+  app.append(el('header',null,
+    el('div',null,
+      el('h1',null,'Lithuanian finance'),
+      el('p',{class:'sub'},'vz Data Explorer terms · LT → EN · manual SRS'),
+    ),
+    el('div',{class:'stat'},
+      el('div',{class:'due'}, due+' due'),
+      el('div',null, vis.length+' cards'),
+    ),
+  ));
+
+  /* settings row */
+  app.append(el('div',{class:'row'},
+    el('button',{class:'pill'+(S.freeScroll?' on':''),onclick:()=>{S.freeScroll=!S.freeScroll;S.idx=0;render();}}, S.freeScroll?'Free scroll: on':'Free scroll: off'),
+    el('button',{class:'pill'+(S.hideTarget?' on':''),onclick:()=>{S.hideTarget=!S.hideTarget;render();}}, S.hideTarget?'Audio: hidden':'Audio: shown'),
+    el('button',{class:'pill',onclick:doExport},'Export'),
+    el('button',{class:'pill',onclick:()=>{S.importOpen=!S.importOpen;render();}},'Import'),
+    el('button',{class:'pill',onclick:()=>{ if(confirm('Reset all progress?')){S.records={};S.deleted=[];S.idx=0;saveState();render();} }},'Reset'),
+  ));
+
+  if(S.importOpen){
+    const ta=el('textarea',{placeholder:'Paste a backup string…'}); ta.value=S.importText;
+    ta.addEventListener('input',e=>S.importText=e.target.value);
+    app.append(el('div',{class:'box',style:{padding:'8px'}}, ta,
+      el('button',{class:'apply',onclick:doImport},'Apply')));
+  }
+
+  /* card */
+  if(cur){
+    const rec=recordFor(cur.id);
+    const metaRight = rec.reps>0
+      ? formatMinutes(rec.interval)+' · '+new Date(rec.due).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})
+      : 'new';
+    app.append(el('div',{class:'card'},
+      el('div',{class:'meta'},
+        el('span',{class:'k'}, 'Term · '+cur.tier),
+        el('span',{style:{fontVariantNumeric:'tabular-nums'}}, metaRight),
+      ),
+      el('div',{class:'prompt'},
+        S.hideTarget
+          ? el('div',{class:'hidden-face'}, el('div',{class:'eye'},'🙈'), el('div',{style:{marginTop:'4px',fontSize:'13px'}},'Listen & guess — Lithuanian hidden'))
+          : el('div',{class:'term'}, cur.target),
+        (!S.hideTarget) ? el('div',{class:'from'}, cur.unit.split(' · ')[0]) : null,
+      ),
+      el('div',{class:'audio'},
+        el('button',{class:'abtn',onclick:()=>speak(cur.target)},'🔊 Say it'),
+      ),
+      el('div',{class:'answer'},
+        S.revealed
+          ? el('div',null,
+              el('div',{class:'natural'}, cur.natural),
+              cur.literal ? el('div',{class:'literal'}, cur.literal) : null,
+              el('div',{class:'gloss'}, '['+cur.gloss+']'),
+            )
+          : el('button',{class:'show',onclick:()=>{S.revealed=true;render();}},'Show meaning'),
+      ),
+    ));
+  } else {
+    app.append(el('div',{class:'empty'}, '🎉 Nothing due right now. Turn on free scroll to browse.'));
+  }
+
+  /* nav */
+  app.append(el('div',{class:'nav'},
+    el('button',{class:'navbtn',onclick:()=>{S.idx--;S.revealed=false;render();}},'← Prev'),
+    cur ? el('button',{class:'hide',onclick:()=>{ if(!S.deleted.includes(cur.id))S.deleted.push(cur.id); S.idx=0; S.revealed=false; saveState(); render(); }},'Hide card') : null,
+    el('button',{class:'navbtn',onclick:()=>{S.idx++;S.revealed=false;render();}},'Next →'),
+  ));
+
+  /* slider */
+  if(cur){
+    const band=BANDS[S.bandIndex];
+    const minutes=minutesFromPos(band,S.pos);
+    app.append(el('div',{class:'card slider'},
+      el('div',{class:'top'},
+        el('span',{style:{color:'var(--t400)'}},'Next review in'),
+        el('span',{class:'val'}, formatMinutes(minutes)+' ', el('span',{class:'due'}, '· '+dueLabel(minutes,t))),
+      ),
+      (()=>{ const r=el('input',{type:'range',min:'0',max:'1000','aria-label':'Review interval'}); r.value=Math.round(S.pos*1000);
+        r.addEventListener('input',e=>{S.pos=Number(e.target.value)/1000;
+          // update label live without full rerender
+          const v=document.querySelector('.slider .val'); const mm=minutesFromPos(BANDS[S.bandIndex],S.pos);
+          if(v) v.innerHTML=formatMinutes(mm)+' <span class="due">· '+dueLabel(mm,now())+'</span>';
+        }); return r; })(),
+      el('div',{class:'controls'},
+        el('div',{class:'bands'}, BANDS.map((b,i)=>el('button',{class:i===S.bandIndex?'on':'',onclick:()=>{S.bandIndex=i;render();}}, b.label))),
+        el('button',{class:'commit',onclick:()=>{
+          const mm=minutesFromPos(BANDS[S.bandIndex],S.pos);
+          S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now());
+          saveState(); S.revealed=false; S.pos=0.4;
+          flash('Scheduled in '+formatMinutes(mm));
+        }},'Commit ↵'),
+      ),
+    ));
+  }
+
+  /* memory map */
+  const map=el('div',{class:'map'});
+  vis.forEach(c=>{
+    const rec=recordFor(c.id), s=dotStyle(rec,t), isCur=cur&&c.id===cur.id, isCry=s.kind==='crystal';
+    const size=Math.max(s.diameter,16);
+    const glyph=el('span',{class:'glyph'});
+    Object.assign(glyph.style,{
+      width:s.diameter+'px', height:s.diameter+'px', display:'block',
+      borderRadius:isCry?'4px':'9999px',
+      transform:(isCry?'rotate(45deg) ':'')+(isCur?'scale(1.25)':'scale(1)'),
+      transition:'background-color .6s ease, box-shadow .6s ease, transform .2s ease',
+    });
+    if(s.due){ Object.assign(glyph.style,{background:'transparent',border:'1.5px solid rgba(0,0,0,.85)',outline:'1px solid rgba(255,255,255,.15)'}); }
+    else if(isCry){ Object.assign(glyph.style,{background:MATERIAL_BG[s.material],boxShadow:s.glow?`0 0 10px 2px ${s.color}`:'none'}); }
+    else { Object.assign(glyph.style,{background:s.color,boxShadow:s.glow?`0 0 8px 2px ${s.color}`:'none'}); }
+    const btn=el('button',{class:'dot',title:c.target+' · '+(s.due?'due':statusAt(rec,t)),style:{width:size+'px',height:size+'px'},
+      onclick:()=>{ const p=pool(t); const i=p.findIndex(x=>x.id===c.id); if(i>=0){S.idx=i; S.revealed=false; render();} else flash('Hidden — in free scroll only'); }},
+      glyph);
+    if(s.cracked){
+      const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.setAttribute('viewBox','0 0 20 20'); svg.setAttribute('class','crack');
+      svg.style.width=s.diameter+'px'; svg.style.height=s.diameter+'px';
+      const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+      p.setAttribute('d','M10 0 L8 7 L12 9 L7 20 M8 7 L2 6 M12 9 L19 11');
+      p.setAttribute('stroke','rgba(0,0,0,0.7)'); p.setAttribute('stroke-width','1'); p.setAttribute('fill','none');
+      svg.append(p); btn.append(svg);
+    }
+    if(isCur) btn.append(el('span',{class:'here'}));
+    map.append(btn);
+  });
+  app.append(el('div',null, el('div',{class:'maplabel'},'Memory map — colour = freshness, size = interval, crystals = long-term'), map));
+
+  /* legend + footer */
+  app.append(el('div',{class:'legend',html:
+    '<b>How to use:</b> read the Lithuanian term, guess the meaning, hit <b>Show meaning</b>, then pick when you want to see it again and <b>Commit</b>. '+
+    'Dots heat from blue (just learned) to coal (fading); pass 4h and they turn to silver → gold → ruby → diamond crystals. A black outline = due now.'}));
+
+  app.append(el('footer',null,
+    el('span',null,'Tartaglia engine · LT finance deck'),
+    S.deleted.length>0 ? el('button',{onclick:()=>{S.deleted=[];saveState();render();}},'Restore '+S.deleted.length+' hidden') : el('span',null,''),
+  ));
+
+  if(S.flashMsg) app.append(el('div',{class:'flash'}, S.flashMsg));
+}
+
+function doExport(){
+  const s=FMT+':'+btoa(unescape(encodeURIComponent(JSON.stringify({records:S.records,deleted:S.deleted}))));
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(s).then(()=>flash('Progress copied to clipboard'),()=>{S.importText=s;S.importOpen=true;flash('Copy this backup string');});
+  } else { S.importText=s; S.importOpen=true; flash('Copy this backup string'); }
+}
+function doImport(){
+  const s=S.importText.trim();
+  try{
+    if(!s.startsWith(FMT+':')) throw 0;
+    const o=JSON.parse(decodeURIComponent(escape(atob(s.slice(FMT.length+1)))));
+    S.records=o.records||{}; S.deleted=o.deleted||[]; saveState();
+    S.importOpen=false; S.importText=''; S.idx=0; flash('Progress imported');
+  }catch(e){ flash('Import failed — incompatible string'); }
+}
+
+/* keyboard: Enter commits, Space reveals */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='TEXTAREA') return;
+  const cur=current(now()); if(!cur) return;
+  if(e.key==='Enter'){ const mm=minutesFromPos(BANDS[S.bandIndex],S.pos); S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now()); saveState(); S.revealed=false; S.pos=0.4; flash('Scheduled in '+formatMinutes(mm)); }
+  else if(e.key===' '){ e.preventDefault(); S.revealed=!S.revealed; render(); }
+  else if(e.key==='ArrowRight'){ S.idx++; S.revealed=false; render(); }
+  else if(e.key==='ArrowLeft'){ S.idx--; S.revealed=false; render(); }
+});
+
+render();
+/* live forgetting-curve repaint of the memory map */
+setInterval(()=>{ if(!S.importOpen) render(); }, 15000);
+</script>
+</body>
+</html>
