@@ -274,16 +274,33 @@ function dotStyle(rec,t){
 /* ============================================================================
  * STORAGE
  * ==========================================================================*/
+// Stable key — kept the same across app updates so your progress and choices
+// survive every redeploy. Card IDs (U1-1, …) are stable too, so reviews stick.
 const KEY='lt-finance-tartaglia-v1';
 const FMT='ltfin1';
 function loadState(){
   try{
     const raw=localStorage.getItem(KEY);
-    if(raw){ const o=JSON.parse(raw); return {records:o.records||{},deleted:o.deleted||[]}; }
+    if(raw){
+      const o=JSON.parse(raw);
+      return {
+        records:o.records||{}, deleted:o.deleted||[],
+        // remembered UI choices
+        freeScroll:!!o.freeScroll, hideTarget:!!o.hideTarget,
+        bandIndex:Number.isInteger(o.bandIndex)?o.bandIndex:1,
+      };
+    }
   }catch(e){}
-  return {records:{},deleted:[]};
+  return {records:{},deleted:[],freeScroll:false,hideTarget:false,bandIndex:1};
 }
-function saveState(){ try{ localStorage.setItem(KEY,JSON.stringify({records:S.records,deleted:S.deleted})); }catch(e){} }
+function saveState(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify({
+      records:S.records, deleted:S.deleted,
+      freeScroll:S.freeScroll, hideTarget:S.hideTarget, bandIndex:S.bandIndex,
+    }));
+  }catch(e){}
+}
 function recordFor(id){ return S.records[id] || (S.records[id]=newRecord()); }
 
 /* ============================================================================
@@ -306,10 +323,11 @@ if('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged=()=>{};
 /* ============================================================================
  * APP STATE + RENDER
  * ==========================================================================*/
-const S = Object.assign(loadState(), {
-  idx:0, freeScroll:false, hideTarget:false, revealed:false,
-  bandIndex:1, pos:0.4, importOpen:false, importText:'', flashMsg:null, flashTimer:null,
-});
+// Defaults first (transient view state), then overlay the remembered values so
+// persisted choices win.
+const S = Object.assign({
+  idx:0, revealed:false, pos:0.4, importOpen:false, importText:'', flashMsg:null, flashTimer:null,
+}, loadState());
 
 function visibleCards(){ return CARDS.filter(c=>!S.deleted.includes(c.id)); }
 function dueCards(t){ return visibleCards().filter(c=>isDue(recordFor(c.id),t)); }
@@ -357,8 +375,8 @@ function render(){
 
   /* settings row */
   app.append(el('div',{class:'row'},
-    el('button',{class:'pill'+(S.freeScroll?' on':''),onclick:()=>{S.freeScroll=!S.freeScroll;S.idx=0;render();}}, S.freeScroll?'Free scroll: on':'Free scroll: off'),
-    el('button',{class:'pill'+(S.hideTarget?' on':''),onclick:()=>{S.hideTarget=!S.hideTarget;render();}}, S.hideTarget?'Audio: hidden':'Audio: shown'),
+    el('button',{class:'pill'+(S.freeScroll?' on':''),onclick:()=>{S.freeScroll=!S.freeScroll;S.idx=0;saveState();render();}}, S.freeScroll?'Free scroll: on':'Free scroll: off'),
+    el('button',{class:'pill'+(S.hideTarget?' on':''),onclick:()=>{S.hideTarget=!S.hideTarget;saveState();render();}}, S.hideTarget?'Audio: hidden':'Audio: shown'),
     el('button',{class:'pill',onclick:doExport},'Export'),
     el('button',{class:'pill',onclick:()=>{S.importOpen=!S.importOpen;render();}},'Import'),
     el('button',{class:'pill',onclick:()=>{ if(confirm('Reset all progress?')){S.records={};S.deleted=[];S.idx=0;saveState();render();} }},'Reset'),
@@ -428,7 +446,7 @@ function render(){
           if(v) v.innerHTML=formatMinutes(mm)+' <span class="due">· '+dueLabel(mm,now())+'</span>';
         }); return r; })(),
       el('div',{class:'controls'},
-        el('div',{class:'bands'}, BANDS.map((b,i)=>el('button',{class:i===S.bandIndex?'on':'',onclick:()=>{S.bandIndex=i;render();}}, b.label))),
+        el('div',{class:'bands'}, BANDS.map((b,i)=>el('button',{class:i===S.bandIndex?'on':'',onclick:()=>{S.bandIndex=i;saveState();render();}}, b.label))),
         el('button',{class:'commit',onclick:()=>{
           const mm=minutesFromPos(BANDS[S.bandIndex],S.pos);
           S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now());
