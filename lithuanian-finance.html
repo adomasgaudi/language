@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.18 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.19 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -53,21 +53,24 @@
   .pill.on{background:var(--sky500);color:#fff}
   .pill.danger:hover{background:var(--rose);color:#fff}
   .pill:hover{filter:brightness(1.12)}
+  .pill,.cardbtn,.actbtn,.abtn,.fab{display:inline-flex;align-items:center;gap:5px}
+  .ic{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .ic svg{display:block}
   /* header card */
   .headcard{padding:12px 14px}
   .headtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
   .headmain{display:flex;align-items:center;gap:10px;min-width:0}
-  .ver{font-size:11px;font-weight:700;color:var(--t400);font-variant-numeric:tabular-nums;background:var(--line);padding:2px 8px;border-radius:999px}
+  .ver{font-size:11px;font-weight:700;color:var(--t400);font-variant-numeric:tabular-nums;background:var(--line);padding:2px 8px;border-radius:6px}
   /* segmented mode control */
-  .seg{display:inline-flex;background:var(--line);border-radius:9px;padding:2px;gap:2px}
+  .seg{display:inline-flex;background:var(--line);border-radius:8px;padding:2px;gap:2px}
   .segbtn{border-radius:7px;padding:5px 10px;font-size:12px;font-weight:600;color:var(--t400);background:transparent;white-space:nowrap}
   .segbtn.on{background:var(--sky500);color:#fff} .segbtn:hover:not(.on){color:var(--t200)}
   .settings{padding:8px;margin-top:2px}
   /* floating history fab + popup */
   .histfab{position:fixed;right:14px;bottom:14px;z-index:50;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-  .fab{width:42px;height:42px;border-radius:999px;background:var(--sky500);color:#fff;font-size:18px;box-shadow:0 6px 18px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
+  .fab{width:40px;height:40px;border-radius:8px;background:var(--sky500);color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
   .fab:hover{filter:brightness(1.1)} .fab:active{transform:scale(.94)}
-  .hist.pop{order:-1;max-width:300px;max-height:55vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+  .hist.pop{order:-1;max-width:300px;max-height:55vh;overflow:auto;background:var(--panel-solid);box-shadow:0 10px 30px rgba(0,0,0,.5)}
   .card,.box{border:1px solid var(--line);background:var(--panel);border-radius:14px}
   .card{padding:12px 14px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
   /* card spans full width; swipe left/right to navigate */
@@ -107,23 +110,23 @@
   .flexbadge.exact{background:var(--line);color:var(--t400)}
   .show{display:flex;align-items:center;justify-content:center;width:100%;min-height:64px;border:1px solid var(--line2);border-radius:10px;padding:8px 20px;font-size:15px;font-weight:600;color:var(--t300);background:transparent}
   .show:hover{background:var(--line)} .show:active{transform:scale(.99)}
-  /* three bare "slide-to-open" knobs — chosen time sits on the thumb, tight stack */
-  .sliders{display:flex;flex-direction:column;gap:5px;margin:1px 0 5px}
+  /* three bare knobs, very tight stack, small (non-pill) corners */
+  .sliders{display:flex;flex-direction:column;gap:2px;margin:0 0 3px}
   .srow{position:relative;opacity:.6;transition:opacity .2s ease}
   .srow.active{opacity:1}
   .knobval{position:absolute;top:0;height:28px;width:24px;display:flex;align-items:center;justify-content:center;
     transform:translateX(-50%);pointer-events:none;font-size:10px;font-weight:700;color:#1a1a1f;font-variant-numeric:tabular-nums}
-  input.knob{-webkit-appearance:none;appearance:none;width:100%;height:28px;border-radius:9999px;margin:0;touch-action:none;cursor:grab;
+  input.knob{-webkit-appearance:none;appearance:none;width:100%;height:28px;border-radius:6px;margin:0;touch-action:none;cursor:grab;
     background:var(--line);border:1px solid var(--line2);outline:none}
-  .srow.active input.knob{background:linear-gradient(90deg,rgba(56,189,248,.42),rgba(56,189,248,.10));border-color:var(--sky500)}
+  .srow.active input.knob{border-color:var(--sky500)}
   input.knob:active{cursor:grabbing}
-  input.knob::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:9999px;
+  input.knob::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:24px;border-radius:5px;
     background:var(--knob);border:2px solid var(--knob-edge);box-shadow:0 2px 5px rgba(0,0,0,.4)}
   .srow.active input.knob::-webkit-slider-thumb{background:#fff;border-color:var(--sky400)}
-  input.knob::-moz-range-thumb{width:24px;height:24px;border:2px solid var(--knob-edge);border-radius:9999px;background:var(--knob);box-shadow:0 2px 5px rgba(0,0,0,.4)}
+  input.knob::-moz-range-thumb{width:22px;height:24px;border:2px solid var(--knob-edge);border-radius:5px;background:var(--knob);box-shadow:0 2px 5px rgba(0,0,0,.4)}
   .srow.active input.knob::-moz-range-thumb{background:#fff;border-color:var(--sky400)}
-  input.knob::-webkit-slider-runnable-track{height:28px;border-radius:9999px;background:transparent}
-  input.knob::-moz-range-track{height:28px;border-radius:9999px;background:transparent}
+  input.knob::-webkit-slider-runnable-track{height:28px;border-radius:6px;background:transparent}
+  input.knob::-moz-range-track{height:28px;border-radius:6px;background:transparent}
   /* sliders on the left, a column of action buttons on the right */
   .sliderwrap{display:flex;gap:8px;align-items:stretch}
   .sliderwrap .sliders{flex:1;min-width:0;margin:0}
@@ -177,10 +180,11 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.19',sp:2,   note:'Knob track filled to the card’s last-scheduled interval; tighter slider gaps + small (non-pill) corners; solid history popup; emoji replaced with minimalist line icons'},
   {v:'0.1.18',sp:1,   note:'Fixed-size clickable shape boxes (selecting no longer shifts the map); side prev/next replaced by swipe left/right on the card'},
   {v:'0.1.17',sp:1,   note:'Narrower sliders + right-hand column of Commit / Forgot / New buttons (all commit for now)'},
   {v:'0.1.16',sp:0.5, note:'Slimmer review knobs (28px track / 24px thumb) and tighter spacing between them'},
-  {v:'0.1.15',sp:7,   note:'Synonyms + flexible/exact badge on vocab cards; Auto-due mode (per-shape thresholds); review "Both" toggle; settings ⚙ menu; header card; version top + floating history; numbers below shapes; LT-specific job terms kept in Lithuanian; embedded progress snapshot'},
+  {v:'0.1.15',sp:7,   note:'Synonyms + flexible/exact badge on vocab cards; Auto-due mode (per-shape thresholds); review "Both" toggle; settings menu; header card; version top + floating history; numbers below shapes; LT-specific job terms kept in Lithuanian; embedded progress snapshot'},
   {v:'0.1.14',sp:4,   note:'3 personalised decks (teacher job, fitness clients, website clients — Vilnius, researched); numbered shapes to track cards across re-sorts'},
   {v:'0.1.13',sp:3,   note:'Intro deck-picker + 2nd deck (advanced rekvizitai finance, 30 cards); thin grey outline on shapes; legacy progress migrated'},
   {v:'0.1.12',sp:1.5, note:'Download/Upload progress as readable JSON; brighter white/yellow glow; greyer light-theme bg'},
@@ -191,7 +195,7 @@ const VERSIONS = [
   {v:'0.1.7', sp:1,   note:'Simplify map to 4 shapes: triangle/hexagon/circle, JWST 4-point star at 1mo+'},
   {v:'0.1.6', sp:4,   note:'3 log-step knobs · sort by due/longevity/topic · light theme · map above card · softer glow · new=outline · full-width Show'},
   {v:'0.1.5', sp:0.5, note:'Sizes 10–15px; ring the current bubble with a 25px circle'},
-  {v:'0.1.4', sp:1,   note:'Version badge + 📋 SP history log'},
+  {v:'0.1.4', sp:1,   note:'Version badge + SP history log'},
   {v:'0.1.3', sp:1.5, note:'Remember UI choices in cache across reloads/redeploys'},
   {v:'0.1.2', sp:3,   note:'Memory map: shape = longevity, dimmer glow, 10px cap'},
   {v:'0.1.1', sp:0.5, note:'Cap memory-map dots at 20px'},
@@ -261,7 +265,7 @@ const UNITS_ADV = [
   { id:'U1', title:'Pelno (nuostolių) ataskaita · Profit & loss', cards:[
     ['Pelnas prieš mokesčius','profit before tax','Profit before the profit tax. ≠ net profit (after tax) and ≠ operating profit (before interest & tax).','PEL-nas pryesh MOH-kes-choos','hard','pre-tax profit · PBT · earnings before tax · EBT'],
     ['Pelnas (nuostoliai) prieš mokesčius','profit (loss) before tax','Same as pelnas prieš mokesčius; the "(nuostoliai)" just flags it may be a loss.','','hard','pre-tax profit or loss · PBT · EBT'],
-    ['Pelningumas','profitability / margin','⚠ Ambiguous on its own — an umbrella for a profit-as-%-of-revenue ratio. The qualifier decides which: grynasis = net, prieš mokesčius = pre-tax.','pel-NIN-goo-mas','hard','profitability · margin · profit margin · return'],
+    ['Pelningumas','profitability / margin','Ambiguous on its own — an umbrella for a profit-as-%-of-revenue ratio. The qualifier decides which: grynasis = net, prieš mokesčius = pre-tax.','pel-NIN-goo-mas','hard','profitability · margin · profit margin · return'],
     ['Grynasis pelningumas','net margin','= net profit ÷ revenue. ⇄ "net margin" = "net profit margin" = "net profitability" (all interchangeable). ≠ gross margin (gross profit) and ≠ pre-tax margin (pre-tax profit).','grih-NAH-sis pel-NIN-goo-mas','hard','net margin · net profit margin · net profitability'],
     ['Pelningumas prieš mokesčius','pre-tax margin','= pre-tax profit ÷ revenue. ⇄ "pre-tax margin" = "pre-tax profit margin" = "PBT margin". ≠ net margin (after tax).','','hard','pre-tax margin · pre-tax profit margin · PBT margin'],
     ['Bendrasis pelnas','gross profit','= revenue − cost of sales. ≠ net profit (after all costs). Its ratio is gross margin.','BEN-drah-sis PEL-nas','mid','gross profit · gross income'],
@@ -686,11 +690,30 @@ function el(tag,props,...kids){
   return n;
 }
 
+// Minimalist line icons (no emoji). Lucide-style 24px stroke paths.
+const ICONS={
+  download:'<path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/>',
+  upload:'<path d="M12 21V9"/><path d="m7 13 5-5 5 5"/><path d="M5 5h14"/>',
+  settings:'<line x1="4" y1="8" x2="20" y2="8"/><circle cx="9" cy="8" r="2.2"/><line x1="4" y1="16" x2="20" y2="16"/><circle cx="15" cy="16" r="2.2"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+  eyeoff:'<path d="M9.9 4.2A10 10 0 0 1 12 4c6.5 0 10 8 10 8a18 18 0 0 1-2.2 3.2"/><path d="M6.5 6.6A18 18 0 0 0 2 12s3.5 7 10 7a10 10 0 0 0 3.4-.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><line x1="2" y1="2" x2="22" y2="22"/>',
+  audio:'<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>',
+  trash:'<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/>',
+  history:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/>',
+  moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/>',
+  check:'<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+};
+function icon(name,size){
+  const s=size||14;
+  return el('span',{class:'ic',html:`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`});
+}
+
 // Intro / deck-picker page.
 function renderIntro(app,t){
   app.append(el('div',{class:'card headcard'},
     el('div',{class:'headtop'}, el('span',{class:'ver'},'v'+VERSION),
-      el('button',{class:'pill'+(S.theme==='light'?' on':''),onclick:()=>{S.theme=S.theme==='light'?'dark':'light';saveState();render();}}, S.theme==='light'?'☀ Light':'🌙 Dark')),
+      el('button',{class:'pill'+(S.theme==='light'?' on':''),onclick:()=>{S.theme=S.theme==='light'?'dark':'light';saveState();render();}}, icon(S.theme==='light'?'sun':'moon'), S.theme==='light'?'Light':'Dark')),
     el('div',{class:'headmain'}, el('div',null,
       el('h1',null,'Lithuanian finance'),
       el('p',{class:'sub'},'Pick a deck to study'))),
@@ -710,8 +733,8 @@ function renderIntro(app,t){
     ));
   });
   app.append(el('div',{class:'row',style:{marginTop:'2px'}},
-    el('button',{class:'pill',onclick:doDownload},'⬇ Download'),
-    el('button',{class:'pill',onclick:doUpload},'⬆ Upload'),
+    el('button',{class:'pill',onclick:doDownload}, icon('download'),'Download'),
+    el('button',{class:'pill',onclick:doUpload}, icon('upload'),'Upload'),
   ));
   app.append(floatHistory());
   if(S.flashMsg) app.append(el('div',{class:'flash'}, S.flashMsg));
@@ -746,21 +769,21 @@ function render(){
     ),
   ));
 
-  /* control row — study mode + a settings (⚙) button */
+  /* control row — study mode + a settings button */
   const MODES=[['order','In order'],['scroll','Free scroll'],['auto','Auto-due']];
   app.append(el('div',{class:'row'},
     el('div',{class:'seg'}, MODES.map(([m,lbl])=>el('button',{class:'segbtn'+(S.mode===m?' on':''),onclick:()=>{S.mode=m;S.idx=0;S.pick=null;S.revealed=false;saveState();render();}}, lbl))),
-    el('button',{class:'pill'+(S.showBoth?' on':''),title:'Review mode — show question + answer together',onclick:()=>{S.showBoth=!S.showBoth;saveState();render();}}, '👁 Both'),
-    deck.lang==='lt' ? el('button',{class:'pill'+(S.hideTarget?' on':''),title:'Hide the term, listen & guess',onclick:()=>{S.hideTarget=!S.hideTarget;saveState();render();}}, S.hideTarget?'🙈':'🔊') : null,
-    el('button',{class:'pill'+(S.settingsOpen?' on':''),onclick:()=>{S.settingsOpen=!S.settingsOpen;render();}, title:'Settings'},'⚙'),
+    el('button',{class:'pill'+(S.showBoth?' on':''),title:'Review mode — show question + answer together',onclick:()=>{S.showBoth=!S.showBoth;saveState();render();}}, icon('eye'),'Both'),
+    deck.lang==='lt' ? el('button',{class:'pill'+(S.hideTarget?' on':''),title:'Hide the term, listen & guess',onclick:()=>{S.hideTarget=!S.hideTarget;saveState();render();}}, icon(S.hideTarget?'eyeoff':'audio')) : null,
+    el('button',{class:'pill'+(S.settingsOpen?' on':''),onclick:()=>{S.settingsOpen=!S.settingsOpen;render();}, title:'Settings'}, icon('settings')),
   ));
 
   if(S.settingsOpen){
     app.append(el('div',{class:'box settings'},
       el('div',{class:'row'},
-        el('button',{class:'pill'+(S.theme==='light'?' on':''),onclick:()=>{S.theme=S.theme==='light'?'dark':'light';saveState();render();}}, S.theme==='light'?'☀ Light':'🌙 Dark'),
-        el('button',{class:'pill',onclick:doDownload},'⬇ Download'),
-        el('button',{class:'pill',onclick:doUpload},'⬆ Upload'),
+        el('button',{class:'pill'+(S.theme==='light'?' on':''),onclick:()=>{S.theme=S.theme==='light'?'dark':'light';saveState();render();}}, icon(S.theme==='light'?'sun':'moon'), S.theme==='light'?'Light':'Dark'),
+        el('button',{class:'pill',onclick:doDownload}, icon('download'),'Download'),
+        el('button',{class:'pill',onclick:doUpload}, icon('upload'),'Upload'),
         el('button',{class:'pill',onclick:doExport},'Export'),
         el('button',{class:'pill',onclick:()=>{S.importOpen=!S.importOpen;render();}},'Import'),
         el('button',{class:'pill danger',onclick:()=>{ if(confirm('Reset all progress?')){S.records={};S.deleted=[];S.purged=[];S.idx=0;S.pick=null;saveState();render();} }},'Reset'),
@@ -787,18 +810,18 @@ function render(){
       el('div',{class:'meta'},
         el('span',{class:'k'}, cur.tier+' · '+metaRight),
         el('div',{class:'acts'},
-          el('button',{class:'cardbtn',title:'Hide (restorable)',onclick:hide},'🙈 Hide'),
-          el('button',{class:'cardbtn del',title:'Delete (gone until reset)',onclick:del},'🗑 Delete'),
+          el('button',{class:'cardbtn',title:'Hide (restorable)',onclick:hide}, icon('eyeoff',13),'Hide'),
+          el('button',{class:'cardbtn del',title:'Delete (gone until reset)',onclick:del}, icon('trash',13),'Delete'),
         ),
       ),
       el('div',{class:'prompt'},
         S.hideTarget
-          ? el('div',{class:'hidden-face'}, el('div',{class:'eye'},'🙈'), el('div',{style:{marginTop:'4px',fontSize:'13px'}},'Listen & guess — Lithuanian hidden'))
+          ? el('div',{class:'hidden-face'}, el('div',{class:'eye'}, icon('eyeoff',26)), el('div',{style:{marginTop:'4px',fontSize:'13px'}},'Listen & guess — term hidden'))
           : el('div',{class:'term'}, cur.target),
         (!S.hideTarget) ? el('div',{class:'from'}, cur.unit.split(' · ')[0]) : null,
       ),
       deck.lang==='lt' ? el('div',{class:'audio'},
-        el('button',{class:'abtn',onclick:()=>speak(cur.target)},'🔊 Say it'),
+        el('button',{class:'abtn',onclick:()=>speak(cur.target)}, icon('audio'),'Say it'),
       ) : null,
       el('div',{class:'answer'},
         (S.revealed || S.showBoth)
@@ -807,13 +830,13 @@ function render(){
               (deck.lang==='lt' && cur.also) ? el('div',{class:'syn'}, '✓ also counts: '+cur.also) : null,
               cur.literal ? el('div',{class:'literal'}, cur.literal) : null,
               cur.gloss ? el('div',{class:'gloss'}, '['+cur.gloss+']') : null,
-              deck.lang==='lt' ? el('div',{class:'flexbadge '+(cur.also?'flex':'exact')}, cur.also?'⇄ flexible — any wording above counts':'⚑ exact term') : null,
+              deck.lang==='lt' ? el('div',{class:'flexbadge '+(cur.also?'flex':'exact')}, cur.also?'flexible — any wording above counts':'exact term') : null,
             )
           : el('button',{class:'show',onclick:()=>{S.revealed=true;render();}},'Show meaning'),
       ),
     );
   } else {
-    cardEl=el('div',{class:'empty'}, S.mode==='auto' ? '🎉 All caught up — nothing decayed enough yet.' : '🎉 Nothing due. Switch to Free scroll to browse.');
+    cardEl=el('div',{class:'empty'}, icon('check',22), el('div',{style:{marginTop:'4px'}}, S.mode==='auto' ? 'All caught up — nothing decayed enough yet.' : 'Nothing due. Switch to Free scroll to browse.'));
   }
   // swipe left/right anywhere on the card = prev/next (replaces the side buttons)
   let _sx=0,_sy=0;
@@ -827,13 +850,19 @@ function render(){
   /* review control — three bare knobs; the chosen time rides on each thumb.
      No labels, no ticks, no header. The last-touched knob is the choice. */
   if(cur){
+    const lastInt=recordFor(cur.id).interval; // the card's last-committed period
+    // how far across band i the last interval sits (0..1), for the track fill
+    const lastFrac=(i)=>{ const st=BAND_STEPS[i]; if(lastInt<=st[0]) return 0; if(lastInt>=st[STEPS-1]) return 1;
+      for(let j=0;j<STEPS-1;j++) if(lastInt>=st[j]&&lastInt<=st[j+1]) return (j+(lastInt-st[j])/(st[j+1]-st[j]))/(STEPS-1); return 0; };
+    const fillBg=(i)=>{ const p=(lastFrac(i)*100).toFixed(1); return `linear-gradient(90deg, rgba(56,189,248,.40) 0 ${p}%, var(--line) ${p}% 100%)`; };
     const chosen=()=>BAND_STEPS[S.bandIndex][S.stepByBand[S.bandIndex]];
-    const thumbLeft=(i)=>`calc((100% - 24px) * ${S.stepByBand[i]/(STEPS-1)} + 12px)`;
+    const thumbLeft=(i)=>`calc((100% - 22px) * ${S.stepByBand[i]/(STEPS-1)} + 11px)`;
     const paintRow=(i)=>{ const lab=document.getElementById('kv'+i); if(lab){ lab.textContent=formatMinutes(BAND_STEPS[i][S.stepByBand[i]]); lab.style.left=thumbLeft(i); } };
     const setActive=(i)=>{ S.bandIndex=i; document.querySelectorAll('.srow').forEach((row,j)=>row.classList.toggle('active',j===i)); };
     const rows = BANDS.map((b,i)=>{
       const r=el('input',{type:'range',min:'0',max:String(STEPS-1),step:'1','aria-label':b.label+' interval',class:'knob'});
       r.value=String(S.stepByBand[i]);
+      r.style.background=fillBg(i); // colour the track up to where it was last scheduled
       r.addEventListener('pointerdown',()=>{ if(S.bandIndex!==i) setActive(i); });
       r.addEventListener('input',e=>{
         S.stepByBand[i]=Number(e.target.value);
@@ -942,7 +971,7 @@ function render(){
 // Floating ⓘ history button + popup, fixed bottom-right (shared by both pages).
 function floatHistory(){
   const wrap=el('div',{class:'histfab'});
-  wrap.append(el('button',{class:'fab',title:'Version history',onclick:()=>{S.histOpen=!S.histOpen;render();}}, '📋'));
+  wrap.append(el('button',{class:'fab',title:'Version history',onclick:()=>{S.histOpen=!S.histOpen;render();}}, icon('history',18)));
   if(S.histOpen){
     wrap.append(el('div',{class:'hist pop'},
       el('div',{class:'histhead'},'v'+VERSION+' · history · '+VERSIONS.reduce((a,e)=>a+e.sp,0)+' sp'),
