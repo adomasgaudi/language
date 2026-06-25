@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.26 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.27 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -192,6 +192,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.27',sp:0.5, note:'Card top now shows remaining / total interval (e.g. 5/30m), counting down to "due"'},
   {v:'0.1.26',sp:0.5, note:'Track history is now a continuous ramp — colour shifts (blue→indigo, darker) on every commit, ~10 shades instead of 3'},
   {v:'0.1.25',sp:0.5, note:'Auto-due locks onto the current card — it no longer switches mid-review (live repaint / decay); only commit or skip advances'},
   {v:'0.1.24',sp:2,   note:'Slider track now shows your answer history per card: each interval rung colours grey→blue→dark by how often you chose it, tinted amber where you struggled (missed)'},
@@ -565,6 +566,12 @@ function formatMinutes(m){
   if(m<=2880){ const h=m/60; return (h<10?h.toFixed(h%1?1:0):Math.round(h))+'h'; } // hours up to 48h
   const d=m/1440; return (d<10?d.toFixed(d%1?1:0):Math.round(d))+'d';
 }
+// "remaining / total interval" e.g. 5/30m (shares the unit suffix when equal).
+function ratioLabel(rem,tot){
+  const a=formatMinutes(Math.max(0,rem)), b=formatMinutes(tot);
+  const su=(b.match(/[a-z]+$/)||[''])[0];
+  return a.endsWith(su) ? a.slice(0,-su.length)+'/'+b : a+'/'+b;
+}
 function dueLabel(m,t){
   const due=new Date(t+m*MINUTE_MS), sameDay=new Date(t).toDateString()===due.toDateString();
   return sameDay
@@ -911,8 +918,9 @@ function render(){
   let cardEl;
   if(cur){
     const rec=recordFor(cur.id);
-    const metaRight = rec.reps>0
-      ? formatMinutes(rec.interval)+' · '+new Date(rec.due).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})
+    // remaining / total interval at the top, e.g. "5/30m" (counts down to "due")
+    const metaRight = (rec.reps>0 && rec.interval>0)
+      ? (t>=rec.due ? 'due · '+formatMinutes(rec.interval) : ratioLabel((rec.due-t)/MINUTE_MS, rec.interval))
       : 'new';
     const hide=()=>{ if(!S.deleted.includes(cur.id))S.deleted.push(cur.id); S.idx=0; S.pick=null; S.revealed=false; S.infoOpen=false; S.mcPick=null; saveState(); render(); };
     const del=()=>{ if(!S.purged.includes(cur.id))S.purged.push(cur.id); S.idx=0; S.pick=null; S.revealed=false; S.infoOpen=false; S.mcPick=null; saveState(); render(); };
