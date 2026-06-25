@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.28 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.29 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -68,6 +68,13 @@
   .segbtn{border-radius:7px;padding:5px 10px;font-size:12px;font-weight:600;color:var(--t400);background:transparent;white-space:nowrap}
   .segbtn.on{background:var(--sky500);color:#fff} .segbtn:hover:not(.on){color:var(--t200)}
   .settings{padding:8px;margin-top:2px}
+  .tune{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+  .tunehead{font-size:11px;font-weight:600;color:var(--t400);margin-bottom:6px}
+  .tunerow{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .tunelabel{font-size:12px;color:var(--t400);flex:0 0 110px}
+  .tunerange{flex:1;accent-color:var(--sky400);height:18px}
+  .tuneval{font-size:12px;font-weight:700;color:var(--sky300);font-variant-numeric:tabular-nums;flex:0 0 34px;text-align:right}
+  .tunenote{font-size:10.5px;color:var(--t600);line-height:1.4;margin-top:4px}
   /* floating history fab + popup */
   .histfab{position:fixed;right:14px;bottom:14px;z-index:50;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
   .fab{width:40px;height:40px;border-radius:8px;background:var(--sky500);color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
@@ -196,10 +203,11 @@
  * Auto-due shows "all reviewed".
  *   eligible  ⇔  remaining_fraction ≤ autoThreshold(interval)
  * ==========================================================================*/
-const AUTO_EARLY     = 0.50;   // newest/short cards: review once ≤50% of interval remains
-const AUTO_LATE      = 0.05;   // oldest/long cards: review only when ≤5% remains
+const AUTO_EARLY     = 0.50;   // DEFAULT: newest/short cards review once ≤50% of interval remains
+const AUTO_LATE      = 0.05;   // DEFAULT: oldest/long cards review only when ≤5% remains
 const AUTO_SHORT_MIN = 5;      // interval (minutes) at the "short" end of the ramp
 const AUTO_LONG_MIN  = 43200;  // interval (minutes) at the "long" end (30 days)
+// AUTO_EARLY / AUTO_LATE are also adjustable live in ⚙ Settings → "Auto-due".
 
 /* ============================================================================
  * VERSION LOG — one continuous counter, bumped on every update/deploy (vz
@@ -207,6 +215,7 @@ const AUTO_LONG_MIN  = 43200;  // interval (minutes) at the "long" end (30 days)
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.29',sp:1,   note:'Auto-due tuning sliders in ⚙ Settings (early/late thresholds, persisted); memory-map glow now covers all colours except red & coal'},
   {v:'0.1.28',sp:1,   note:'Auto-due eligibility is now a tunable formula (constants at top): short cards reviewable early (≤50% left), long cards only near due (≤5% left), log-linear between; else shows none'},
   {v:'0.1.27',sp:0.5, note:'Card top now shows remaining / total interval (e.g. 5/30m), counting down to "due"'},
   {v:'0.1.26',sp:0.5, note:'Track history is now a continuous ramp — colour shifts (blue→indigo, darker) on every commit, ~10 shades instead of 3'},
@@ -602,7 +611,7 @@ function dueLabel(m,t){
  *             triangle <30m · hexagon <2d · circle <1mo · 4-point star 1mo+.
  *   SIZE    = position within the band, 10px (just entered) -> 15px. */
 const SIZE_MIN=10, SIZE_MAX=15;
-const GLOW_AT=0.55; // yellow/white/blue shine; cooler/brighter = bigger glow
+const GLOW_AT=0.30; // everything brighter than red shines (orange→yellow→white→blue); red & coal stay matte
 const HEAT=[[1,[77,166,255]],[0.8,[235,245,255]],[0.6,[255,214,92]],[0.4,[255,138,30]],[0.2,[229,57,53]],[0,[58,42,42]]];
 
 // Longevity bands, smallest interval first. `peak` caps how bright/cool the
@@ -697,7 +706,7 @@ function loadState(){
       seedStamp:SEED.stamp, deckId:(o&&o.deckId)||null,
       mode: s.freeScroll?'scroll':'order', hideTarget:!!s.hideTarget, showBoth:false,
       bandIndex:1, sortMode:['due','longevity','topic'].includes(s.sortMode)?s.sortMode:'due',
-      theme:s.theme==='light'?'light':'dark',
+      theme:s.theme==='light'?'light':'dark', autoEarly:AUTO_EARLY, autoLate:AUTO_LATE,
     };
   }
   // Normal load + migrate legacy single-deck ids (U1-1 -> d1:U1-1).
@@ -710,6 +719,8 @@ function loadState(){
     bandIndex:Number.isInteger(o.bandIndex)?o.bandIndex:1,
     sortMode:['due','longevity','topic'].includes(o.sortMode)?o.sortMode:'due',
     theme:o.theme==='light'?'light':'dark',
+    autoEarly:Number.isFinite(o.autoEarly)?clamp(o.autoEarly,0,1):AUTO_EARLY,
+    autoLate:Number.isFinite(o.autoLate)?clamp(o.autoLate,0,1):AUTO_LATE,
   };
 }
 function saveState(){
@@ -717,6 +728,7 @@ function saveState(){
     localStorage.setItem(KEY,JSON.stringify({
       records:S.records, deleted:S.deleted, purged:S.purged, deckId:S.deckId, seedStamp:S.seedStamp,
       mode:S.mode, hideTarget:S.hideTarget, showBoth:S.showBoth, bandIndex:S.bandIndex, sortMode:S.sortMode, theme:S.theme,
+      autoEarly:S.autoEarly, autoLate:S.autoLate,
     }));
   }catch(e){}
 }
@@ -747,6 +759,7 @@ if('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged=()=>{};
 const S = Object.assign({
   idx:0, revealed:false, stepByBand:[2,2,2], importOpen:false, importText:'', histOpen:false, legendOpen:false, settingsOpen:false, flashMsg:null, flashTimer:null,
   deleted:[], purged:[], deckId:null, mode:'order', pick:null, seedStamp:null, showBoth:false, suggestedFor:null, infoOpen:false, mcPick:null,
+  autoEarly:AUTO_EARLY, autoLate:AUTO_LATE,
 }, loadState());
 
 function visibleCards(){ return activeCards().filter(c=>!S.deleted.includes(c.id) && !S.purged.includes(c.id)); }
@@ -761,7 +774,7 @@ function autoThreshold(rec){
   const m=rec.interval;
   if(m<=0) return 1; // brand-new card: always reviewable
   const t=clamp((Math.log(m)-Math.log(AUTO_SHORT_MIN))/(Math.log(AUTO_LONG_MIN)-Math.log(AUTO_SHORT_MIN)),0,1);
-  return AUTO_EARLY + (AUTO_LATE-AUTO_EARLY)*t;
+  return S.autoEarly + (S.autoLate-S.autoEarly)*t; // live-tunable via Settings
 }
 function autoOrder(t){
   const vis=visibleCards();
@@ -840,6 +853,15 @@ const ICONS={
 function icon(name,size){
   const s=size||14;
   return el('span',{class:'ic',html:`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`});
+}
+// One labelled 0–100% slider for the Settings tuning section.
+function tuneRow(label, val, suffix, set){
+  const r=el('input',{type:'range',min:'0',max:'100',step:'5',class:'tunerange','aria-label':label});
+  r.value=String(Math.round(val*100));
+  const v=el('span',{class:'tuneval'}, Math.round(val*100)+'%');
+  r.addEventListener('input',e=>{ const x=Number(e.target.value)/100; set(x); v.textContent=Math.round(x*100)+'%'; });
+  r.addEventListener('change',()=>{ saveState(); render(); });
+  return el('div',{class:'tunerow'}, el('span',{class:'tunelabel'}, label), r, v);
 }
 
 // Intro / deck-picker page.
@@ -924,6 +946,13 @@ function render(){
       S.importOpen ? (()=>{ const ta=el('textarea',{placeholder:'Paste a backup string…'}); ta.value=S.importText;
         ta.addEventListener('input',e=>S.importText=e.target.value);
         return el('div',{style:{marginTop:'6px'}}, ta, el('button',{class:'apply',onclick:doImport},'Apply')); })() : null,
+      // Auto-due tuning: when to surface short vs long cards
+      el('div',{class:'tune'},
+        el('div',{class:'tunehead'},'Auto-due — when a card becomes reviewable'),
+        tuneRow('Short cards (early)', S.autoEarly, '% of interval left', v=>{S.autoEarly=v;}),
+        tuneRow('Long cards (late)', S.autoLate, '% of interval left', v=>{S.autoLate=v;}),
+        el('div',{class:'tunenote'}, 'Higher = review sooner. Short cards: '+Math.round(S.autoEarly*100)+'% left · long cards: '+Math.round(S.autoLate*100)+'% left (log-ramped between).'),
+      ),
     ));
   }
 
