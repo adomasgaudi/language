@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.23 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.24 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -192,6 +192,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.24',sp:2,   note:'Slider track now shows your answer history per card: each interval rung colours grey→blue→dark by how often you chose it, tinted amber where you struggled (missed)'},
   {v:'0.1.23',sp:3,   note:'New multiple-choice "Finance formulas" deck (20 cards): same concepts as decks 1 & 2 but asked as term = which formula?, with shuffled options and explanations'},
   {v:'0.1.22',sp:3,   note:'Zoned knob track (blue/brighter/dashed/grey vs last interval); per-card "nuance & origin" dropdowns (synonym differences, usage, etymology); Auto-due only shows almost-due/new cards, else "all reviewed"'},
   {v:'0.1.21',sp:1,   note:'Knob auto-pre-sets to one step above the card’s last interval (shaded track = last interval)'},
@@ -489,7 +490,14 @@ function statusAt(r,t){ return r.last===null ? 'new' : (t>=r.due?'due':'schedule
 function commitInterval(r,minutes,t){
   const interval = Math.max(0,minutes);
   const wasOverdue = r.last!==null && t>=r.due;
-  return {status:'scheduled',last:t,due:t+interval*MINUTE_MS,interval,reps:r.reps+1,lapses:r.lapses+(wasOverdue?1:0)};
+  // per-rung answer history: how many times each ladder interval (1-11) was
+  // chosen, and how many of those were after a lapse (a "miss"). Drives the
+  // track heatmap so you can see at a glance where you've struggled.
+  const hist=(r.hist||Array(11).fill(0)).slice();
+  const miss=(r.miss||Array(11).fill(0)).slice();
+  const rung=rungOf(interval); // 1-11
+  if(rung>=1){ hist[rung-1]++; if(wasOverdue) miss[rung-1]++; }
+  return {status:'scheduled',last:t,due:t+interval*MINUTE_MS,interval,reps:r.reps+1,lapses:r.lapses+(wasOverdue?1:0),hist,miss};
 }
 function freshness(r,t){
   if(r.last===null || r.interval<=0) return 0;
@@ -519,19 +527,29 @@ const LADDER = [
 ];
 function suggestNext(interval){ for(const r of LADDER) if(r.m>interval+1e-9) return r; return LADDER[LADDER.length-1]; }
 function bandNextStep(i,interval){ const st=BAND_STEPS[i]; for(let j=0;j<STEPS;j++) if(st[j]>interval+1e-9) return j; return STEPS-1; }
-// ladder rung (1-11) for each band+step, and the rung a last interval sits at (0 = new)
+// ladder rung (1-11) for each band+step; nearest rung for an arbitrary interval
 const LPOS = BAND_STEPS.map(st=>st.map(m=>LADDER.findIndex(r=>Math.abs(r.m-m)<1e-6)+1));
-function lastLadder(interval){ let L=0; for(let k=0;k<LADDER.length;k++) if(LADDER[k].m<=interval+1e-6) L=k+1; return L; }
-// Zone of rung p vs last rung L: ≤L-2 blue · L-1..L brighter · L+1..L+2 dashed · ≥L+3 grey.
-function zoneCol(p,L){ if(p<=L-2) return 'var(--zA)'; if(p<=L) return 'var(--zB)'; if(p<=L+2) return 'transparent'; return 'var(--line)'; }
-// Layered track background for band i: solid zones over a dashed layer over the grey base.
-function trackBg(i,L){
+function rungOf(m){ let best=1,bd=Infinity; LADDER.forEach((r,i)=>{ const d=Math.abs(r.m-m); if(d<bd){bd=d;best=i+1;} }); return best; }
+// Heatmap colour for a rung from its history: count → grey→blue→dark-blue,
+// tinted toward amber by the fraction of those reviews that were misses.
+function histColor(c, ms){
+  if(!c || c<=0) return 'transparent'; // unused rung → bare grey track shows
+  const t=Math.min(1,(c-1)/3);                 // 0 at 1 review → 1 at 4+
+  let r=Math.round(70+(20-70)*t), g=Math.round(150+(70-150)*t), b=Math.round(230+(150-230)*t); // light→dark blue
+  let a=0.40+0.50*t;
+  const mf=c>0?Math.min(1,ms/c):0;             // miss fraction → amber tint
+  r=Math.round(r+(235-r)*mf*0.85); g=Math.round(g+(180-g)*mf*0.85); b=Math.round(b+(20-b)*mf*0.85);
+  return `rgba(${r},${g},${b},${(a+mf*0.25).toFixed(2)})`;
+}
+// Track background for band i = per-rung history heatmap over the grey base.
+function trackBg(i,rec){
+  let hist=(rec&&rec.hist)||[], miss=(rec&&rec.miss)||[];
+  if((!rec||!rec.hist) && rec && rec.interval>0){ hist=Array(11).fill(0); hist[rungOf(rec.interval)-1]=1; miss=[]; } // backfill seeded cards
   const bnd=[0,12.5,37.5,62.5,87.5,100];
-  let solid='linear-gradient(90deg';
-  LPOS[i].forEach((p,j)=>{ solid+=`, ${zoneCol(p,L)} ${bnd[j]}% ${bnd[j+1]}%`; });
-  solid+=')';
-  const dash='repeating-linear-gradient(45deg, var(--sky400) 0 2px, rgba(0,0,0,0) 2px 5px)';
-  return `${solid}, ${dash}, var(--line)`;
+  let g='linear-gradient(90deg';
+  LPOS[i].forEach((p,j)=>{ g+=`, ${histColor(hist[p-1]||0, miss[p-1]||0)} ${bnd[j]}% ${bnd[j+1]}%`; });
+  g+=')';
+  return `${g}, var(--line)`;
 }
 function formatMinutes(m){
   if(m<1) return Math.round(m*60)+'s';
@@ -956,7 +974,7 @@ function render(){
       else { S.stepByBand=BANDS.map((b,i)=>bandNextStep(i,lastInt)); S.bandIndex=suggestNext(lastInt).b; }
       S.suggestedFor=cur.id;
     }
-    const L=lastLadder(lastInt); // last interval's rung (1-11), drives the track zones
+    const histRec=recordFor(cur.id); // drives the track answer-history heatmap
     const chosen=()=>BAND_STEPS[S.bandIndex][S.stepByBand[S.bandIndex]];
     const thumbLeft=(i)=>`calc((100% - 22px) * ${S.stepByBand[i]/(STEPS-1)} + 11px)`;
     const paintRow=(i)=>{ const lab=document.getElementById('kv'+i); if(lab){ lab.textContent=formatMinutes(BAND_STEPS[i][S.stepByBand[i]]); lab.style.left=thumbLeft(i); } };
@@ -964,7 +982,7 @@ function render(){
     const rows = BANDS.map((b,i)=>{
       const r=el('input',{type:'range',min:'0',max:String(STEPS-1),step:'1','aria-label':b.label+' interval',class:'knob'});
       r.value=String(S.stepByBand[i]);
-      r.style.background=trackBg(i,L); // zoned track: blue / brighter / dashed / grey vs last interval
+      r.style.background=trackBg(i,histRec); // answer-history heatmap: grey→blue→dark, amber where missed
       r.addEventListener('pointerdown',()=>{ if(S.bandIndex!==i) setActive(i); });
       r.addEventListener('input',e=>{
         S.stepByBand[i]=Number(e.target.value);
