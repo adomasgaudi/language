@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.25 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.26 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -192,6 +192,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.26',sp:0.5, note:'Track history is now a continuous ramp — colour shifts (blue→indigo, darker) on every commit, ~10 shades instead of 3'},
   {v:'0.1.25',sp:0.5, note:'Auto-due locks onto the current card — it no longer switches mid-review (live repaint / decay); only commit or skip advances'},
   {v:'0.1.24',sp:2,   note:'Slider track now shows your answer history per card: each interval rung colours grey→blue→dark by how often you chose it, tinted amber where you struggled (missed)'},
   {v:'0.1.23',sp:3,   note:'New multiple-choice "Finance formulas" deck (20 cards): same concepts as decks 1 & 2 but asked as term = which formula?, with shuffled options and explanations'},
@@ -531,16 +532,22 @@ function bandNextStep(i,interval){ const st=BAND_STEPS[i]; for(let j=0;j<STEPS;j
 // ladder rung (1-11) for each band+step; nearest rung for an arbitrary interval
 const LPOS = BAND_STEPS.map(st=>st.map(m=>LADDER.findIndex(r=>Math.abs(r.m-m)<1e-6)+1));
 function rungOf(m){ let best=1,bd=Infinity; LADDER.forEach((r,i)=>{ const d=Math.abs(r.m-m); if(d<bd){bd=d;best=i+1;} }); return best; }
-// Heatmap colour for a rung from its history: count → grey→blue→dark-blue,
-// tinted toward amber by the fraction of those reviews that were misses.
+function hslToRgb(h,s,l){
+  s/=100; l/=100;
+  const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l), f=n=>l-a*Math.max(-1,Math.min(k(n)-3,9-k(n),1));
+  return [Math.round(255*f(0)),Math.round(255*f(8)),Math.round(255*f(4))];
+}
+// Heatmap colour for a rung from its history. A CONTINUOUS ramp: every commit
+// shifts the hue blue→indigo and darkens it (≈10 distinct shades), so the colour
+// changes on each review. Misses tint it toward amber to flag struggle.
 function histColor(c, ms){
   if(!c || c<=0) return 'transparent'; // unused rung → bare grey track shows
-  const t=Math.min(1,(c-1)/3);                 // 0 at 1 review → 1 at 4+
-  let r=Math.round(70+(20-70)*t), g=Math.round(150+(70-150)*t), b=Math.round(230+(150-230)*t); // light→dark blue
-  let a=0.40+0.50*t;
-  const mf=c>0?Math.min(1,ms/c):0;             // miss fraction → amber tint
+  const n=Math.min(c,10);                       // saturate after ~10 reviews
+  let [r,g,b]=hslToRgb(205+n*4.2, 72, 60-n*3.7);// hue 209→247, lightness ~56%→23%
+  const a=Math.min(0.96, 0.42+n*0.055);
+  const mf=c>0?Math.min(1,ms/c):0;              // miss fraction → amber tint
   r=Math.round(r+(235-r)*mf*0.85); g=Math.round(g+(180-g)*mf*0.85); b=Math.round(b+(20-b)*mf*0.85);
-  return `rgba(${r},${g},${b},${(a+mf*0.25).toFixed(2)})`;
+  return `rgba(${r},${g},${b},${a.toFixed(2)})`;
 }
 // Track background for band i = per-rung history heatmap over the grey base.
 function trackBg(i,rec){
