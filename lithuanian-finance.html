@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.15 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.16 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -107,23 +107,23 @@
   .flexbadge.exact{background:var(--line);color:var(--t400)}
   .show{display:flex;align-items:center;justify-content:center;width:100%;min-height:64px;border:1px solid var(--line2);border-radius:10px;padding:8px 20px;font-size:15px;font-weight:600;color:var(--t300);background:transparent}
   .show:hover{background:var(--line)} .show:active{transform:scale(.99)}
-  /* three bare "slide-to-open" knobs — chosen time sits on the thumb, ~10px apart */
-  .sliders{display:flex;flex-direction:column;gap:10px;margin:2px 0 10px}
+  /* three bare "slide-to-open" knobs — chosen time sits on the thumb, tight stack */
+  .sliders{display:flex;flex-direction:column;gap:5px;margin:1px 0 5px}
   .srow{position:relative;opacity:.6;transition:opacity .2s ease}
   .srow.active{opacity:1}
-  .knobval{position:absolute;top:0;height:40px;width:34px;display:flex;align-items:center;justify-content:center;
+  .knobval{position:absolute;top:0;height:28px;width:24px;display:flex;align-items:center;justify-content:center;
     transform:translateX(-50%);pointer-events:none;font-size:10px;font-weight:700;color:#1a1a1f;font-variant-numeric:tabular-nums}
-  input.knob{-webkit-appearance:none;appearance:none;width:100%;height:40px;border-radius:9999px;margin:0;touch-action:none;cursor:grab;
+  input.knob{-webkit-appearance:none;appearance:none;width:100%;height:28px;border-radius:9999px;margin:0;touch-action:none;cursor:grab;
     background:var(--line);border:1px solid var(--line2);outline:none}
   .srow.active input.knob{background:linear-gradient(90deg,rgba(56,189,248,.42),rgba(56,189,248,.10));border-color:var(--sky500)}
   input.knob:active{cursor:grabbing}
-  input.knob::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:34px;height:34px;border-radius:9999px;
-    background:var(--knob);border:2px solid var(--knob-edge);box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  input.knob::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:9999px;
+    background:var(--knob);border:2px solid var(--knob-edge);box-shadow:0 2px 5px rgba(0,0,0,.4)}
   .srow.active input.knob::-webkit-slider-thumb{background:#fff;border-color:var(--sky400)}
-  input.knob::-moz-range-thumb{width:34px;height:34px;border:2px solid var(--knob-edge);border-radius:9999px;background:var(--knob);box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  input.knob::-moz-range-thumb{width:24px;height:24px;border:2px solid var(--knob-edge);border-radius:9999px;background:var(--knob);box-shadow:0 2px 5px rgba(0,0,0,.4)}
   .srow.active input.knob::-moz-range-thumb{background:#fff;border-color:var(--sky400)}
-  input.knob::-webkit-slider-runnable-track{height:40px;border-radius:9999px;background:transparent}
-  input.knob::-moz-range-track{height:40px;border-radius:9999px;background:transparent}
+  input.knob::-webkit-slider-runnable-track{height:28px;border-radius:9999px;background:transparent}
+  input.knob::-moz-range-track{height:28px;border-radius:9999px;background:transparent}
   .commit{background:var(--sky500);color:#fff;border-radius:10px;padding:13px;font-size:15px;font-weight:600;width:100%}
   .commit:hover{background:var(--sky400)} .commit:active{transform:scale(.98)}
   .maplabel{font-size:11px;color:var(--t500);margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -167,6 +167,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.16',sp:0.5, note:'Slimmer review knobs (28px track / 24px thumb) and tighter spacing between them'},
   {v:'0.1.15',sp:7,   note:'Synonyms + flexible/exact badge on vocab cards; Auto-due mode (per-shape thresholds); review "Both" toggle; settings ⚙ menu; header card; version top + floating history; numbers below shapes; LT-specific job terms kept in Lithuanian; embedded progress snapshot'},
   {v:'0.1.14',sp:4,   note:'3 personalised decks (teacher job, fitness clients, website clients — Vilnius, researched); numbered shapes to track cards across re-sorts'},
   {v:'0.1.13',sp:3,   note:'Intro deck-picker + 2nd deck (advanced rekvizitai finance, 30 cards); thin grey outline on shapes; legacy progress migrated'},
@@ -810,7 +811,7 @@ function render(){
      No labels, no ticks, no header. The last-touched knob is the choice. */
   if(cur){
     const chosen=()=>BAND_STEPS[S.bandIndex][S.stepByBand[S.bandIndex]];
-    const thumbLeft=(i)=>`calc((100% - 34px) * ${S.stepByBand[i]/(STEPS-1)} + 17px)`;
+    const thumbLeft=(i)=>`calc((100% - 24px) * ${S.stepByBand[i]/(STEPS-1)} + 12px)`;
     const paintRow=(i)=>{ const lab=document.getElementById('kv'+i); if(lab){ lab.textContent=formatMinutes(BAND_STEPS[i][S.stepByBand[i]]); lab.style.left=thumbLeft(i); } };
     const setActive=(i)=>{ S.bandIndex=i; document.querySelectorAll('.srow').forEach((row,j)=>row.classList.toggle('active',j===i)); };
     const rows = BANDS.map((b,i)=>{
