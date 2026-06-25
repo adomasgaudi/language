@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.8 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.9 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -150,6 +150,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.9', sp:0.5, note:'Round knob intervals to 20s/1m/5m/10m/30m · 10m/30m/4h/12h/48h · 12h/48h/5d/14d/30d'},
   {v:'0.1.8', sp:2,   note:'Compact one-view layout: halved margins, prev/next on sides, hide+delete atop card, crammed dots & knobs, collapsible key'},
   {v:'0.1.7', sp:1,   note:'Simplify map to 4 shapes: triangle/hexagon/circle, JWST 4-point star at 1mo+'},
   {v:'0.1.6', sp:4,   note:'3 log-step knobs · sort by due/longevity/topic · light theme · map above card · softer glow · new=outline · full-width Show'},
@@ -252,18 +253,18 @@ const BANDS = [
   {id:'mid',label:'hours',lo:10,hi:2880},
   {id:'long',label:'days',lo:1440,hi:43200},
 ];
-// Each knob snaps to 5 fixed, log-spaced intervals (no free choice) so reviews
-// land on predictable times instead of scattering randomly. 3 knobs × 5 = 15 stops.
+// Each knob snaps to 5 fixed, rounded intervals (no free choice) so reviews
+// land on tidy times instead of scattering. Values are in minutes. 3×5 = 15 stops.
 const STEPS=5;
-const BAND_STEPS = BANDS.map(b=>{
-  const lo=Math.log(b.lo), hi=Math.log(b.hi), out=[];
-  for(let i=0;i<STEPS;i++) out.push(Math.exp(lo+(hi-lo)*i/(STEPS-1)));
-  return out;
-});
+const BAND_STEPS = [
+  [1/3, 1, 5, 10, 30],               // 20s · 1m · 5m · 10m · 30m
+  [10, 30, 240, 720, 2880],          // 10m · 30m · 4h · 12h · 48h
+  [720, 2880, 7200, 20160, 43200],   // 12h · 48h · 5d · 14d · 30d
+];
 function formatMinutes(m){
   if(m<1) return Math.round(m*60)+'s';
   if(m<60) return Math.round(m)+'m';
-  if(m<1440){ const h=m/60; return (h<10?h.toFixed(h%1?1:0):Math.round(h))+'h'; }
+  if(m<=2880){ const h=m/60; return (h<10?h.toFixed(h%1?1:0):Math.round(h))+'h'; } // hours up to 48h
   const d=m/1440; return (d<10?d.toFixed(d%1?1:0):Math.round(d))+'d';
 }
 function dueLabel(m,t){
