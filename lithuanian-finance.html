@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.17 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.18 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -70,10 +70,10 @@
   .hist.pop{order:-1;max-width:300px;max-height:55vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.5)}
   .card,.box{border:1px solid var(--line);background:var(--panel);border-radius:14px}
   .card{padding:12px 14px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
-  /* prev/next flank the card */
-  .cardwrap{display:flex;align-items:stretch;gap:6px}
-  .cardcol{flex:1;min-width:0}
-  .side{flex:0 0 auto;width:36px;background:var(--line);color:var(--t300);border-radius:10px;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  /* card spans full width; swipe left/right to navigate */
+  .cardwrap{display:block}
+  .cardwrap .card{touch-action:pan-y}
+  .side{background:var(--line);color:var(--t300);display:flex;align-items:center;justify-content:center}
   .side:hover{background:var(--line2)} .side:active{transform:scale(.96)}
   .side.back{width:30px;height:30px;font-size:18px;border-radius:8px}
   /* deck-picker cards */
@@ -136,13 +136,16 @@
   .maplabel{font-size:11px;color:var(--t500);margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;gap:8px}
   .sortbtn{background:var(--line);color:var(--t300);border-radius:7px;padding:3px 8px;font-size:11px;font-weight:600;white-space:nowrap}
   .sortbtn:hover{filter:brightness(1.12)}
-  .map{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 7px;padding:4px 0}
+  .map{display:flex;flex-wrap:wrap;align-items:flex-start;gap:5px 6px;padding:4px 0}
   .dot{display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent}
-  .shapebox{position:relative;display:grid;place-items:center}
+  /* every shape gets the SAME fixed clickable box, so selecting never moves the layout */
+  .shapebox{position:relative;display:grid;place-items:center;width:26px;height:26px;border-radius:8px}
+  .shapebox.cur{background:color-mix(in srgb,var(--sky500) 14%,transparent)}
+  .dot:hover .shapebox{background:color-mix(in srgb,var(--sky500) 8%,transparent)}
   .dot .glyph{display:block}
   .dotnum{font-size:9px;line-height:1;font-weight:600;color:var(--t500);font-variant-numeric:tabular-nums}
   .dotnum.cur{color:var(--sky300);font-weight:700}
-  .dot .ring{position:absolute;width:25px;height:25px;border-radius:9999px;border:1.5px solid var(--sky300);box-sizing:border-box;pointer-events:none}
+  .dot .ring{position:absolute;inset:2px;border-radius:9999px;border:1.5px solid var(--sky300);box-sizing:border-box;pointer-events:none}
   footer{margin-top:auto;display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--t600);padding-top:4px}
   footer button{color:var(--t600);background:transparent}
   footer button:hover{color:var(--t400)}
@@ -174,6 +177,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.18',sp:1,   note:'Fixed-size clickable shape boxes (selecting no longer shifts the map); side prev/next replaced by swipe left/right on the card'},
   {v:'0.1.17',sp:1,   note:'Narrower sliders + right-hand column of Commit / Forgot / New buttons (all commit for now)'},
   {v:'0.1.16',sp:0.5, note:'Slimmer review knobs (28px track / 24px thumb) and tighter spacing between them'},
   {v:'0.1.15',sp:7,   note:'Synonyms + flexible/exact badge on vocab cards; Auto-due mode (per-shape thresholds); review "Both" toggle; settings ⚙ menu; header card; version top + floating history; numbers below shapes; LT-specific job terms kept in Lithuanian; embedded progress snapshot'},
@@ -770,9 +774,7 @@ function render(){
   /* memory map — above the card */
   app.append(buildMap(cur,t,vis));
 
-  /* card flanked by prev / next; hide & delete sit at the card top */
-  const prevBtn=el('button',{class:'side',title:'Previous',onclick:()=>go(-1)},'‹');
-  const nextBtn=el('button',{class:'side',title:'Next',onclick:()=>go(1)},'›');
+  /* card — swipe left/right to navigate (prev/next); hide & delete at the top */
   let cardEl;
   if(cur){
     const rec=recordFor(cur.id);
@@ -813,7 +815,14 @@ function render(){
   } else {
     cardEl=el('div',{class:'empty'}, S.mode==='auto' ? '🎉 All caught up — nothing decayed enough yet.' : '🎉 Nothing due. Switch to Free scroll to browse.');
   }
-  app.append(el('div',{class:'cardwrap'}, prevBtn, el('div',{class:'cardcol'}, cardEl), nextBtn));
+  // swipe left/right anywhere on the card = prev/next (replaces the side buttons)
+  let _sx=0,_sy=0;
+  cardEl.addEventListener('pointerdown',e=>{ _sx=e.clientX; _sy=e.clientY; });
+  cardEl.addEventListener('pointerup',e=>{
+    const dx=e.clientX-_sx, dy=e.clientY-_sy;
+    if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.4) go(dx<0?1:-1); // left = next, right = prev
+  });
+  app.append(el('div',{class:'cardwrap'}, cardEl));
 
   /* review control — three bare knobs; the chosen time rides on each thumb.
      No labels, no ticks, no header. The last-touched knob is the choice. */
@@ -862,7 +871,6 @@ function render(){
   const numOf={}; activeCards().forEach((c,i)=>numOf[c.id]=i+1);
   sorted.forEach(c=>{
     const rec=recordFor(c.id), s=dotStyle(rec,t), isCur=cur&&c.id===cur.id;
-    const size=Math.max(s.diameter, isCur?25:14); // tap target; fit the 25px ring when current
     // outer = thin grey rim (so shapes read apart); inner = the colour (or a
     // hole for new cards, leaving just the outline).
     const glyph=el('span',{class:'glyph'});
@@ -887,8 +895,8 @@ function render(){
       transition:'background-color .6s ease',
     });
     glyph.append(inner);
-    // shape sits in a fixed slot; the stable id number reads BELOW it, one muted colour
-    const shapeBox=el('span',{class:'shapebox',style:{width:size+'px',height:size+'px'}}, glyph, isCur?el('span',{class:'ring'}):null);
+    // shape sits in a FIXED-size box (ring fits inside it) so selecting never shifts layout
+    const shapeBox=el('span',{class:'shapebox'+(isCur?' cur':'')}, glyph, isCur?el('span',{class:'ring'}):null);
     const num=el('span',{class:'dotnum'+(isCur?' cur':'')}, String(numOf[c.id]||''));
     const btn=el('button',{class:'dot',title:'#'+(numOf[c.id]||'')+' · '+c.target+' · '+s.shape+' · '+(s.due?'due':statusAt(rec,t)),
       onclick:()=>{
