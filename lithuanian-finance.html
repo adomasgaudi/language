@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.7 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.8 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -40,46 +40,51 @@
     font:14px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Inter,Arial,sans-serif;
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:580px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding:20px 16px 40px;min-height:100%}
-  header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-  h1{font-size:18px;font-weight:700;color:var(--t50);margin:0}
-  .sub{font-size:12px;color:var(--t500);margin:2px 0 0}
-  .stat{text-align:right;font-size:12px;color:var(--t500);white-space:nowrap}
+  /* margins/gaps halved throughout so the whole UI fits one screen */
+  .wrap{max-width:580px;margin:0 auto;display:flex;flex-direction:column;gap:8px;padding:10px 8px 14px;min-height:100%}
+  header{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
+  h1{font-size:17px;font-weight:700;color:var(--t50);margin:0}
+  .sub{font-size:11px;color:var(--t500);margin:1px 0 0}
+  .stat{text-align:right;font-size:11px;color:var(--t500);white-space:nowrap}
   .stat .due{font-weight:600;color:var(--sky300)}
-  .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .row{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
   button{font-family:inherit;cursor:pointer;border:0;color:inherit}
-  .pill{background:var(--line);color:var(--t300);border-radius:8px;padding:5px 10px;font-size:12px}
+  .pill{background:var(--line);color:var(--t300);border-radius:7px;padding:4px 8px;font-size:12px}
   .pill.on{background:var(--sky500);color:#fff}
   .pill:hover{filter:brightness(1.12)}
-  .card,.box{border:1px solid var(--line);background:var(--panel);border-radius:16px}
-  .card{padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-  .meta{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--t500);margin-bottom:4px}
+  .card,.box{border:1px solid var(--line);background:var(--panel);border-radius:14px}
+  .card{padding:12px 14px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+  /* prev/next flank the card */
+  .cardwrap{display:flex;align-items:stretch;gap:6px}
+  .cardcol{flex:1;min-width:0}
+  .side{flex:0 0 auto;width:36px;background:var(--line);color:var(--t300);border-radius:10px;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .side:hover{background:var(--line2)} .side:active{transform:scale(.96)}
+  .meta{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px;color:var(--t500);margin-bottom:2px}
   .meta .k{text-transform:uppercase;letter-spacing:.04em}
-  .prompt{min-height:92px;padding:12px 0;text-align:center}
-  .term{font-size:30px;font-weight:600;line-height:1.2;color:var(--t50)}
-  .from{margin-top:6px;font-size:13px;color:var(--t500)}
+  .acts{display:flex;align-items:center;gap:2px}
+  .cardbtn{background:transparent;color:var(--t500);font-size:12px;padding:2px 6px;border-radius:6px}
+  .cardbtn:hover{background:var(--line);color:var(--t200)}
+  .cardbtn.del:hover{color:var(--rose)}
+  .prompt{min-height:64px;padding:6px 0;text-align:center}
+  .term{font-size:28px;font-weight:600;line-height:1.15;color:var(--t50)}
+  .from{margin-top:3px;font-size:12px;color:var(--t500)}
   .hidden-face{color:var(--t500)}
-  .hidden-face .eye{font-size:30px}
-  .audio{display:flex;justify-content:center;gap:8px;margin-top:4px}
-  .abtn{background:var(--line);color:var(--t200);border-radius:8px;padding:6px 12px;font-size:13px}
+  .hidden-face .eye{font-size:28px}
+  .audio{display:flex;justify-content:center;gap:6px;margin-top:2px}
+  .abtn{background:var(--line);color:var(--t200);border-radius:8px;padding:5px 12px;font-size:13px}
   .abtn:hover{background:var(--line2)}
-  .answer{margin-top:16px;border-top:1px solid var(--line);padding-top:16px;text-align:center}
+  .answer{margin-top:8px;border-top:1px solid var(--line);padding-top:8px;text-align:center}
   .natural{font-size:18px;color:var(--t100)}
-  .literal{font-size:13px;color:var(--t400);margin-top:6px}
-  .gloss{font-size:12px;color:var(--t500);margin-top:6px;font-style:italic}
-  .show{display:flex;align-items:center;justify-content:center;width:100%;min-height:96px;border:1px solid var(--line2);border-radius:10px;padding:8px 20px;font-size:15px;font-weight:600;color:var(--t300);background:transparent}
+  .literal{font-size:13px;color:var(--t400);margin-top:3px}
+  .gloss{font-size:12px;color:var(--t500);margin-top:3px;font-style:italic}
+  .show{display:flex;align-items:center;justify-content:center;width:100%;min-height:64px;border:1px solid var(--line2);border-radius:10px;padding:8px 20px;font-size:15px;font-weight:600;color:var(--t300);background:transparent}
   .show:hover{background:var(--line)} .show:active{transform:scale(.99)}
-  .nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .nav .navbtn{background:var(--line);color:var(--t200);border-radius:8px;padding:8px 16px;font-size:14px}
-  .nav .navbtn:hover{background:var(--line2)}
-  .nav .hide{background:transparent;color:var(--t500);font-size:12px;padding:8px 12px}
-  .nav .hide:hover{color:var(--rose)}
-  .slider .top{display:flex;align-items:center;justify-content:space-between;font-size:14px;margin-bottom:8px}
+  .slider .top{display:flex;align-items:center;justify-content:space-between;font-size:14px;margin-bottom:4px}
   .slider .val{font-weight:600;color:var(--sky300);font-variant-numeric:tabular-nums}
   .slider .val .due{color:var(--t500);font-weight:400}
-  /* three big "slide-to-open" knobs — one per band */
-  .sliders{display:flex;flex-direction:column;gap:14px;margin:6px 0 16px}
-  .srow{display:flex;flex-direction:column;gap:6px;opacity:.6;transition:opacity .2s ease}
+  /* three big "slide-to-open" knobs — one per band, crammed close */
+  .sliders{display:flex;flex-direction:column;gap:4px;margin:3px 0 8px}
+  .srow{display:flex;flex-direction:column;gap:1px;opacity:.6;transition:opacity .2s ease}
   .srow.active{opacity:1}
   .slabel{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;padding:0 4px}
   .sname{color:var(--t500)}
@@ -105,23 +110,25 @@
   .tick.on{color:var(--t300);font-weight:600}
   .commit{background:var(--sky500);color:#fff;border-radius:10px;padding:13px;font-size:15px;font-weight:600;width:100%}
   .commit:hover{background:var(--sky400)} .commit:active{transform:scale(.98)}
-  .maplabel{font-size:12px;color:var(--t500);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-  .sortbtn{background:var(--line);color:var(--t300);border-radius:7px;padding:4px 9px;font-size:11px;font-weight:600;white-space:nowrap}
+  .maplabel{font-size:11px;color:var(--t500);margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .sortbtn{background:var(--line);color:var(--t300);border-radius:7px;padding:3px 8px;font-size:11px;font-weight:600;white-space:nowrap}
   .sortbtn:hover{filter:brightness(1.12)}
-  .map{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 0}
+  .map{display:flex;flex-wrap:wrap;align-items:center;gap:3px;padding:2px 0}
   .dot{position:relative;display:grid;place-items:center;background:transparent}
   .dot .glyph{display:block}
   .dot .crack{position:absolute;pointer-events:none}
   .dot .here{position:absolute;bottom:-4px;width:4px;height:4px;border-radius:9999px;background:var(--sky300)}
   .dot .ring{position:absolute;width:25px;height:25px;border-radius:9999px;border:1.5px solid var(--sky300);box-sizing:border-box;pointer-events:none}
-  footer{margin-top:auto;display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--t600);padding-top:8px}
+  footer{margin-top:auto;display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--t600);padding-top:4px}
   footer button{color:var(--t600);background:transparent}
   footer button:hover{color:var(--t400)}
   .empty{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:40px;text-align:center;color:var(--t400)}
   textarea{width:100%;height:80px;resize:none;border-radius:6px;background:#0a0a0b;border:1px solid var(--line);color:var(--t200);padding:8px;font-size:12px;font-family:ui-monospace,monospace}
   .apply{margin-top:6px;background:var(--sky500);color:#fff;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600}
   .flash{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--t100);color:#18181b;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.4)}
-  .legend{font-size:11px;color:var(--t600);line-height:1.7}
+  .legtoggle{background:transparent;color:var(--t600);font-size:10px;padding:0}
+  .legtoggle:hover{color:var(--t400)}
+  .legend{font-size:10px;color:var(--t600);line-height:1.5;margin-top:3px}
   .legend b{color:var(--t400);font-weight:600}
   footer .ver{color:var(--t400);font-weight:600;font-variant-numeric:tabular-nums}
   .hist{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:10px 12px;font-size:11px}
@@ -143,6 +150,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.8', sp:2,   note:'Compact one-view layout: halved margins, prev/next on sides, hide+delete atop card, crammed dots & knobs, collapsible key'},
   {v:'0.1.7', sp:1,   note:'Simplify map to 4 shapes: triangle/hexagon/circle, JWST 4-point star at 1mo+'},
   {v:'0.1.6', sp:4,   note:'3 log-step knobs · sort by due/longevity/topic · light theme · map above card · softer glow · new=outline · full-width Show'},
   {v:'0.1.5', sp:0.5, note:'Sizes 10–15px; ring the current bubble with a 25px circle'},
@@ -357,7 +365,7 @@ function loadState(){
     if(raw){
       const o=JSON.parse(raw);
       return {
-        records:o.records||{}, deleted:o.deleted||[],
+        records:o.records||{}, deleted:o.deleted||[], purged:o.purged||[],
         // remembered UI choices
         freeScroll:!!o.freeScroll, hideTarget:!!o.hideTarget,
         bandIndex:Number.isInteger(o.bandIndex)?o.bandIndex:1,
@@ -366,12 +374,12 @@ function loadState(){
       };
     }
   }catch(e){}
-  return {records:{},deleted:[],freeScroll:false,hideTarget:false,bandIndex:1,sortMode:'due',theme:'dark'};
+  return {records:{},deleted:[],purged:[],freeScroll:false,hideTarget:false,bandIndex:1,sortMode:'due',theme:'dark'};
 }
 function saveState(){
   try{
     localStorage.setItem(KEY,JSON.stringify({
-      records:S.records, deleted:S.deleted,
+      records:S.records, deleted:S.deleted, purged:S.purged,
       freeScroll:S.freeScroll, hideTarget:S.hideTarget, bandIndex:S.bandIndex,
       sortMode:S.sortMode, theme:S.theme,
     }));
@@ -402,10 +410,11 @@ if('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged=()=>{};
 // Defaults first (transient view state), then overlay the remembered values so
 // persisted choices win.
 const S = Object.assign({
-  idx:0, revealed:false, stepByBand:[2,2,2], importOpen:false, importText:'', histOpen:false, flashMsg:null, flashTimer:null,
+  idx:0, revealed:false, stepByBand:[2,2,2], importOpen:false, importText:'', histOpen:false, legendOpen:false, flashMsg:null, flashTimer:null,
+  deleted:[], purged:[],
 }, loadState());
 
-function visibleCards(){ return CARDS.filter(c=>!S.deleted.includes(c.id)); }
+function visibleCards(){ return CARDS.filter(c=>!S.deleted.includes(c.id) && !S.purged.includes(c.id)); }
 function dueCards(t){ return visibleCards().filter(c=>isDue(recordFor(c.id),t)); }
 function pool(t){ return S.freeScroll ? visibleCards() : dueCards(t); }
 function current(t){ const p=pool(t); if(!p.length) return null; if(S.idx>=p.length) S.idx=0; if(S.idx<0) S.idx=p.length-1; return p[S.idx]; }
@@ -468,7 +477,7 @@ function render(){
     el('button',{class:'pill'+(S.theme==='light'?' on':''),onclick:()=>{S.theme=S.theme==='light'?'dark':'light';saveState();render();}}, S.theme==='light'?'☀ Light':'🌙 Dark'),
     el('button',{class:'pill',onclick:doExport},'Export'),
     el('button',{class:'pill',onclick:()=>{S.importOpen=!S.importOpen;render();}},'Import'),
-    el('button',{class:'pill',onclick:()=>{ if(confirm('Reset all progress?')){S.records={};S.deleted=[];S.idx=0;saveState();render();} }},'Reset'),
+    el('button',{class:'pill',onclick:()=>{ if(confirm('Reset all progress?')){S.records={};S.deleted=[];S.purged=[];S.idx=0;saveState();render();} }},'Reset'),
   ));
 
   if(S.importOpen){
@@ -481,16 +490,24 @@ function render(){
   /* memory map — above the card */
   app.append(buildMap(cur,t,vis));
 
-  /* card */
+  /* card flanked by prev / next; hide & delete sit at the card top */
+  const prevBtn=el('button',{class:'side',title:'Previous',onclick:()=>{S.idx--;S.revealed=false;render();}},'‹');
+  const nextBtn=el('button',{class:'side',title:'Next',onclick:()=>{S.idx++;S.revealed=false;render();}},'›');
+  let cardEl;
   if(cur){
     const rec=recordFor(cur.id);
     const metaRight = rec.reps>0
       ? formatMinutes(rec.interval)+' · '+new Date(rec.due).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})
       : 'new';
-    app.append(el('div',{class:'card'},
+    const hide=()=>{ if(!S.deleted.includes(cur.id))S.deleted.push(cur.id); S.idx=0; S.revealed=false; saveState(); render(); };
+    const del=()=>{ if(!S.purged.includes(cur.id))S.purged.push(cur.id); S.idx=0; S.revealed=false; saveState(); render(); };
+    cardEl=el('div',{class:'card'},
       el('div',{class:'meta'},
-        el('span',{class:'k'}, 'Term · '+cur.tier),
-        el('span',{style:{fontVariantNumeric:'tabular-nums'}}, metaRight),
+        el('span',{class:'k'}, cur.tier+' · '+metaRight),
+        el('div',{class:'acts'},
+          el('button',{class:'cardbtn',title:'Hide (restorable)',onclick:hide},'🙈 Hide'),
+          el('button',{class:'cardbtn del',title:'Delete (gone until reset)',onclick:del},'🗑 Delete'),
+        ),
       ),
       el('div',{class:'prompt'},
         S.hideTarget
@@ -510,17 +527,11 @@ function render(){
             )
           : el('button',{class:'show',onclick:()=>{S.revealed=true;render();}},'Show meaning'),
       ),
-    ));
+    );
   } else {
-    app.append(el('div',{class:'empty'}, '🎉 Nothing due right now. Turn on free scroll to browse.'));
+    cardEl=el('div',{class:'empty'}, '🎉 Nothing due. Turn on free scroll to browse.');
   }
-
-  /* nav */
-  app.append(el('div',{class:'nav'},
-    el('button',{class:'navbtn',onclick:()=>{S.idx--;S.revealed=false;render();}},'← Prev'),
-    cur ? el('button',{class:'hide',onclick:()=>{ if(!S.deleted.includes(cur.id))S.deleted.push(cur.id); S.idx=0; S.revealed=false; saveState(); render(); }},'Hide card') : null,
-    el('button',{class:'navbtn',onclick:()=>{S.idx++;S.revealed=false;render();}},'Next →'),
-  ));
+  app.append(el('div',{class:'cardwrap'}, prevBtn, el('div',{class:'cardcol'}, cardEl), nextBtn));
 
   /* review control — three big knobs, one per band; each snaps to 5 log steps.
      The last-touched knob is the active choice. */
@@ -567,7 +578,7 @@ function render(){
   const sorted=sortCards(vis,t);
   sorted.forEach(c=>{
     const rec=recordFor(c.id), s=dotStyle(rec,t), isCur=cur&&c.id===cur.id;
-    const size=Math.max(s.diameter, isCur?25:16); // tap target; fit the 25px ring when current
+    const size=Math.max(s.diameter, isCur?25:14); // tap target; fit the 25px ring when current
     const glyph=el('span',{class:'glyph'});
     Object.assign(glyph.style,{
       position:'relative',
@@ -608,12 +619,14 @@ function render(){
     map);
   }
 
-  /* legend + footer */
-  app.append(el('div',{class:'legend',html:
-    '<b>How to use:</b> read the Lithuanian term, guess the meaning, hit <b>Show meaning</b>, then pick when you want to see it again and <b>Commit</b>. '+
-    '<b>New cards</b> show as a hollow outline; once reviewed they fill and colour heats from blue (fresh) → white → orange → coal as the word fades. '+
-    'Shape shows longevity: △ &lt;30m · ⬡ &lt;2d · ○ &lt;1mo · ✦ 1mo+. Faded = due now. '+
-    'Each review knob snaps to 5 fixed log intervals so cards come due at tidy times.'}));
+  /* legend (collapsed by default to keep one-view) + footer */
+  app.append(el('div',null,
+    el('button',{class:'legtoggle',onclick:()=>{S.legendOpen=!S.legendOpen;render();}}, (S.legendOpen?'▾':'▸')+' key'),
+    S.legendOpen ? el('div',{class:'legend',html:
+      '<b>How to use:</b> read the term, guess, hit <b>Show meaning</b>, pick an interval, <b>Commit</b>. '+
+      '<b>New cards</b> are a hollow outline; reviewed ones fill and heat from blue (fresh) → orange → coal as they fade. '+
+      'Shape = longevity: △ &lt;30m · ⬡ &lt;2d · ○ &lt;1mo · ✦ 1mo+. Faded = due. Each knob snaps to 5 log intervals.'}) : null,
+  ));
 
   app.append(el('footer',null,
     el('span',null,
