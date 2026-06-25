@@ -205,23 +205,38 @@ function dueLabel(m,t){
     : due.toLocaleDateString([], {month:'short',day:'numeric'});
 }
 
-/* memory map (ported from app/src/engine/memorymap.ts) */
-const SIZE_BASE=3.2, SIZE_EXP=1/3, SIZE_MIN=5, SIZE_MAX=20;
-const CRYSTAL_AT=240, GLOW_AT=0.72;
+/* memory map.
+ *   COLOUR  = freshness (forgetting curve): bright blue just-reviewed -> white
+ *             -> orange -> coal as it fades. New words start bright blue.
+ *   SHAPE   = longevity / interval band: more corners = longer-term memory.
+ *             triangle <30m · square 30m–4h · pentagon 4h–2d · hexagon 2d–5d
+ *             · heptagon 5d–1mo · circle >1mo.
+ *   SIZE    = position within the band, 5px (just entered the band) -> 10px. */
+const SIZE_MIN=5, SIZE_MAX=10;
+const GLOW_AT=0.9; // only the freshest shapes carry a faint glow ("less shining")
 const HEAT=[[1,[77,166,255]],[0.8,[235,245,255]],[0.6,[255,214,92]],[0.4,[255,138,30]],[0.2,[229,57,53]],[0,[58,42,42]]];
-const CRYSTAL=[
-  {material:'silver',minMinutes:240,mult:1.0},
-  {material:'gold',minMinutes:1440,mult:1.25},
-  {material:'ruby',minMinutes:10080,mult:1.5},
-  {material:'diamond',minMinutes:43200,mult:1.7},
+
+// Longevity bands, smallest interval first. sides:0 => circle.
+const SHAPE_BANDS=[
+  {sides:3, lo:0,     hi:30},     // triangle  · up to 30 min
+  {sides:4, lo:30,    hi:240},    // square    · 30 min – 4 h
+  {sides:5, lo:240,   hi:2880},   // pentagon  · 4 h – 2 d
+  {sides:6, lo:2880,  hi:7200},   // hexagon   · 2 d – 5 d
+  {sides:7, lo:7200,  hi:43200},  // heptagon  · 5 d – 1 mo
+  {sides:0, lo:43200, hi:Infinity}, // circle  · 1 mo +
 ];
-const MATERIAL_BG={
-  silver:'linear-gradient(145deg,#e8eef5,#9aa6b5)',
-  gold:'linear-gradient(145deg,#ffe79a,#d4a017)',
-  ruby:'linear-gradient(145deg,#ff7a8a,#b3122b)',
-  diamond:'linear-gradient(145deg,#ffffff,#bfe9ff)',
-};
-function diameter(m){ return clamp(SIZE_BASE*Math.pow(Math.max(0,m),SIZE_EXP),SIZE_MIN,SIZE_MAX); }
+function bandFor(m){
+  for(const b of SHAPE_BANDS) if(m<b.hi) return b;
+  return SHAPE_BANDS[SHAPE_BANDS.length-1];
+}
+// 5px at the band's low edge -> 10px at its high edge (cube-root spaced).
+function bandSize(b,m){
+  const L=b.lo<=0?0.5:b.lo;
+  const H=(b.hi===Infinity)?L*64:b.hi;
+  const span=cbrt(H)-cbrt(L);
+  const t=span<=0?1:clamp((cbrt(Math.max(m,L))-cbrt(L))/span,0,1);
+  return SIZE_MIN+(SIZE_MAX-SIZE_MIN)*t;
+}
 function heatColor(f){
   const x=clamp(f,0,1);
   for(let i=0;i<HEAT.length-1;i++){
@@ -234,21 +249,25 @@ function heatColor(f){
   }
   const last=HEAT[HEAT.length-1][1]; return `rgb(${last[0]}, ${last[1]}, ${last[2]})`;
 }
-function crystalFor(m){
-  if(m<CRYSTAL_AT) return null;
-  let chosen=CRYSTAL[0];
-  for(const tier of CRYSTAL) if(m>=tier.minMinutes) chosen=tier;
-  return {material:chosen.material,mult:chosen.mult};
+// CSS clip-path for a regular N-gon (point up); '' => leave as a circle.
+function polyClip(sides){
+  if(sides<3) return '';
+  const pts=[];
+  for(let i=0;i<sides;i++){
+    const a=-Math.PI/2 + i*2*Math.PI/sides;
+    pts.push((50+50*Math.cos(a)).toFixed(2)+'% '+(50+50*Math.sin(a)).toFixed(2)+'%');
+  }
+  return 'polygon('+pts.join(', ')+')';
 }
 function dotStyle(rec,t){
-  const f=freshness(rec,t), due=rec.status!=='new' && t>=rec.due;
-  const crystal=crystalFor(rec.interval), base=diameter(rec.interval);
-  // Hard cap: no dot/crystal renders larger than 20px, crystal multiplier included.
-  const dia=Math.min(SIZE_MAX, crystal?base*crystal.mult:base);
+  const isNew=rec.status==='new';
+  const f=isNew?1:freshness(rec,t);          // new words start bright blue
+  const due=!isNew && t>=rec.due;
+  const b=bandFor(rec.interval);
   return {
-    kind:crystal?'crystal':'dot', material:crystal?crystal.material:null,
-    diameter:dia, color:heatColor(f),
-    due, glow:!due && f>=GLOW_AT, cracked:!!crystal && due,
+    sides:b.sides, clip:polyClip(b.sides),
+    diameter:bandSize(b,rec.interval), color:heatColor(f),
+    due, glow:f>=GLOW_AT,
   };
 }
 
@@ -422,40 +441,35 @@ function render(){
 
   /* memory map */
   const map=el('div',{class:'map'});
+  const SHAPE_NAME={3:'triangle',4:'square',5:'pentagon',6:'hexagon',7:'heptagon',0:'circle'};
   vis.forEach(c=>{
-    const rec=recordFor(c.id), s=dotStyle(rec,t), isCur=cur&&c.id===cur.id, isCry=s.kind==='crystal';
-    const size=Math.max(s.diameter,16);
+    const rec=recordFor(c.id), s=dotStyle(rec,t), isCur=cur&&c.id===cur.id;
+    const size=Math.max(s.diameter,16); // tap target stays comfortable
     const glyph=el('span',{class:'glyph'});
     Object.assign(glyph.style,{
       width:s.diameter+'px', height:s.diameter+'px', display:'block',
-      borderRadius:isCry?'4px':'9999px',
-      transform:(isCry?'rotate(45deg) ':'')+(isCur?'scale(1.25)':'scale(1)'),
-      transition:'background-color .6s ease, box-shadow .6s ease, transform .2s ease',
+      background:s.color,
+      clipPath:s.clip||'none', WebkitClipPath:s.clip||'none',
+      borderRadius:s.sides<3?'9999px':'1px',
+      // gentle glow only when freshest; clip-path means glow rides as a soft drop-shadow
+      filter:s.glow?`drop-shadow(0 0 2px ${s.color})`:'none',
+      opacity:s.due?0.45:1, // faded when due, otherwise full
+      transform:isCur?'scale(1.3)':'scale(1)',
+      transition:'background-color .6s ease, filter .6s ease, opacity .6s ease, transform .2s ease',
     });
-    if(s.due){ Object.assign(glyph.style,{background:'transparent',border:'1.5px solid rgba(0,0,0,.85)',outline:'1px solid rgba(255,255,255,.15)'}); }
-    else if(isCry){ Object.assign(glyph.style,{background:MATERIAL_BG[s.material],boxShadow:s.glow?`0 0 10px 2px ${s.color}`:'none'}); }
-    else { Object.assign(glyph.style,{background:s.color,boxShadow:s.glow?`0 0 8px 2px ${s.color}`:'none'}); }
-    const btn=el('button',{class:'dot',title:c.target+' · '+(s.due?'due':statusAt(rec,t)),style:{width:size+'px',height:size+'px'},
+    const btn=el('button',{class:'dot',title:c.target+' · '+SHAPE_NAME[s.sides]+' · '+(s.due?'due':statusAt(rec,t)),style:{width:size+'px',height:size+'px'},
       onclick:()=>{ const p=pool(t); const i=p.findIndex(x=>x.id===c.id); if(i>=0){S.idx=i; S.revealed=false; render();} else flash('Hidden — in free scroll only'); }},
       glyph);
-    if(s.cracked){
-      const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-      svg.setAttribute('viewBox','0 0 20 20'); svg.setAttribute('class','crack');
-      svg.style.width=s.diameter+'px'; svg.style.height=s.diameter+'px';
-      const p=document.createElementNS('http://www.w3.org/2000/svg','path');
-      p.setAttribute('d','M10 0 L8 7 L12 9 L7 20 M8 7 L2 6 M12 9 L19 11');
-      p.setAttribute('stroke','rgba(0,0,0,0.7)'); p.setAttribute('stroke-width','1'); p.setAttribute('fill','none');
-      svg.append(p); btn.append(svg);
-    }
     if(isCur) btn.append(el('span',{class:'here'}));
     map.append(btn);
   });
-  app.append(el('div',null, el('div',{class:'maplabel'},'Memory map — colour = freshness, size = interval, crystals = long-term'), map));
+  app.append(el('div',null, el('div',{class:'maplabel'},'Memory map — colour = freshness · shape = how long you’ve held it'), map));
 
   /* legend + footer */
   app.append(el('div',{class:'legend',html:
     '<b>How to use:</b> read the Lithuanian term, guess the meaning, hit <b>Show meaning</b>, then pick when you want to see it again and <b>Commit</b>. '+
-    'Dots heat from blue (just learned) to coal (fading); pass 4h and they turn to silver → gold → ruby → diamond crystals. A black outline = due now.'}));
+    'Colour heats from blue (just reviewed) → white → orange → coal as a word fades. Shape shows longevity: '+
+    '△ &lt;30m · ◻ 30m–4h · ⬠ 4h–2d · ⬡ 2d–5d · heptagon 5d–1mo · ○ 1mo+. Faded = due now.'}));
 
   app.append(el('footer',null,
     el('span',null,'Tartaglia engine · LT finance deck'),
