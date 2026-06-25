@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.5 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.6 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -23,7 +23,15 @@
     --t50:#fafafa; --t100:#f4f4f5; --t200:#e4e4e7; --t300:#d4d4d8;
     --t400:#a1a1aa; --t500:#71717a; --t600:#52525b;
     --sky:#38bdf8; --sky300:#7dd3fc; --sky400:#38bdf8; --sky500:#0ea5e9;
-    --rose:#fb7185;
+    --rose:#fb7185; --outline:#8b8b93; --knob:#52606e; --knob-edge:#6b7785;
+  }
+  body.light{
+    --bg:#f6f7f9; --panel:rgba(255,255,255,.85); --panel-solid:#ffffff;
+    --line:#e2e4e9; --line2:#cdd1d8;
+    --t50:#0b0b0d; --t100:#1a1a1f; --t200:#27272a; --t300:#3f3f46;
+    --t400:#52525b; --t500:#71717a; --t600:#a1a1aa;
+    --sky:#0ea5e9; --sky300:#0284c7; --sky400:#0ea5e9; --sky500:#0ea5e9;
+    --rose:#e11d48; --outline:#9aa0ab; --knob:#cbd2da; --knob-edge:#aeb6c0;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%}
@@ -59,8 +67,8 @@
   .natural{font-size:18px;color:var(--t100)}
   .literal{font-size:13px;color:var(--t400);margin-top:6px}
   .gloss{font-size:12px;color:var(--t500);margin-top:6px;font-style:italic}
-  .show{display:block;margin:0 auto;border:1px solid var(--line2);border-radius:8px;padding:8px 20px;font-size:13px;font-weight:500;color:var(--t300);background:transparent}
-  .show:hover{background:var(--line)}
+  .show{display:flex;align-items:center;justify-content:center;width:100%;min-height:96px;border:1px solid var(--line2);border-radius:10px;padding:8px 20px;font-size:15px;font-weight:600;color:var(--t300);background:transparent}
+  .show:hover{background:var(--line)} .show:active{transform:scale(.99)}
   .nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .nav .navbtn{background:var(--line);color:var(--t200);border-radius:8px;padding:8px 16px;font-size:14px}
   .nav .navbtn:hover{background:var(--line2)}
@@ -69,14 +77,37 @@
   .slider .top{display:flex;align-items:center;justify-content:space-between;font-size:14px;margin-bottom:8px}
   .slider .val{font-weight:600;color:var(--sky300);font-variant-numeric:tabular-nums}
   .slider .val .due{color:var(--t500);font-weight:400}
-  input[type=range]{width:100%;accent-color:var(--sky400);touch-action:none}
-  .bands{display:flex;gap:4px;background:var(--line);padding:4px;border-radius:8px}
-  .bands button{border-radius:6px;padding:5px 10px;font-size:12px;font-weight:500;color:var(--t400);background:transparent}
-  .bands button.on{background:var(--sky500);color:#fff}
-  .commit{margin-left:auto;background:var(--sky500);color:#fff;border-radius:8px;padding:9px 20px;font-size:14px;font-weight:600}
-  .commit:hover{background:var(--sky400)} .commit:active{transform:scale(.96)}
-  .controls{display:flex;align-items:center;gap:8px;margin-top:12px}
-  .maplabel{font-size:12px;color:var(--t500);margin-bottom:4px}
+  /* three big "slide-to-open" knobs — one per band */
+  .sliders{display:flex;flex-direction:column;gap:14px;margin:6px 0 16px}
+  .srow{display:flex;flex-direction:column;gap:6px;opacity:.6;transition:opacity .2s ease}
+  .srow.active{opacity:1}
+  .slabel{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;padding:0 4px}
+  .sname{color:var(--t500)}
+  .srow.active .sname{color:var(--sky300);font-weight:600}
+  .schip{font-variant-numeric:tabular-nums;color:var(--t400);font-weight:600}
+  .srow.active .schip{color:var(--sky300)}
+  input.knob{-webkit-appearance:none;appearance:none;width:100%;height:40px;border-radius:9999px;margin:0;touch-action:none;cursor:grab;
+    background:var(--line);border:1px solid var(--line2);outline:none}
+  .srow.active input.knob{background:linear-gradient(90deg,rgba(56,189,248,.42),rgba(56,189,248,.10));border-color:var(--sky500)}
+  input.knob:active{cursor:grabbing}
+  input.knob::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:34px;height:34px;border-radius:9999px;
+    background:var(--knob);border:2px solid var(--knob-edge);box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  .srow.active input.knob::-webkit-slider-thumb{background:#fff;border-color:var(--sky400)}
+  input.knob::-moz-range-thumb{width:34px;height:34px;border:2px solid var(--knob-edge);border-radius:9999px;background:var(--knob);box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  .srow.active input.knob::-moz-range-thumb{background:#fff;border-color:var(--sky400)}
+  input.knob::-webkit-slider-runnable-track{height:40px;border-radius:9999px;background:transparent}
+  input.knob::-moz-range-track{height:40px;border-radius:9999px;background:transparent}
+  /* 5 log-interval tick labels under each knob */
+  .ticks{display:flex;justify-content:space-between;padding:0 4px;font-size:10px;color:var(--t600);font-variant-numeric:tabular-nums}
+  .tick{flex:1;text-align:center}
+  .tick:first-child{text-align:left} .tick:last-child{text-align:right}
+  .srow.active .tick.on{color:var(--sky300);font-weight:700}
+  .tick.on{color:var(--t300);font-weight:600}
+  .commit{background:var(--sky500);color:#fff;border-radius:10px;padding:13px;font-size:15px;font-weight:600;width:100%}
+  .commit:hover{background:var(--sky400)} .commit:active{transform:scale(.98)}
+  .maplabel{font-size:12px;color:var(--t500);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .sortbtn{background:var(--line);color:var(--t300);border-radius:7px;padding:4px 9px;font-size:11px;font-weight:600;white-space:nowrap}
+  .sortbtn:hover{filter:brightness(1.12)}
   .map{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 0}
   .dot{position:relative;display:grid;place-items:center;background:transparent}
   .dot .glyph{display:block}
@@ -112,6 +143,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.6', sp:4,   note:'3 log-step knobs · sort by due/longevity/topic · light theme · map above card · softer glow · new=outline · full-width Show'},
   {v:'0.1.5', sp:0.5, note:'Sizes 10–15px; ring the current bubble with a 25px circle'},
   {v:'0.1.4', sp:1,   note:'Version badge + 📋 SP history log'},
   {v:'0.1.3', sp:1.5, note:'Remember UI choices in cache across reloads/redeploys'},
@@ -207,15 +239,18 @@ function freshness(r,t){
 }
 
 const BANDS = [
-  {id:'short',label:'30s–30m',lo:0.5,hi:30},
-  {id:'mid',label:'10m–2d',lo:10,hi:2880},
-  {id:'long',label:'1d–30d',lo:1440,hi:43200},
+  {id:'short',label:'minutes',lo:0.5,hi:30},
+  {id:'mid',label:'hours',lo:10,hi:2880},
+  {id:'long',label:'days',lo:1440,hi:43200},
 ];
-function minutesFromPos(band,pos){
-  const p=clamp(pos,0,1);
-  const root=cbrt(band.lo)+(cbrt(band.hi)-cbrt(band.lo))*p;
-  return root**3;
-}
+// Each knob snaps to 5 fixed, log-spaced intervals (no free choice) so reviews
+// land on predictable times instead of scattering randomly. 3 knobs × 5 = 15 stops.
+const STEPS=5;
+const BAND_STEPS = BANDS.map(b=>{
+  const lo=Math.log(b.lo), hi=Math.log(b.hi), out=[];
+  for(let i=0;i<STEPS;i++) out.push(Math.exp(lo+(hi-lo)*i/(STEPS-1)));
+  return out;
+});
 function formatMinutes(m){
   if(m<1) return Math.round(m*60)+'s';
   if(m<60) return Math.round(m)+'m';
@@ -237,7 +272,7 @@ function dueLabel(m,t){
  *             · heptagon 5d–1mo · circle >1mo.
  *   SIZE    = position within the band, 5px (just entered the band) -> 10px. */
 const SIZE_MIN=10, SIZE_MAX=15;
-const GLOW_AT=0.9; // only the freshest shapes carry a faint glow ("less shining")
+const GLOW_AT=0.78; // freshest shapes carry a soft glow — some shine, not the old halo
 const HEAT=[[1,[77,166,255]],[0.8,[235,245,255]],[0.6,[255,214,92]],[0.4,[255,138,30]],[0.2,[229,57,53]],[0,[58,42,42]]];
 
 // Longevity bands, smallest interval first. sides:0 => circle.
@@ -285,13 +320,14 @@ function polyClip(sides){
 }
 function dotStyle(rec,t){
   const isNew=rec.status==='new';
-  const f=isNew?1:freshness(rec,t);          // new words start bright blue
+  const f=freshness(rec,t);
   const due=!isNew && t>=rec.due;
   const b=bandFor(rec.interval);
   return {
     sides:b.sides, clip:polyClip(b.sides),
     diameter:bandSize(b,rec.interval), color:heatColor(f),
-    due, glow:f>=GLOW_AT,
+    isNew,                       // new = hollow outline, no fill
+    due, glow:!isNew && f>=GLOW_AT,
   };
 }
 
@@ -312,16 +348,19 @@ function loadState(){
         // remembered UI choices
         freeScroll:!!o.freeScroll, hideTarget:!!o.hideTarget,
         bandIndex:Number.isInteger(o.bandIndex)?o.bandIndex:1,
+        sortMode:['due','longevity','topic'].includes(o.sortMode)?o.sortMode:'due',
+        theme:o.theme==='light'?'light':'dark',
       };
     }
   }catch(e){}
-  return {records:{},deleted:[],freeScroll:false,hideTarget:false,bandIndex:1};
+  return {records:{},deleted:[],freeScroll:false,hideTarget:false,bandIndex:1,sortMode:'due',theme:'dark'};
 }
 function saveState(){
   try{
     localStorage.setItem(KEY,JSON.stringify({
       records:S.records, deleted:S.deleted,
       freeScroll:S.freeScroll, hideTarget:S.hideTarget, bandIndex:S.bandIndex,
+      sortMode:S.sortMode, theme:S.theme,
     }));
   }catch(e){}
 }
@@ -350,13 +389,24 @@ if('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged=()=>{};
 // Defaults first (transient view state), then overlay the remembered values so
 // persisted choices win.
 const S = Object.assign({
-  idx:0, revealed:false, pos:0.4, importOpen:false, importText:'', histOpen:false, flashMsg:null, flashTimer:null,
+  idx:0, revealed:false, stepByBand:[2,2,2], importOpen:false, importText:'', histOpen:false, flashMsg:null, flashTimer:null,
 }, loadState());
 
 function visibleCards(){ return CARDS.filter(c=>!S.deleted.includes(c.id)); }
 function dueCards(t){ return visibleCards().filter(c=>isDue(recordFor(c.id),t)); }
 function pool(t){ return S.freeScroll ? visibleCards() : dueCards(t); }
 function current(t){ const p=pool(t); if(!p.length) return null; if(S.idx>=p.length) S.idx=0; if(S.idx<0) S.idx=p.length-1; return p[S.idx]; }
+
+// Order for the memory map. due: soonest-due first (new cards count as due now);
+// longevity: shortest interval first; topic: original unit/deck order.
+function sortCards(cards,t){
+  const arr=cards.slice();
+  if(S.sortMode==='due') arr.sort((a,b)=>dueKey(recordFor(a.id),t)-dueKey(recordFor(b.id),t));
+  else if(S.sortMode==='longevity') arr.sort((a,b)=>recordFor(a.id).interval-recordFor(b.id).interval);
+  // 'topic' keeps CARDS' natural unit order
+  return arr;
+}
+function dueKey(rec,t){ return rec.status==='new' ? t : rec.due; }
 
 function flash(msg){
   S.flashMsg=msg; render();
@@ -379,6 +429,7 @@ function el(tag,props,...kids){
 
 function render(){
   const t=now();
+  document.body.className = S.theme==='light' ? 'light' : '';
   const app=document.getElementById('app');
   app.innerHTML='';
   const cur=current(t);
@@ -401,6 +452,7 @@ function render(){
   app.append(el('div',{class:'row'},
     el('button',{class:'pill'+(S.freeScroll?' on':''),onclick:()=>{S.freeScroll=!S.freeScroll;S.idx=0;saveState();render();}}, S.freeScroll?'Free scroll: on':'Free scroll: off'),
     el('button',{class:'pill'+(S.hideTarget?' on':''),onclick:()=>{S.hideTarget=!S.hideTarget;saveState();render();}}, S.hideTarget?'Audio: hidden':'Audio: shown'),
+    el('button',{class:'pill'+(S.theme==='light'?' on':''),onclick:()=>{S.theme=S.theme==='light'?'dark':'light';saveState();render();}}, S.theme==='light'?'☀ Light':'🌙 Dark'),
     el('button',{class:'pill',onclick:doExport},'Export'),
     el('button',{class:'pill',onclick:()=>{S.importOpen=!S.importOpen;render();}},'Import'),
     el('button',{class:'pill',onclick:()=>{ if(confirm('Reset all progress?')){S.records={};S.deleted=[];S.idx=0;saveState();render();} }},'Reset'),
@@ -412,6 +464,9 @@ function render(){
     app.append(el('div',{class:'box',style:{padding:'8px'}}, ta,
       el('button',{class:'apply',onclick:doImport},'Apply')));
   }
+
+  /* memory map — above the card */
+  app.append(buildMap(cur,t,vis));
 
   /* card */
   if(cur){
@@ -454,63 +509,99 @@ function render(){
     el('button',{class:'navbtn',onclick:()=>{S.idx++;S.revealed=false;render();}},'Next →'),
   ));
 
-  /* slider */
+  /* review control — three big knobs, one per band; each snaps to 5 log steps.
+     The last-touched knob is the active choice. */
   if(cur){
-    const band=BANDS[S.bandIndex];
-    const minutes=minutesFromPos(band,S.pos);
+    const chosen=()=>BAND_STEPS[S.bandIndex][S.stepByBand[S.bandIndex]];
+    // switch active band & repaint tick highlight without a full re-render (keeps a drag alive)
+    const setActive=(i)=>{ S.bandIndex=i; document.querySelectorAll('.srow').forEach((row,j)=>row.classList.toggle('active',j===i)); paintRow(i); refreshHead(); };
+    const paintRow=(i)=>{ document.querySelectorAll('#ticks'+i+' .tick').forEach((tk,j)=>tk.classList.toggle('on',j===S.stepByBand[i])); };
+    const refreshHead=()=>{ const mm=chosen(); const v=document.querySelector('.slider .val'); if(v) v.innerHTML=formatMinutes(mm)+' <span class="due">· '+dueLabel(mm,now())+'</span>'; };
+    const rows = BANDS.map((b,i)=>{
+      const r=el('input',{type:'range',min:'0',max:String(STEPS-1),step:'1','aria-label':b.label+' interval',class:'knob'});
+      r.value=String(S.stepByBand[i]);
+      r.addEventListener('pointerdown',()=>{ if(S.bandIndex!==i) setActive(i); });
+      r.addEventListener('input',e=>{
+        S.stepByBand[i]=Number(e.target.value);
+        if(S.bandIndex!==i) setActive(i); else { paintRow(i); refreshHead(); }
+      });
+      r.addEventListener('change',()=>saveState());
+      const ticks=el('div',{class:'ticks',id:'ticks'+i},
+        BAND_STEPS[i].map((m,j)=>el('span',{class:'tick'+(j===S.stepByBand[i]?' on':'')}, formatMinutes(m))));
+      return el('div',{class:'srow'+(i===S.bandIndex?' active':'')},
+        el('div',{class:'slabel'}, el('span',{class:'sname'}, b.label)),
+        r, ticks,
+      );
+    });
+    const mNow=chosen();
     app.append(el('div',{class:'card slider'},
       el('div',{class:'top'},
         el('span',{style:{color:'var(--t400)'}},'Next review in'),
-        el('span',{class:'val'}, formatMinutes(minutes)+' ', el('span',{class:'due'}, '· '+dueLabel(minutes,t))),
+        el('span',{class:'val'}, formatMinutes(mNow)+' ', el('span',{class:'due'}, '· '+dueLabel(mNow,t))),
       ),
-      (()=>{ const r=el('input',{type:'range',min:'0',max:'1000','aria-label':'Review interval'}); r.value=Math.round(S.pos*1000);
-        r.addEventListener('input',e=>{S.pos=Number(e.target.value)/1000;
-          // update label live without full rerender
-          const v=document.querySelector('.slider .val'); const mm=minutesFromPos(BANDS[S.bandIndex],S.pos);
-          if(v) v.innerHTML=formatMinutes(mm)+' <span class="due">· '+dueLabel(mm,now())+'</span>';
-        }); return r; })(),
-      el('div',{class:'controls'},
-        el('div',{class:'bands'}, BANDS.map((b,i)=>el('button',{class:i===S.bandIndex?'on':'',onclick:()=>{S.bandIndex=i;saveState();render();}}, b.label))),
-        el('button',{class:'commit',onclick:()=>{
-          const mm=minutesFromPos(BANDS[S.bandIndex],S.pos);
-          S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now());
-          saveState(); S.revealed=false; S.pos=0.4;
-          flash('Scheduled in '+formatMinutes(mm));
-        }},'Commit ↵'),
-      ),
+      el('div',{class:'sliders'}, rows),
+      el('button',{class:'commit',onclick:()=>{
+        const mm=chosen();
+        S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now());
+        saveState(); S.revealed=false; S.stepByBand=[2,2,2];
+        flash('Scheduled in '+formatMinutes(mm));
+      }},'Commit ↵'),
     ));
   }
 
-  /* memory map */
+  function buildMap(cur,t,vis){
   const map=el('div',{class:'map'});
   const SHAPE_NAME={3:'triangle',4:'square',5:'pentagon',6:'hexagon',7:'heptagon',0:'circle'};
-  vis.forEach(c=>{
+  const sorted=sortCards(vis,t);
+  sorted.forEach(c=>{
     const rec=recordFor(c.id), s=dotStyle(rec,t), isCur=cur&&c.id===cur.id;
     const size=Math.max(s.diameter, isCur?25:16); // tap target; fit the 25px ring when current
     const glyph=el('span',{class:'glyph'});
     Object.assign(glyph.style,{
+      position:'relative',
       width:s.diameter+'px', height:s.diameter+'px', display:'block',
-      background:s.color,
+      // new cards: hollow outline (no fill); others: heat-colour fill
+      background:s.isNew?'var(--outline)':s.color,
       clipPath:s.clip||'none', WebkitClipPath:s.clip||'none',
       borderRadius:s.sides<3?'9999px':'1px',
-      // gentle glow only when freshest; clip-path means glow rides as a soft drop-shadow
-      filter:s.glow?`drop-shadow(0 0 2px ${s.color})`:'none',
+      // a little shine back: soft drop-shadow when fresh (less than the old halo)
+      filter:s.glow?`drop-shadow(0 0 4px ${s.color})`:'none',
       opacity:s.due?0.45:1, // faded when due, otherwise full
       transition:'background-color .6s ease, filter .6s ease, opacity .6s ease, transform .2s ease',
     });
+    if(s.isNew){
+      // punch a same-shape hole so the new card reads as an outline only
+      const hole=el('span');
+      Object.assign(hole.style,{
+        position:'absolute', left:'50%', top:'50%', transform:'translate(-50%,-50%)',
+        width:Math.max(s.diameter-3,2)+'px', height:Math.max(s.diameter-3,2)+'px',
+        background:'var(--bg)', clipPath:s.clip||'none', WebkitClipPath:s.clip||'none',
+        borderRadius:s.sides<3?'9999px':'1px',
+      });
+      glyph.append(hole);
+    }
     const btn=el('button',{class:'dot',title:c.target+' · '+SHAPE_NAME[s.sides]+' · '+(s.due?'due':statusAt(rec,t)),style:{width:size+'px',height:size+'px'},
       onclick:()=>{ const p=pool(t); const i=p.findIndex(x=>x.id===c.id); if(i>=0){S.idx=i; S.revealed=false; render();} else flash('Hidden — in free scroll only'); }},
       glyph);
     if(isCur) btn.append(el('span',{class:'ring'})); // 25px circle marks the card on screen
     map.append(btn);
   });
-  app.append(el('div',null, el('div',{class:'maplabel'},'Memory map — colour = freshness · shape = how long you’ve held it'), map));
+  const SORT_LABEL={due:'due date',longevity:'longevity',topic:'topic'};
+  const SORT_NEXT={due:'longevity',longevity:'topic',topic:'due'};
+  return el('div',null,
+    el('div',{class:'maplabel'},
+      el('span',null,'Memory map — colour = freshness · shape = longevity'),
+      el('button',{class:'sortbtn',onclick:()=>{S.sortMode=SORT_NEXT[S.sortMode];saveState();render();}}, 'Sort: '+SORT_LABEL[S.sortMode]),
+    ),
+    map);
+  }
 
   /* legend + footer */
   app.append(el('div',{class:'legend',html:
     '<b>How to use:</b> read the Lithuanian term, guess the meaning, hit <b>Show meaning</b>, then pick when you want to see it again and <b>Commit</b>. '+
-    'Colour heats from blue (just reviewed) → white → orange → coal as a word fades. Shape shows longevity: '+
-    '△ &lt;30m · ◻ 30m–4h · ⬠ 4h–2d · ⬡ 2d–5d · heptagon 5d–1mo · ○ 1mo+. Faded = due now.'}));
+    '<b>New cards</b> show as a hollow outline; once reviewed they fill and colour heats from blue (fresh) → white → orange → coal as the word fades. '+
+    'Shape shows longevity: △ &lt;30m · ◻ 30m–4h · ⬠ 4h–2d · ⬡ 2d–5d · heptagon 5d–1mo · ○ 1mo+. Faded = due now. '+
+    'Each review knob snaps to 5 fixed log intervals so cards come due at tidy times.'}));
 
   app.append(el('footer',null,
     el('span',null,
@@ -554,7 +645,7 @@ function doImport(){
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='TEXTAREA') return;
   const cur=current(now()); if(!cur) return;
-  if(e.key==='Enter'){ const mm=minutesFromPos(BANDS[S.bandIndex],S.pos); S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now()); saveState(); S.revealed=false; S.pos=0.4; flash('Scheduled in '+formatMinutes(mm)); }
+  if(e.key==='Enter'){ const mm=BAND_STEPS[S.bandIndex][S.stepByBand[S.bandIndex]]; S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now()); saveState(); S.revealed=false; S.stepByBand=[2,2,2]; flash('Scheduled in '+formatMinutes(mm)); }
   else if(e.key===' '){ e.preventDefault(); S.revealed=!S.revealed; render(); }
   else if(e.key==='ArrowRight'){ S.idx++; S.revealed=false; render(); }
   else if(e.key==='ArrowLeft'){ S.idx--; S.revealed=false; render(); }
