@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.11 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.12 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -26,8 +26,8 @@
     --rose:#fb7185; --outline:#8b8b93; --knob:#52606e; --knob-edge:#6b7785;
   }
   body.light{
-    --bg:#f6f7f9; --panel:rgba(255,255,255,.85); --panel-solid:#ffffff;
-    --line:#e2e4e9; --line2:#cdd1d8;
+    --bg:#dcdfe6; --panel:rgba(255,255,255,.82); --panel-solid:#ffffff;
+    --line:#c8ccd4; --line2:#b4bac4;
     --t50:#0b0b0d; --t100:#1a1a1f; --t200:#27272a; --t300:#3f3f46;
     --t400:#52525b; --t500:#71717a; --t600:#a1a1aa;
     --sky:#0ea5e9; --sky300:#0284c7; --sky400:#0ea5e9; --sky500:#0ea5e9;
@@ -138,6 +138,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.12',sp:1.5, note:'Download/Upload progress as readable JSON; brighter white/yellow glow; greyer light-theme bg'},
   {v:'0.1.11',sp:0.5, note:'Per-shape colour caps: triangle→orange, hexagon→white, circle/star→blue'},
   {v:'0.1.10',sp:1,   note:'Strip slider labels/ticks/header; chosen time rides on the thumb; knobs 10px apart'},
   {v:'0.1.9', sp:0.5, note:'Round knob intervals to 20s/1m/5m/10m/30m · 10m/30m/4h/12h/48h · 12h/48h/5d/14d/30d'},
@@ -271,7 +272,7 @@ function dueLabel(m,t){
  *             triangle <30m · hexagon <2d · circle <1mo · 4-point star 1mo+.
  *   SIZE    = position within the band, 10px (just entered) -> 15px. */
 const SIZE_MIN=10, SIZE_MAX=15;
-const GLOW_AT=0.78; // freshest shapes carry a soft glow — some shine, not the old halo
+const GLOW_AT=0.55; // yellow/white/blue shine; cooler/brighter = bigger glow
 const HEAT=[[1,[77,166,255]],[0.8,[235,245,255]],[0.6,[255,214,92]],[0.4,[255,138,30]],[0.2,[229,57,53]],[0,[58,42,42]]];
 
 // Longevity bands, smallest interval first. `peak` caps how bright/cool the
@@ -342,7 +343,7 @@ function dotStyle(rec,t){
     shape:b.shape, clip:clipFor(b.shape),
     diameter:bandSize(b,rec.interval), color:heatColor(cf),
     isNew,                       // new = hollow outline, no fill
-    due, glow:!isNew && cf>=GLOW_AT,
+    due, glow:(!isNew && cf>=GLOW_AT) ? cf : 0, // 0 or the freshness driving the glow size
   };
 }
 
@@ -469,6 +470,8 @@ function render(){
     el('button',{class:'pill'+(S.freeScroll?' on':''),onclick:()=>{S.freeScroll=!S.freeScroll;S.idx=0;saveState();render();}}, S.freeScroll?'Free scroll: on':'Free scroll: off'),
     el('button',{class:'pill'+(S.hideTarget?' on':''),onclick:()=>{S.hideTarget=!S.hideTarget;saveState();render();}}, S.hideTarget?'Audio: hidden':'Audio: shown'),
     el('button',{class:'pill'+(S.theme==='light'?' on':''),onclick:()=>{S.theme=S.theme==='light'?'dark':'light';saveState();render();}}, S.theme==='light'?'☀ Light':'🌙 Dark'),
+    el('button',{class:'pill',onclick:doDownload},'⬇ Download'),
+    el('button',{class:'pill',onclick:doUpload},'⬆ Upload'),
     el('button',{class:'pill',onclick:doExport},'Export'),
     el('button',{class:'pill',onclick:()=>{S.importOpen=!S.importOpen;render();}},'Import'),
     el('button',{class:'pill',onclick:()=>{ if(confirm('Reset all progress?')){S.records={};S.deleted=[];S.purged=[];S.idx=0;saveState();render();} }},'Reset'),
@@ -573,8 +576,8 @@ function render(){
       background:s.isNew?'var(--outline)':s.color,
       clipPath:s.clip||'none', WebkitClipPath:s.clip||'none',
       borderRadius:s.shape==='circle'?'9999px':'1px',
-      // a little shine back: soft drop-shadow when fresh (less than the old halo)
-      filter:s.glow?`drop-shadow(0 0 4px ${s.color})`:'none',
+      // brighter/cooler shapes shine more — doubled drop-shadow scaled by freshness
+      filter:s.glow?(()=>{ const b=(4+(s.glow-GLOW_AT)*14).toFixed(1); return `drop-shadow(0 0 ${b}px ${s.color}) drop-shadow(0 0 ${(b/2).toFixed(1)}px ${s.color})`; })():'none',
       opacity:s.due?0.45:1, // faded when due, otherwise full
       transition:'background-color .6s ease, filter .6s ease, opacity .6s ease, transform .2s ease',
     });
@@ -638,7 +641,7 @@ function render(){
 }
 
 function doExport(){
-  const s=FMT+':'+btoa(unescape(encodeURIComponent(JSON.stringify({records:S.records,deleted:S.deleted}))));
+  const s=FMT+':'+btoa(unescape(encodeURIComponent(JSON.stringify({records:S.records,deleted:S.deleted,purged:S.purged}))));
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(s).then(()=>flash('Progress copied to clipboard'),()=>{S.importText=s;S.importOpen=true;flash('Copy this backup string');});
   } else { S.importText=s; S.importOpen=true; flash('Copy this backup string'); }
@@ -648,9 +651,62 @@ function doImport(){
   try{
     if(!s.startsWith(FMT+':')) throw 0;
     const o=JSON.parse(decodeURIComponent(escape(atob(s.slice(FMT.length+1)))));
-    S.records=o.records||{}; S.deleted=o.deleted||[]; saveState();
+    S.records=o.records||{}; S.deleted=o.deleted||[]; S.purged=o.purged||[]; saveState();
     S.importOpen=false; S.importText=''; S.idx=0; flash('Progress imported');
   }catch(e){ flash('Import failed — incompatible string'); }
+}
+
+const cardById=(id)=>CARDS.find(c=>c.id===id);
+// Build a human-readable snapshot of everything you've learned/edited.
+function buildSnapshot(){
+  const reviewed=Object.keys(S.records).map(id=>{
+    const r=S.records[id], c=cardById(id); if(!c||r.reps<1) return null; // only actually-reviewed
+    return {
+      id, lt:c.target, en:c.natural, tier:c.tier,
+      reps:r.reps, lapses:r.lapses, status:statusAt(r,now()),
+      interval:formatMinutes(r.interval), intervalMin:Math.round(r.interval),
+      lastReviewed:r.last?new Date(r.last).toISOString():null,
+      due:r.last?new Date(r.due).toISOString():null,
+    };
+  }).filter(Boolean).sort((a,b)=>b.reps-a.reps || b.intervalMin-a.intervalMin);
+  return {
+    app:'lt-finance-tartaglia', version:VERSION, exportedAt:new Date().toISOString(),
+    settings:{theme:S.theme, sortMode:S.sortMode, freeScroll:S.freeScroll, hideTarget:S.hideTarget},
+    counts:{total:CARDS.length, reviewed:reviewed.length, hidden:S.deleted.length, deleted:S.purged.length},
+    reviewed,
+    hidden:S.deleted.map(id=>({id, lt:(cardById(id)||{}).target})),
+    deleted:S.purged.map(id=>({id, lt:(cardById(id)||{}).target})),
+    raw:{records:S.records, deleted:S.deleted, purged:S.purged},
+  };
+}
+function doDownload(){
+  try{
+    const blob=new Blob([JSON.stringify(buildSnapshot(),null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='lt-finance-progress.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    flash('Downloaded progress JSON');
+  }catch(e){ flash('Download failed'); }
+}
+function doUpload(){
+  const inp=document.createElement('input');
+  inp.type='file'; inp.accept='application/json,.json';
+  inp.addEventListener('change',()=>{
+    const f=inp.files&&inp.files[0]; if(!f) return;
+    const fr=new FileReader();
+    fr.onload=()=>{
+      try{
+        const o=JSON.parse(fr.result), raw=o.raw||o; // accept rich snapshot or bare state
+        S.records=raw.records||{}; S.deleted=raw.deleted||[]; S.purged=raw.purged||[];
+        if(o.settings){ if(o.settings.theme)S.theme=o.settings.theme; if(o.settings.sortMode)S.sortMode=o.settings.sortMode; }
+        S.idx=0; saveState(); render(); flash('Progress loaded from file');
+      }catch(e){ flash('Upload failed — not a valid file'); }
+    };
+    fr.readAsText(f);
+  });
+  inp.click();
 }
 
 /* keyboard: Enter commits, Space reveals */
