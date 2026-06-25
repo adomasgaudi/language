@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.22 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.23 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -111,6 +111,15 @@
   .infotoggle:hover{filter:brightness(1.15)}
   .infobox{margin-top:6px;text-align:left;font-size:12.5px;line-height:1.55;color:var(--t300);background:var(--line);border-radius:8px;padding:9px 11px}
   .infobox b{color:var(--t100);font-weight:700}
+  /* multiple-choice formula card */
+  .mcq{font-size:17px;font-weight:600;color:var(--t50);text-align:center;padding:6px 0 2px;line-height:1.3}
+  .mcopts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .mcopt{text-align:left;background:var(--line);color:var(--t200);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.3}
+  .mcopt:hover{filter:brightness(1.12)}
+  .mcopt.correct{background:color-mix(in srgb,var(--ok) 22%,transparent);border-color:var(--ok);color:var(--t50);font-weight:600}
+  .mcopt.wrong{background:color-mix(in srgb,var(--rose) 22%,transparent);border-color:var(--rose);color:var(--t50)}
+  .mcexpl{margin-top:9px;text-align:left;font-size:12.5px;line-height:1.5;color:var(--t300);background:var(--line);border-radius:8px;padding:8px 10px}
+  .mcexpl.ok{border-left:3px solid var(--ok)} .mcexpl.no{border-left:3px solid var(--rose)}
   .show{display:flex;align-items:center;justify-content:center;width:100%;min-height:64px;border:1px solid var(--line2);border-radius:10px;padding:8px 20px;font-size:15px;font-weight:600;color:var(--t300);background:transparent}
   .show:hover{background:var(--line)} .show:active{transform:scale(.99)}
   /* three bare knobs, very tight stack, small (non-pill) corners */
@@ -183,6 +192,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.23',sp:3,   note:'New multiple-choice "Finance formulas" deck (20 cards): same concepts as decks 1 & 2 but asked as term = which formula?, with shuffled options and explanations'},
   {v:'0.1.22',sp:3,   note:'Zoned knob track (blue/brighter/dashed/grey vs last interval); per-card "nuance & origin" dropdowns (synonym differences, usage, etymology); Auto-due only shows almost-due/new cards, else "all reviewed"'},
   {v:'0.1.21',sp:1,   note:'Knob auto-pre-sets to one step above the card’s last interval (shaded track = last interval)'},
   {v:'0.1.20',sp:0.5, note:'Memory map: side padding + crammed dots (tighter horizontal spacing, smaller boxes)'},
@@ -397,9 +407,43 @@ const UNITS_WEB = [
   ]},
 ];
 
+// ---- Deck 6: Finance MATH — formulas, multiple choice -----------------------
+// Same concepts as decks 1 & 2, but asked as "term = which formula?".
+// Tuple: [question, [options...], correctIndex, tier, explanation]. Option 0 is
+// authored as the correct one; the builder shuffles them per card.
+const UNITS_MATH = [
+  { id:'U1', title:'Marginai ir pelningumas · Margins', cards:[
+    ['Grynasis pelningumas (net margin) =', ['Grynasis pelnas ÷ Pardavimo pajamos','Bendrasis pelnas ÷ Pardavimo pajamos','Pardavimo pajamos ÷ Grynasis pelnas','Grynasis pelnas − Pardavimo pajamos'],0,'hard','Net margin = net profit ÷ revenue, as a %. Using bendrasis pelnas instead gives gross margin.'],
+    ['Bendrasis pelningumas (gross margin) =', ['Bendrasis pelnas ÷ Pardavimo pajamos','Grynasis pelnas ÷ Pardavimo pajamos','Bendrasis pelnas ÷ Turtas','Pardavimo pajamos − Savikaina'],0,'hard','Gross margin = gross profit ÷ revenue. The last option is gross profit itself (€), not the margin (%).'],
+    ['Pelningumas prieš mokesčius (pre-tax margin) =', ['Pelnas prieš mokesčius ÷ Pardavimo pajamos','Grynasis pelnas ÷ Pardavimo pajamos','Pelnas prieš mokesčius ÷ Nuosavas kapitalas','Pelno mokestis ÷ Pardavimo pajamos'],0,'hard','Pre-tax margin uses profit before tax. Option 2 (after tax) is net margin.'],
+    ['Pelningumas (generic profitability) =', ['Pelnas ÷ Pardavimo pajamos','Pelnas × Pardavimo pajamos','Pardavimo pajamos ÷ Pelnas','Pelnas − Sąnaudos'],0,'mid','Any profit ÷ revenue ratio; which profit (net/gross/pre-tax) depends on the qualifier.'],
+    ['ROE — grąža nuosavam kapitalui =', ['Grynasis pelnas ÷ Nuosavas kapitalas','Grynasis pelnas ÷ Turtas','Nuosavas kapitalas ÷ Grynasis pelnas','Grynasis pelnas ÷ Pardavimo pajamos'],0,'hard','Return on equity = net profit ÷ equity. Option 2 is ROA (assets); option 4 is net margin.'],
+    ['ROA — grąža turtui =', ['Grynasis pelnas ÷ Turtas','Grynasis pelnas ÷ Nuosavas kapitalas','Turtas ÷ Grynasis pelnas','Grynasis pelnas ÷ Pardavimo pajamos'],0,'hard','Return on assets = net profit ÷ total assets. Option 2 is ROE.'],
+    ['Apyvartos pokytis (turnover change %) =', ['(Šie metai − Praeiti metai) ÷ Praeiti metai','Šie metai − Praeiti metai','Šie metai ÷ Praeiti metai','(Šie − Praeiti) ÷ Šie metai'],0,'mid','% change = (new − old) ÷ old. Dividing by the new year (option 4) is a common mistake.'],
+  ]},
+  { id:'U2', title:'Pelno eilutės · Profit lines', cards:[
+    ['Bendrasis pelnas (gross profit) =', ['Pardavimo pajamos − Savikaina','Pardavimo pajamos − Visos sąnaudos','Pardavimo pajamos − Mokesčiai','Turtas − Įsipareigojimai'],0,'mid','Gross profit = revenue − cost of sales (savikaina), before operating costs.'],
+    ['Veiklos pelnas (operating profit, EBIT) =', ['Bendrasis pelnas − Veiklos sąnaudos','Pardavimo pajamos − Savikaina','Grynasis pelnas − Mokesčiai','Bendrasis pelnas − Mokesčiai'],0,'hard','Operating profit = gross profit − operating expenses, before interest and tax.'],
+    ['Pelnas prieš mokesčius (pre-tax profit) =', ['Grynasis pelnas + Pelno mokestis','Grynasis pelnas − Pelno mokestis','Bendrasis pelnas + Mokesčiai','Pardavimo pajamos − Savikaina'],0,'mid','Pre-tax profit = net profit + the profit tax added back.'],
+    ['Grynasis pelnas (net profit) =', ['Pelnas prieš mokesčius − Pelno mokestis','Pelnas prieš mokesčius + Pelno mokestis','Bendrasis pelnas − Savikaina','Pardavimo pajamos − Savikaina'],0,'mid','Net profit = pre-tax profit − profit tax. The bottom line.'],
+    ['Savikaina (cost of sales), from gross profit =', ['Pardavimo pajamos − Bendrasis pelnas','Pardavimo pajamos + Bendrasis pelnas','Bendrasis pelnas − Pardavimo pajamos','Visos sąnaudos − Mokesčiai'],0,'mid','Rearranged from gross profit = revenue − cost of sales.'],
+    ['Pardavimo pajamos (revenue), from gross profit =', ['Bendrasis pelnas + Savikaina','Bendrasis pelnas − Savikaina','Savikaina − Bendrasis pelnas','Grynasis pelnas + Mokesčiai'],0,'mid','Revenue = gross profit + cost of sales.'],
+  ]},
+  { id:'U3', title:'Balansas ir rodikliai · Balance sheet & ratios', cards:[
+    ['Balansas: Turtas =', ['Nuosavas kapitalas + Įsipareigojimai','Nuosavas kapitalas − Įsipareigojimai','Įsipareigojimai − Nuosavas kapitalas','Pajamos − Sąnaudos'],0,'mid','The balance-sheet identity: assets = equity + liabilities.'],
+    ['Nuosavas kapitalas (equity) =', ['Turtas − Įsipareigojimai','Turtas + Įsipareigojimai','Įsipareigojimai − Turtas','Ilgalaikis + Trumpalaikis turtas'],0,'mid','Equity = assets − liabilities (owners’ residual stake).'],
+    ['Įsipareigojimai (liabilities) =', ['Turtas − Nuosavas kapitalas','Turtas + Nuosavas kapitalas','Nuosavas kapitalas − Turtas','Trumpalaikis turtas − Atsargos'],0,'mid','Liabilities = assets − equity, from the balance-sheet identity.'],
+    ['Turtas (total assets) =', ['Ilgalaikis turtas + Trumpalaikis turtas','Ilgalaikis turtas − Trumpalaikis turtas','Nuosavas kapitalas − Įsipareigojimai','Atsargos + Pinigų srautas'],0,'mid','Total assets = non-current (fixed) + current assets.'],
+    ['Apyvartinis kapitalas (working capital) =', ['Trumpalaikis turtas − Trumpalaikiai įsipareigojimai','Ilgalaikis turtas − Įsipareigojimai','Trumpalaikis turtas + Atsargos','Turtas − Nuosavas kapitalas'],0,'hard','Working capital = current assets − current liabilities.'],
+    ['Einamasis likvidumas (current ratio) =', ['Trumpalaikis turtas ÷ Trumpalaikiai įsipareigojimai','Trumpalaikis turtas − Trumpalaikiai įsipareigojimai','Turtas ÷ Įsipareigojimai','Ilgalaikis turtas ÷ Įsipareigojimai'],0,'hard','Current ratio = current assets ÷ current liabilities. The subtraction version is working capital.'],
+    ['Skola / nuosavybė (debt-to-equity) =', ['Įsipareigojimai ÷ Nuosavas kapitalas','Nuosavas kapitalas ÷ Įsipareigojimai','Įsipareigojimai ÷ Turtas','Turtas ÷ Įsipareigojimai'],0,'hard','Debt-to-equity = liabilities ÷ equity. Liabilities ÷ assets is the debt ratio.'],
+  ]},
+];
+
 const DECKS = [
   {id:'d1', lang:'lt', title:'Finance basics', subtitle:'Data Explorer terms · LT→EN · 34 cards', units:UNITS_CORE},
   {id:'d2', lang:'lt', title:'Advanced finance', subtitle:'Financial statements & credit · LT→EN · 30 cards', units:UNITS_ADV},
+  {id:'d6', lang:'mc', type:'mc', title:'Finance formulas', subtitle:'Multiple-choice math · 20 cards', units:UNITS_MATH},
   {id:'d3', lang:'en', title:'Science teacher job', subtitle:'Get a teaching job in Vilnius · 20 cards', units:UNITS_TEACHER},
   {id:'d4', lang:'en', title:'Fitness clients', subtitle:'Find PT clients in Vilnius · 20 cards', units:UNITS_FITNESS},
   {id:'d5', lang:'en', title:'Website clients', subtitle:'Find web-build clients in Vilnius · 20 cards', units:UNITS_WEB},
@@ -409,6 +453,16 @@ const DECKS = [
 function buildDeckCards(deck){
   if(deck._cards) return deck._cards;
   const out=[];
+  if(deck.type==='mc'){
+    deck.units.forEach(u => u.cards.forEach((c,i)=>{
+      const [q,opts,correct,tier,expl]=c;
+      const order=opts.map((_,k)=>k);                 // shuffle so the answer isn't always first
+      for(let k=order.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [order[k],order[j]]=[order[j],order[k]]; }
+      out.push({ id:deck.id+':'+u.id+'-'+(i+1), deck:deck.id, unit:u.title, kind:'mc',
+        target:q, options:order.map(k=>opts[k]), answer:order.indexOf(correct), tier:tier, info:expl||'' });
+    }));
+    deck._cards=out; return out;
+  }
   deck.units.forEach(u => u.cards.forEach((c,i)=> out.push({
     id: deck.id+':'+u.id+'-'+(i+1), deck: deck.id, unit: u.title,
     target:c[0], natural:c[1], literal:c[2], gloss:c[3], tier:c[4], also:c[5]||'', info:c[6]||'',
@@ -643,7 +697,7 @@ if('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged=()=>{};
 // persisted choices win.
 const S = Object.assign({
   idx:0, revealed:false, stepByBand:[2,2,2], importOpen:false, importText:'', histOpen:false, legendOpen:false, settingsOpen:false, flashMsg:null, flashTimer:null,
-  deleted:[], purged:[], deckId:null, mode:'order', pick:null, seedStamp:null, showBoth:false, suggestedFor:null, infoOpen:false,
+  deleted:[], purged:[], deckId:null, mode:'order', pick:null, seedStamp:null, showBoth:false, suggestedFor:null, infoOpen:false, mcPick:null,
 }, loadState());
 
 function visibleCards(){ return activeCards().filter(c=>!S.deleted.includes(c.id) && !S.purged.includes(c.id)); }
@@ -685,7 +739,7 @@ function go(delta){
     const cur=autoCurrent(t); let i=Math.max(0,o.findIndex(x=>cur&&x.id===cur.id));
     i=(i+delta+o.length)%o.length; S.pick=o[i].id;
   } else { S.idx+=delta; }
-  S.revealed=false; S.infoOpen=false; render();
+  S.revealed=false; S.infoOpen=false; S.mcPick=null; render();
 }
 
 // Order for the memory map. due: soonest-due first (new cards count as due now);
@@ -792,7 +846,7 @@ function render(){
       el('button',{class:'side back',title:'All decks',onclick:()=>{S.deckId=null;S.idx=0;S.pick=null;saveState();render();}},'‹'),
       el('div',{style:{minWidth:'0'}},
         el('h1',null,deck.title),
-        el('p',{class:'sub'}, deck.lang==='lt' ? 'LT → EN · manual SRS' : 'Action notes · manual SRS'),
+        el('p',{class:'sub'}, deck.type==='mc' ? 'Formula quiz · tap an answer' : (deck.lang==='lt' ? 'LT → EN · manual SRS' : 'Action notes · manual SRS')),
       ),
     ),
   ));
@@ -832,16 +886,30 @@ function render(){
     const metaRight = rec.reps>0
       ? formatMinutes(rec.interval)+' · '+new Date(rec.due).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})
       : 'new';
-    const hide=()=>{ if(!S.deleted.includes(cur.id))S.deleted.push(cur.id); S.idx=0; S.pick=null; S.revealed=false; S.infoOpen=false; saveState(); render(); };
-    const del=()=>{ if(!S.purged.includes(cur.id))S.purged.push(cur.id); S.idx=0; S.pick=null; S.revealed=false; S.infoOpen=false; saveState(); render(); };
-    cardEl=el('div',{class:'card'},
-      el('div',{class:'meta'},
-        el('span',{class:'k'}, cur.tier+' · '+metaRight),
-        el('div',{class:'acts'},
-          el('button',{class:'cardbtn',title:'Hide (restorable)',onclick:hide}, icon('eyeoff',13),'Hide'),
-          el('button',{class:'cardbtn del',title:'Delete (gone until reset)',onclick:del}, icon('trash',13),'Delete'),
-        ),
+    const hide=()=>{ if(!S.deleted.includes(cur.id))S.deleted.push(cur.id); S.idx=0; S.pick=null; S.revealed=false; S.infoOpen=false; S.mcPick=null; saveState(); render(); };
+    const del=()=>{ if(!S.purged.includes(cur.id))S.purged.push(cur.id); S.idx=0; S.pick=null; S.revealed=false; S.infoOpen=false; S.mcPick=null; saveState(); render(); };
+    const metaRow=el('div',{class:'meta'},
+      el('span',{class:'k'}, cur.tier+' · '+metaRight),
+      el('div',{class:'acts'},
+        el('button',{class:'cardbtn',title:'Hide (restorable)',onclick:hide}, icon('eyeoff',13),'Hide'),
+        el('button',{class:'cardbtn del',title:'Delete (gone until reset)',onclick:del}, icon('trash',13),'Delete'),
       ),
+    );
+    if(cur.kind==='mc'){
+      // multiple-choice formula card: tap an option to reveal correct/wrong
+      const answered = (S.mcPick!=null) || S.showBoth;
+      cardEl=el('div',{class:'card'}, metaRow,
+        el('div',{class:'mcq'}, cur.target),
+        el('div',{class:'mcopts'}, cur.options.map((opt,k)=>{
+          let cls='mcopt';
+          if(answered){ if(k===cur.answer) cls+=' correct'; else if(k===S.mcPick) cls+=' wrong'; }
+          return el('button',{class:cls, onclick:()=>{ if(S.mcPick==null && !S.showBoth){ S.mcPick=k; render(); } }}, opt);
+        })),
+        answered ? el('div',{class:'mcexpl'+(S.showBoth?'':(S.mcPick===cur.answer?' ok':' no'))},
+          (S.showBoth?'':(S.mcPick===cur.answer?'Correct. ':'Not quite. ')) + (cur.info||'')) : null,
+      );
+    } else {
+    cardEl=el('div',{class:'card'}, metaRow,
       el('div',{class:'prompt'},
         S.hideTarget
           ? el('div',{class:'hidden-face'}, el('div',{class:'eye'}, icon('eyeoff',26)), el('div',{style:{marginTop:'4px',fontSize:'13px'}},'Listen & guess — term hidden'))
@@ -864,6 +932,7 @@ function render(){
           : el('button',{class:'show',onclick:()=>{S.revealed=true;render();}},'Show meaning'),
       ),
     );
+    }
   } else {
     cardEl=el('div',{class:'empty'}, icon('check',22), el('div',{style:{marginTop:'4px'}}, S.mode==='auto' ? 'All reviewed — nothing due yet.' : 'Nothing due. Switch to Free scroll to browse.'));
   }
@@ -911,7 +980,7 @@ function render(){
     const doCommit=(verb)=>{
       const mm=chosen();
       S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now());
-      saveState(); S.revealed=false; S.infoOpen=false; S.suggestedFor=null; S.pick=null; // next card re-suggests; auto advances
+      saveState(); S.revealed=false; S.infoOpen=false; S.mcPick=null; S.suggestedFor=null; S.pick=null; // next card re-suggests; auto advances
       flash((verb||'Scheduled')+' · '+formatMinutes(mm));
     };
     app.append(el('div',{class:'card slider'},
@@ -1087,7 +1156,7 @@ function doUpload(){
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='TEXTAREA') return;
   const cur=current(now()); if(!cur) return;
-  if(e.key==='Enter'){ const mm=BAND_STEPS[S.bandIndex][S.stepByBand[S.bandIndex]]; S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now()); saveState(); S.revealed=false; S.suggestedFor=null; S.pick=null; flash('Scheduled in '+formatMinutes(mm)); }
+  if(e.key==='Enter'){ const mm=BAND_STEPS[S.bandIndex][S.stepByBand[S.bandIndex]]; S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now()); saveState(); S.revealed=false; S.mcPick=null; S.suggestedFor=null; S.pick=null; flash('Scheduled in '+formatMinutes(mm)); }
   else if(e.key===' '){ e.preventDefault(); S.revealed=!S.revealed; render(); }
   else if(e.key==='ArrowRight'){ go(1); }
   else if(e.key==='ArrowLeft'){ go(-1); }
