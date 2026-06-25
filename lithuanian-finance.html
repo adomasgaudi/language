@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.6 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.7 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -143,6 +143,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.7', sp:1,   note:'Simplify map to 4 shapes: triangle/hexagon/circle, JWST 4-point star at 1mo+'},
   {v:'0.1.6', sp:4,   note:'3 log-step knobs · sort by due/longevity/topic · light theme · map above card · softer glow · new=outline · full-width Show'},
   {v:'0.1.5', sp:0.5, note:'Sizes 10–15px; ring the current bubble with a 25px circle'},
   {v:'0.1.4', sp:1,   note:'Version badge + 📋 SP history log'},
@@ -266,23 +267,20 @@ function dueLabel(m,t){
 
 /* memory map.
  *   COLOUR  = freshness (forgetting curve): bright blue just-reviewed -> white
- *             -> orange -> coal as it fades. New words start bright blue.
- *   SHAPE   = longevity / interval band: more corners = longer-term memory.
- *             triangle <30m · square 30m–4h · pentagon 4h–2d · hexagon 2d–5d
- *             · heptagon 5d–1mo · circle >1mo.
- *   SIZE    = position within the band, 5px (just entered the band) -> 10px. */
+ *             -> orange -> coal as it fades.
+ *   SHAPE   = longevity / interval band, simplified to four:
+ *             triangle <30m · hexagon <2d · circle <1mo · 4-point star 1mo+.
+ *   SIZE    = position within the band, 10px (just entered) -> 15px. */
 const SIZE_MIN=10, SIZE_MAX=15;
 const GLOW_AT=0.78; // freshest shapes carry a soft glow — some shine, not the old halo
 const HEAT=[[1,[77,166,255]],[0.8,[235,245,255]],[0.6,[255,214,92]],[0.4,[255,138,30]],[0.2,[229,57,53]],[0,[58,42,42]]];
 
-// Longevity bands, smallest interval first. sides:0 => circle.
+// Longevity bands, smallest interval first.
 const SHAPE_BANDS=[
-  {sides:3, lo:0,     hi:30},     // triangle  · up to 30 min
-  {sides:4, lo:30,    hi:240},    // square    · 30 min – 4 h
-  {sides:5, lo:240,   hi:2880},   // pentagon  · 4 h – 2 d
-  {sides:6, lo:2880,  hi:7200},   // hexagon   · 2 d – 5 d
-  {sides:7, lo:7200,  hi:43200},  // heptagon  · 5 d – 1 mo
-  {sides:0, lo:43200, hi:Infinity}, // circle  · 1 mo +
+  {shape:'triangle', lo:0,     hi:30},      // up to 30 min
+  {shape:'hexagon',  lo:30,    hi:2880},    // 30 min – 2 d
+  {shape:'circle',   lo:2880,  hi:43200},   // 2 d – 1 mo
+  {shape:'star',     lo:43200, hi:Infinity},// 1 mo +  (JWST-style 4-point star)
 ];
 function bandFor(m){
   for(const b of SHAPE_BANDS) if(m<b.hi) return b;
@@ -308,9 +306,8 @@ function heatColor(f){
   }
   const last=HEAT[HEAT.length-1][1]; return `rgb(${last[0]}, ${last[1]}, ${last[2]})`;
 }
-// CSS clip-path for a regular N-gon (point up); '' => leave as a circle.
+// CSS clip-path for a regular N-gon, point up.
 function polyClip(sides){
-  if(sides<3) return '';
   const pts=[];
   for(let i=0;i<sides;i++){
     const a=-Math.PI/2 + i*2*Math.PI/sides;
@@ -318,13 +315,29 @@ function polyClip(sides){
   }
   return 'polygon('+pts.join(', ')+')';
 }
+// 4-point sparkle (JWST-style): outer points up/right/down/left, thin inner waist.
+function starClip(){
+  const R=50, r=13, pts=[];
+  for(let i=0;i<8;i++){
+    const a=-Math.PI/2 + i*Math.PI/4, rad=(i%2===0)?R:r;
+    pts.push((50+rad*Math.cos(a)).toFixed(2)+'% '+(50+rad*Math.sin(a)).toFixed(2)+'%');
+  }
+  return 'polygon('+pts.join(', ')+')';
+}
+// Resolve a band's shape name to a CSS clip-path ('' => plain circle).
+function clipFor(shape){
+  if(shape==='triangle') return polyClip(3);
+  if(shape==='hexagon')  return polyClip(6);
+  if(shape==='star')     return starClip();
+  return ''; // circle
+}
 function dotStyle(rec,t){
   const isNew=rec.status==='new';
   const f=freshness(rec,t);
   const due=!isNew && t>=rec.due;
   const b=bandFor(rec.interval);
   return {
-    sides:b.sides, clip:polyClip(b.sides),
+    shape:b.shape, clip:clipFor(b.shape),
     diameter:bandSize(b,rec.interval), color:heatColor(f),
     isNew,                       // new = hollow outline, no fill
     due, glow:!isNew && f>=GLOW_AT,
@@ -551,7 +564,6 @@ function render(){
 
   function buildMap(cur,t,vis){
   const map=el('div',{class:'map'});
-  const SHAPE_NAME={3:'triangle',4:'square',5:'pentagon',6:'hexagon',7:'heptagon',0:'circle'};
   const sorted=sortCards(vis,t);
   sorted.forEach(c=>{
     const rec=recordFor(c.id), s=dotStyle(rec,t), isCur=cur&&c.id===cur.id;
@@ -563,7 +575,7 @@ function render(){
       // new cards: hollow outline (no fill); others: heat-colour fill
       background:s.isNew?'var(--outline)':s.color,
       clipPath:s.clip||'none', WebkitClipPath:s.clip||'none',
-      borderRadius:s.sides<3?'9999px':'1px',
+      borderRadius:s.shape==='circle'?'9999px':'1px',
       // a little shine back: soft drop-shadow when fresh (less than the old halo)
       filter:s.glow?`drop-shadow(0 0 4px ${s.color})`:'none',
       opacity:s.due?0.45:1, // faded when due, otherwise full
@@ -576,11 +588,11 @@ function render(){
         position:'absolute', left:'50%', top:'50%', transform:'translate(-50%,-50%)',
         width:Math.max(s.diameter-3,2)+'px', height:Math.max(s.diameter-3,2)+'px',
         background:'var(--bg)', clipPath:s.clip||'none', WebkitClipPath:s.clip||'none',
-        borderRadius:s.sides<3?'9999px':'1px',
+        borderRadius:s.shape==='circle'?'9999px':'1px',
       });
       glyph.append(hole);
     }
-    const btn=el('button',{class:'dot',title:c.target+' · '+SHAPE_NAME[s.sides]+' · '+(s.due?'due':statusAt(rec,t)),style:{width:size+'px',height:size+'px'},
+    const btn=el('button',{class:'dot',title:c.target+' · '+s.shape+' · '+(s.due?'due':statusAt(rec,t)),style:{width:size+'px',height:size+'px'},
       onclick:()=>{ const p=pool(t); const i=p.findIndex(x=>x.id===c.id); if(i>=0){S.idx=i; S.revealed=false; render();} else flash('Hidden — in free scroll only'); }},
       glyph);
     if(isCur) btn.append(el('span',{class:'ring'})); // 25px circle marks the card on screen
@@ -600,7 +612,7 @@ function render(){
   app.append(el('div',{class:'legend',html:
     '<b>How to use:</b> read the Lithuanian term, guess the meaning, hit <b>Show meaning</b>, then pick when you want to see it again and <b>Commit</b>. '+
     '<b>New cards</b> show as a hollow outline; once reviewed they fill and colour heats from blue (fresh) → white → orange → coal as the word fades. '+
-    'Shape shows longevity: △ &lt;30m · ◻ 30m–4h · ⬠ 4h–2d · ⬡ 2d–5d · heptagon 5d–1mo · ○ 1mo+. Faded = due now. '+
+    'Shape shows longevity: △ &lt;30m · ⬡ &lt;2d · ○ &lt;1mo · ✦ 1mo+. Faded = due now. '+
     'Each review knob snaps to 5 fixed log intervals so cards come due at tidy times.'}));
 
   app.append(el('footer',null,
