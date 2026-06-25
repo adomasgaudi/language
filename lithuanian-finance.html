@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.24 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.25 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -192,6 +192,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.25',sp:0.5, note:'Auto-due locks onto the current card — it no longer switches mid-review (live repaint / decay); only commit or skip advances'},
   {v:'0.1.24',sp:2,   note:'Slider track now shows your answer history per card: each interval rung colours grey→blue→dark by how often you chose it, tinted amber where you struggled (missed)'},
   {v:'0.1.23',sp:3,   note:'New multiple-choice "Finance formulas" deck (20 cards): same concepts as decks 1 & 2 but asked as term = which formula?, with shuffled options and explanations'},
   {v:'0.1.22',sp:3,   note:'Zoned knob track (blue/brighter/dashed/grey vs last interval); per-card "nuance & origin" dropdowns (synonym differences, usage, etymology); Auto-due only shows almost-due/new cards, else "all reviewed"'},
@@ -742,7 +743,9 @@ function autoOrder(t){
 }
 function autoCurrent(t){
   if(S.pick){ const c=visibleCards().find(x=>x.id===S.pick); if(c) return c; }
-  const o=autoOrder(t); return o.length?o[0]:null;
+  const o=autoOrder(t); if(!o.length) return null;
+  S.pick=o[0].id; // LOCK onto this card so it can't switch mid-review; commit/skip releases it
+  return o[0];
 }
 function pool(t){ return S.mode==='scroll' ? visibleCards() : dueCards(t); }
 function current(t){
