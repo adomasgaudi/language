@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.14 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.15 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -23,7 +23,7 @@
     --t50:#fafafa; --t100:#f4f4f5; --t200:#e4e4e7; --t300:#d4d4d8;
     --t400:#a1a1aa; --t500:#71717a; --t600:#52525b;
     --sky:#38bdf8; --sky300:#7dd3fc; --sky400:#38bdf8; --sky500:#0ea5e9;
-    --rose:#fb7185; --outline:#8b8b93; --knob:#52606e; --knob-edge:#6b7785;
+    --rose:#fb7185; --outline:#8b8b93; --knob:#52606e; --knob-edge:#6b7785; --ok:#34d399;
   }
   body.light{
     --bg:#dcdfe6; --panel:rgba(255,255,255,.82); --panel-solid:#ffffff;
@@ -31,7 +31,7 @@
     --t50:#0b0b0d; --t100:#1a1a1f; --t200:#27272a; --t300:#3f3f46;
     --t400:#52525b; --t500:#71717a; --t600:#a1a1aa;
     --sky:#0ea5e9; --sky300:#0284c7; --sky400:#0ea5e9; --sky500:#0ea5e9;
-    --rose:#e11d48; --outline:#9aa0ab; --knob:#cbd2da; --knob-edge:#aeb6c0;
+    --rose:#e11d48; --outline:#9aa0ab; --knob:#cbd2da; --knob-edge:#aeb6c0; --ok:#059669;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%}
@@ -40,18 +40,34 @@
     font:14px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Inter,Arial,sans-serif;
     -webkit-font-smoothing:antialiased;
   }
-  /* margins/gaps halved throughout so the whole UI fits one screen */
-  .wrap{max-width:580px;margin:0 auto;display:flex;flex-direction:column;gap:8px;padding:10px 8px 14px;min-height:100%}
+  /* comfortable side margin, sections breathe a little */
+  .wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:10px;padding:14px 14px 28px;min-height:100%}
   header{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
-  h1{font-size:17px;font-weight:700;color:var(--t50);margin:0}
-  .sub{font-size:11px;color:var(--t500);margin:1px 0 0}
-  .stat{text-align:right;font-size:11px;color:var(--t500);white-space:nowrap}
-  .stat .due{font-weight:600;color:var(--sky300)}
-  .row{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+  h1{font-size:18px;font-weight:700;color:var(--t50);margin:0;letter-spacing:-.01em}
+  .sub{font-size:11px;color:var(--t500);margin:2px 0 0}
+  .stat{font-size:11px;color:var(--t500);white-space:nowrap;display:flex;gap:5px;align-items:center}
+  .stat .due{font-weight:700;color:var(--sky300)} .stat .sep{color:var(--t600)}
+  .row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
   button{font-family:inherit;cursor:pointer;border:0;color:inherit}
-  .pill{background:var(--line);color:var(--t300);border-radius:7px;padding:4px 8px;font-size:12px}
+  .pill{background:var(--line);color:var(--t300);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:500}
   .pill.on{background:var(--sky500);color:#fff}
+  .pill.danger:hover{background:var(--rose);color:#fff}
   .pill:hover{filter:brightness(1.12)}
+  /* header card */
+  .headcard{padding:12px 14px}
+  .headtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .headmain{display:flex;align-items:center;gap:10px;min-width:0}
+  .ver{font-size:11px;font-weight:700;color:var(--t400);font-variant-numeric:tabular-nums;background:var(--line);padding:2px 8px;border-radius:999px}
+  /* segmented mode control */
+  .seg{display:inline-flex;background:var(--line);border-radius:9px;padding:2px;gap:2px}
+  .segbtn{border-radius:7px;padding:5px 10px;font-size:12px;font-weight:600;color:var(--t400);background:transparent;white-space:nowrap}
+  .segbtn.on{background:var(--sky500);color:#fff} .segbtn:hover:not(.on){color:var(--t200)}
+  .settings{padding:8px;margin-top:2px}
+  /* floating history fab + popup */
+  .histfab{position:fixed;right:14px;bottom:14px;z-index:50;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+  .fab{width:42px;height:42px;border-radius:999px;background:var(--sky500);color:#fff;font-size:18px;box-shadow:0 6px 18px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
+  .fab:hover{filter:brightness(1.1)} .fab:active{transform:scale(.94)}
+  .hist.pop{order:-1;max-width:300px;max-height:55vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.5)}
   .card,.box{border:1px solid var(--line);background:var(--panel);border-radius:14px}
   .card{padding:12px 14px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
   /* prev/next flank the card */
@@ -82,9 +98,13 @@
   .abtn{background:var(--line);color:var(--t200);border-radius:8px;padding:5px 12px;font-size:13px}
   .abtn:hover{background:var(--line2)}
   .answer{margin-top:8px;border-top:1px solid var(--line);padding-top:8px;text-align:center}
-  .natural{font-size:18px;color:var(--t100)}
-  .literal{font-size:13px;color:var(--t400);margin-top:3px}
-  .gloss{font-size:12px;color:var(--t500);margin-top:3px;font-style:italic}
+  .natural{font-size:18px;color:var(--t100);font-weight:600}
+  .syn{font-size:13px;color:var(--ok);margin-top:4px;line-height:1.4}
+  .literal{font-size:13px;color:var(--t400);margin-top:5px;line-height:1.4}
+  .gloss{font-size:12px;color:var(--t500);margin-top:4px;font-style:italic}
+  .flexbadge{display:inline-block;margin-top:8px;font-size:10px;font-weight:700;letter-spacing:.02em;padding:3px 9px;border-radius:6px}
+  .flexbadge.flex{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+  .flexbadge.exact{background:var(--line);color:var(--t400)}
   .show{display:flex;align-items:center;justify-content:center;width:100%;min-height:64px;border:1px solid var(--line2);border-radius:10px;padding:8px 20px;font-size:15px;font-weight:600;color:var(--t300);background:transparent}
   .show:hover{background:var(--line)} .show:active{transform:scale(.99)}
   /* three bare "slide-to-open" knobs — chosen time sits on the thumb, ~10px apart */
@@ -109,11 +129,12 @@
   .maplabel{font-size:11px;color:var(--t500);margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;gap:8px}
   .sortbtn{background:var(--line);color:var(--t300);border-radius:7px;padding:3px 8px;font-size:11px;font-weight:600;white-space:nowrap}
   .sortbtn:hover{filter:brightness(1.12)}
-  .map{display:flex;flex-wrap:wrap;align-items:center;gap:3px;padding:2px 0}
-  .dot{position:relative;display:grid;place-items:center;background:transparent}
+  .map{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 7px;padding:4px 0}
+  .dot{display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent}
+  .shapebox{position:relative;display:grid;place-items:center}
   .dot .glyph{display:block}
-  .dot .crack{position:absolute;pointer-events:none}
-  .dot .here{position:absolute;bottom:-4px;width:4px;height:4px;border-radius:9999px;background:var(--sky300)}
+  .dotnum{font-size:9px;line-height:1;font-weight:600;color:var(--t500);font-variant-numeric:tabular-nums}
+  .dotnum.cur{color:var(--sky300);font-weight:700}
   .dot .ring{position:absolute;width:25px;height:25px;border-radius:9999px;border:1.5px solid var(--sky300);box-sizing:border-box;pointer-events:none}
   footer{margin-top:auto;display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--t600);padding-top:4px}
   footer button{color:var(--t600);background:transparent}
@@ -146,6 +167,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.15',sp:7,   note:'Synonyms + flexible/exact badge on vocab cards; Auto-due mode (per-shape thresholds); review "Both" toggle; settings ⚙ menu; header card; version top + floating history; numbers below shapes; LT-specific job terms kept in Lithuanian; embedded progress snapshot'},
   {v:'0.1.14',sp:4,   note:'3 personalised decks (teacher job, fitness clients, website clients — Vilnius, researched); numbered shapes to track cards across re-sorts'},
   {v:'0.1.13',sp:3,   note:'Intro deck-picker + 2nd deck (advanced rekvizitai finance, 30 cards); thin grey outline on shapes; legacy progress migrated'},
   {v:'0.1.12',sp:1.5, note:'Download/Upload progress as readable JSON; brighter white/yellow glow; greyer light-theme bg'},
@@ -171,50 +193,51 @@ document.title = 'Lithuanian finance v' + VERSION;
  * Tiers: obvious (cognate) | easy | mid | hard
  * ==========================================================================*/
 // ---- Deck 1: Data Explorer basics (the original deck) ----------------------
+// Tuple: [lt, primary EN, note(definition + ≠ distinctions), pronunciation, tier, synonyms(all count)]
 const UNITS_CORE = [
   { id:'U1', title:'Pajamos ir apyvarta · Revenue & turnover', cards:[
-    ['Apyvarta','turnover (revenue incl. pass-through ad spend)','the dashboard’s "Turnover (apyvarta)"','ah-pih-VAR-tah','mid'],
-    ['Pajamos','income / revenue','plural noun, always','pah-YAH-mos','mid'],
-    ['Spėjamos pajamos','estimated revenue (fee income)','"Revenue (spėjamos pajamos)" — pass-through excluded','SPAY-yah-mos pah-YAH-mos','hard'],
-    ['Pardavimo pajamos','sales revenue','pardavimas = a sale','par-DAH-vih-mo pah-YAH-mos','hard'],
-    ['Apyvartos pokytis','turnover change (%)','pokytis = change','ah-pih-VAR-tos POH-kih-tis','mid'],
+    ['Apyvarta','turnover','Total sales value incl. pass-through (e.g. media ad spend). The dashboard’s "Turnover (apyvarta)". ≠ spėjamos pajamos (fee income only).','ah-pih-VAR-tah','mid','gross turnover · sales · (loosely) revenue'],
+    ['Pajamos','income / revenue','General word for money coming in; context picks the exact sense. ≠ apyvarta (specifically turnover).','pah-YAH-mos','mid','income · revenue · earnings · proceeds'],
+    ['Spėjamos pajamos','estimated revenue (fee income)','Fee income, pass-through excluded — the dashboard’s "Revenue (spėjamos pajamos)". ≠ apyvarta (turnover, includes pass-through).','SPAY-yah-mos pah-YAH-mos','hard','projected revenue · estimated income · fee income'],
+    ['Pardavimo pajamos','sales revenue','Revenue from sales — the P&L top line. ≈ pajamos in most contexts.','par-DAH-vih-mo pah-YAH-mos','hard','sales · revenue from sales · net sales'],
+    ['Apyvartos pokytis','turnover change (%)','Year-on-year % change in turnover.','ah-pih-VAR-tos POH-kih-tis','mid','change in turnover · turnover growth'],
   ]},
   { id:'U2', title:'Pelnas ir sąnaudos · Profit & costs', cards:[
-    ['Pelnas','profit','','PEL-nas','easy'],
-    ['Grynasis pelnas','net profit','grynas = pure / net','grih-NAH-sis PEL-nas','mid'],
-    ['Nuostoliai','losses','the opposite of pelnas','noo-OST-oh-lyay','hard'],
-    ['Sąnaudos','costs / expenses','plural noun','SAW-now-dos','mid'],
-    ['DU sąnaudos','wage costs','DU = darbo užmokestis (payroll)','DEH-OO SAW-now-dos','hard'],
-    ['Ne-atlyginimų sąnaudos','non-salary costs','ne- = not, atlyginimų = of salaries','neh-at-lih-GIH-nih-moo SAW-now-dos','hard'],
-    ['Pelno mokestis','corporate income tax','tax on profit','PEL-no MOH-kes-tis','mid'],
+    ['Pelnas','profit','Generic profit. Add a qualifier for precision: grynasis = net, bendrasis = gross, prieš mokesčius = pre-tax.','PEL-nas','easy','earnings · gain · income (profit sense)'],
+    ['Grynasis pelnas','net profit','Profit after ALL costs and tax (the bottom line). ≠ gross profit (before opex) and ≠ pre-tax profit (before tax).','grih-NAH-sis PEL-nas','mid','net income · net earnings · profit after tax · bottom line'],
+    ['Nuostoliai','losses','Negative result; the opposite of pelnas. A negative net result = net loss.','noo-OST-oh-lyay','hard','loss · net loss · deficit'],
+    ['Sąnaudos','costs / expenses','General costs. ≠ savikaina (specifically cost of sales).','SAW-now-dos','mid','costs · expenses · expenditure · outlays'],
+    ['DU sąnaudos','wage costs','DU = darbo užmokestis. Salaries plus related employer costs.','DEH-OO SAW-now-dos','hard','payroll costs · labour costs · staff costs · personnel costs'],
+    ['Ne-atlyginimų sąnaudos','non-salary costs','All costs except wages.','neh-at-lih-GIH-nih-moo SAW-now-dos','hard','non-wage costs · non-payroll costs'],
+    ['Pelno mokestis','corporate income tax','Tax on company profit. ≠ PVM (VAT, a sales tax).','PEL-no MOH-kes-tis','mid','corporate tax · profit tax · CIT'],
   ]},
   { id:'U3', title:'Atlyginimai ir darbuotojai · Pay & employees', cards:[
-    ['Atlyginimas','salary / pay','','at-lih-GIH-nih-mas','mid'],
-    ['Atlyginimų vidurkis','average salary','vidurkis = average','at-lih-GIH-nih-moo VEE-door-kis','mid'],
-    ['Darbo užmokestis','wages (payroll)','darbas = work','DAR-bo OO-zhmo-kes-tis','hard'],
-    ['Darbuotojai','employees','darbuotojas = an employee','dar-boo-OH-toy-yay','mid'],
-    ['Darbuotojų skaičius','number of employees','skaičius = number / count','dar-boo-oh-TOH-yoo SKY-choos','mid'],
-    ['Vidurkis','average','','VEE-door-kis','easy'],
-    ['Pokytis','change (%)','year-on-year delta','POH-kih-tis','easy'],
+    ['Atlyginimas','salary / pay','What an employee is paid. ≈ darbo užmokestis in everyday use.','at-lih-GIH-nih-mas','mid','salary · wage · pay · remuneration'],
+    ['Atlyginimų vidurkis','average salary','','at-lih-GIH-nih-moo VEE-door-kis','mid','mean salary · average pay'],
+    ['Darbo užmokestis','wages / payroll','Formal term for remuneration; ≈ atlyginimas. As a company cost it’s DU sąnaudos.','DAR-bo OO-zhmo-kes-tis','hard','wages · pay · remuneration · salary'],
+    ['Darbuotojai','employees','','dar-boo-OH-toy-yay','mid','staff · workers · workforce · personnel'],
+    ['Darbuotojų skaičius','number of employees','','dar-boo-oh-TOH-yoo SKY-choos','mid','headcount · staff count · employee count'],
+    ['Vidurkis','average','','VEE-door-kis','easy','mean'],
+    ['Pokytis','change (%)','Year-on-year delta.','POH-kih-tis','easy','change · variance · delta'],
   ]},
   { id:'U4', title:'Mokesčiai, skolos, rizika · Tax, debt & risk', cards:[
-    ['Mokestis','tax','','MOH-kes-tis','easy'],
-    ['PVM','VAT','pridėtinės vertės mokestis = value-added tax','PEH-VEH-EM','obvious'],
-    ['Skola','debt','','SKOH-lah','easy'],
-    ['Skola Sodrai','debt to Sodra (social security)','owed to the state fund','SKOH-lah SOD-rye','mid'],
-    ['Sodra','State Social Insurance Fund','the payroll-tax / pension body','SOD-rah','mid'],
-    ['Kredito rizika','credit risk','','KREH-dih-to RIH-zih-kah','obvious'],
-    ['Rizika','risk','','RIH-zih-kah','obvious'],
-    ['Įmonė','company','','im-oh-NEH','easy'],
-    ['Metai','year','plural form','MEH-tye','easy'],
-    ['Veikla','activity / line of business','what the firm does','VAYK-lah','mid'],
+    ['Mokestis','tax','Generic tax; specify pelno (profit) or PVM (VAT).','MOH-kes-tis','easy','tax · duty · levy'],
+    ['PVM','VAT','pridėtinės vertės mokestis — a sales/consumption tax. ≠ pelno mokestis (profit tax).','PEH-VEH-EM','obvious','value-added tax'],
+    ['Skola','debt','What is owed. The formal balance-sheet term is įsipareigojimai.','SKOH-lah','easy','debt · amount owed · (loosely) liability'],
+    ['Skola Sodrai','social-security debt','Owed to Sodra. ≠ skola VMI (tax debt).','SKOH-lah SOD-rye','mid','debt to Sodra · social-security arrears'],
+    ['Sodra','State Social Insurance Fund','The payroll-tax / pension body.','SOD-rah','mid','social security (LT) · SoDra'],
+    ['Kredito rizika','credit risk','','KREH-dih-to RIH-zih-kah','obvious','default risk'],
+    ['Rizika','risk','','RIH-zih-kah','obvious','hazard · exposure'],
+    ['Įmonė','company','','im-oh-NEH','easy','firm · business · enterprise'],
+    ['Metai','year','','MEH-tye','easy','year'],
+    ['Veikla','activity / line of business','What the firm does.','VAYK-lah','mid','operations · business activity · line of business'],
   ]},
   { id:'U5', title:'Rizikos lygiai · Credit-risk levels', cards:[
-    ['Žemiausia','lowest','best credit standing','zheh-MYOW-sya','hard'],
-    ['Žema','low','','ZHEH-mah','mid'],
-    ['Vidutinė','medium','','vih-doo-TIH-neh','mid'],
-    ['Aukšta','high','','OWK-shtah','mid'],
-    ['Aukščiausia','highest','worst credit standing','owk-SHCHOW-sya','hard'],
+    ['Žemiausia','lowest','Best credit standing; superlative of žema (low).','zheh-MYOW-sya','hard','very lowest · minimum'],
+    ['Žema','low','','ZHEH-mah','mid','low'],
+    ['Vidutinė','medium','','vih-doo-TIH-neh','mid','moderate · average · medium'],
+    ['Aukšta','high','','OWK-shtah','mid','high'],
+    ['Aukščiausia','highest','Worst credit standing; superlative of aukšta (high).','owk-SHCHOW-sya','hard','very highest · maximum'],
   ]},
 ];
 
@@ -223,40 +246,40 @@ const UNITS_CORE = [
 // balance-sheet, P&L and creditworthiness line items. No simple words.
 const UNITS_ADV = [
   { id:'U1', title:'Pelno (nuostolių) ataskaita · Profit & loss', cards:[
-    ['Pelnas prieš mokesčius','profit before tax','EBT, before the profit tax','PEL-nas pryesh MOH-kes-choos','hard'],
-    ['Pelnas (nuostoliai) prieš mokesčius','profit (loss) before tax','rekvizitai P&L line','','hard'],
-    ['Pelningumas','profitability / margin','pelnas → pelningumas','pel-NIN-goo-mas','hard'],
-    ['Grynasis pelningumas','net margin','net profit ÷ revenue','grih-NAH-sis pel-NIN-goo-mas','hard'],
-    ['Pelningumas prieš mokesčius','pre-tax margin','profit-before-tax ÷ revenue','','hard'],
-    ['Bendrasis pelnas','gross profit','revenue − cost of sales','BEN-drah-sis PEL-nas','mid'],
-    ['Savikaina','cost of sales / cost price','COGS','sah-vih-KY-nah','mid'],
-    ['Veiklos sąnaudos','operating expenses','OPEX','VAYK-los SAW-now-dos','mid'],
+    ['Pelnas prieš mokesčius','profit before tax','Profit before the profit tax. ≠ net profit (after tax) and ≠ operating profit (before interest & tax).','PEL-nas pryesh MOH-kes-choos','hard','pre-tax profit · PBT · earnings before tax · EBT'],
+    ['Pelnas (nuostoliai) prieš mokesčius','profit (loss) before tax','Same as pelnas prieš mokesčius; the "(nuostoliai)" just flags it may be a loss.','','hard','pre-tax profit or loss · PBT · EBT'],
+    ['Pelningumas','profitability / margin','⚠ Ambiguous on its own — an umbrella for a profit-as-%-of-revenue ratio. The qualifier decides which: grynasis = net, prieš mokesčius = pre-tax.','pel-NIN-goo-mas','hard','profitability · margin · profit margin · return'],
+    ['Grynasis pelningumas','net margin','= net profit ÷ revenue. ⇄ "net margin" = "net profit margin" = "net profitability" (all interchangeable). ≠ gross margin (gross profit) and ≠ pre-tax margin (pre-tax profit).','grih-NAH-sis pel-NIN-goo-mas','hard','net margin · net profit margin · net profitability'],
+    ['Pelningumas prieš mokesčius','pre-tax margin','= pre-tax profit ÷ revenue. ⇄ "pre-tax margin" = "pre-tax profit margin" = "PBT margin". ≠ net margin (after tax).','','hard','pre-tax margin · pre-tax profit margin · PBT margin'],
+    ['Bendrasis pelnas','gross profit','= revenue − cost of sales. ≠ net profit (after all costs). Its ratio is gross margin.','BEN-drah-sis PEL-nas','mid','gross profit · gross income'],
+    ['Savikaina','cost of sales','Direct cost of what was sold. ≠ sąnaudos (all expenses) and ≠ veiklos sąnaudos (operating expenses).','sah-vih-KY-nah','mid','cost of sales · cost of goods sold · COGS · cost price'],
+    ['Veiklos sąnaudos','operating expenses','Costs of running the business, excluding cost of sales. ≠ savikaina (cost of sales).','VAYK-los SAW-now-dos','mid','operating expenses · operating costs · OPEX'],
   ]},
   { id:'U2', title:'Balansas · Balance sheet', cards:[
-    ['Balansas','balance sheet','assets = equity + liabilities','bah-LAN-sas','mid'],
-    ['Turtas','assets','umbrella term','TOOR-tas','mid'],
-    ['Ilgalaikis turtas','non-current (fixed) assets','held over a year','il-gah-LY-kis TOOR-tas','hard'],
-    ['Trumpalaikis turtas','current assets','held under a year','troom-pah-LY-kis TOOR-tas','hard'],
-    ['Nuosavas kapitalas','equity (own capital)','assets − liabilities','noo-OH-sah-vas kah-pih-TAH-las','hard'],
-    ['Įstatinis kapitalas','share / authorised capital','registered capital','is-tah-TIH-nis kah-pih-TAH-las','hard'],
-    ['Įsipareigojimai','liabilities','what the firm owes','i-sih-pah-ray-go-YEE-my','hard'],
-    ['Mokėtinos sumos ir įsipareigojimai','payables & liabilities','rekvizitai balance line','','hard'],
-    ['Atsargos','inventories / stock','goods on hand','aht-SAR-gos','mid'],
-    ['Pinigų srautas','cash flow','pinigai = money','PIH-nih-goo SROW-tas','hard'],
+    ['Balansas','balance sheet','Snapshot where assets = equity + liabilities.','bah-LAN-sas','mid','balance sheet · statement of financial position'],
+    ['Turtas','assets','What the company owns; splits into ilgalaikis (non-current) + trumpalaikis (current).','TOOR-tas','mid','assets · property (accounting sense)'],
+    ['Ilgalaikis turtas','non-current assets','Held over a year (property, equipment). ≠ trumpalaikis turtas (current).','il-gah-LY-kis TOOR-tas','hard','non-current assets · fixed assets · long-term assets'],
+    ['Trumpalaikis turtas','current assets','Held under a year (cash, stock, receivables). ≠ ilgalaikis turtas (non-current).','troom-pah-LY-kis TOOR-tas','hard','current assets · short-term assets'],
+    ['Nuosavas kapitalas','equity','= assets − liabilities (all of the owners’ stake). ≠ įstatinis kapitalas (just the registered share capital).','noo-OH-sah-vas kah-pih-TAH-las','hard','equity · shareholders’ equity · owners’ equity · net assets'],
+    ['Įstatinis kapitalas','share capital','The registered capital — only one part of total equity. ≠ nuosavas kapitalas (all equity).','is-tah-TIH-nis kah-pih-TAH-las','hard','share capital · authorised capital · registered capital'],
+    ['Įsipareigojimai','liabilities','What the firm owes. ≠ nuosavas kapitalas (equity).','i-sih-pah-ray-go-YEE-my','hard','liabilities · obligations · debts (balance-sheet)'],
+    ['Mokėtinos sumos ir įsipareigojimai','payables and liabilities','Rekvizitai balance line: trade payables + other liabilities.','','hard','amounts payable and liabilities · payables'],
+    ['Atsargos','inventories','Goods/materials on hand; a current asset.','aht-SAR-gos','mid','inventories · inventory · stock'],
+    ['Pinigų srautas','cash flow','Cash actually moving in/out. ≠ pelnas (accrual profit, which isn’t cash).','PIH-nih-goo SROW-tas','hard','cash flow · cash flows'],
   ]},
   { id:'U3', title:'Kreditas, skolos, registras · Credit, debt, registry', cards:[
-    ['Kreditingumas','creditworthiness','the Juris LT rating','kreh-dih-TIN-goo-mas','hard'],
-    ['Įvertinimas','rating / assessment','a score','i-ver-TIH-nih-mas','mid'],
-    ['Kreditavimo rizika','lending / credit risk','rekvizitai field','','mid'],
-    ['Registruotos skolos','registered debts','officially recorded','reh-gis-TROO-oh-tos SKOH-los','hard'],
-    ['Skolų pokyčių įrašai','debt-change records','history of debt moves','','hard'],
-    ['Skola VMI','debt to the tax office','owed to VMI','SKOH-lah VEH-EM-EE','mid'],
-    ['VMI','State Tax Inspectorate','Valstybinė mokesčių inspekcija','VEH-EM-EE','mid'],
-    ['Mokestinė nepriemoka','tax arrears','overdue tax owed','moh-kes-TIH-neh neh-pryeh-MOH-kah','hard'],
-    ['Įmonės kodas','company registration code','the legal-entity code','IM-oh-nehs KOH-das','mid'],
-    ['PVM mokėtojo kodas','VAT payer code','VAT registration no.','','mid'],
-    ['Apdraustųjų skaičius','number of insured (employees)','Sodra-insured headcount','ahp-drows-TOO-yoo SKY-choos','hard'],
-    ['Finansinė ataskaita','financial statement','the annual accounts','fih-nan-SIH-neh ah-tahs-KY-tah','mid'],
+    ['Kreditingumas','creditworthiness','How creditworthy a firm is (e.g. the Juris LT score).','kreh-dih-TIN-goo-mas','hard','creditworthiness · credit rating · credit standing · credit score'],
+    ['Įvertinimas','rating / assessment','A score or grade; context picks the exact sense.','i-ver-TIH-nih-mas','mid','rating · score · assessment · evaluation · appraisal'],
+    ['Kreditavimo rizika','credit risk','Risk a borrower defaults. ≈ kredito rizika.','','mid','credit risk · lending risk · default risk'],
+    ['Registruotos skolos','registered debts','Debts officially on record.','reh-gis-TROO-oh-tos SKOH-los','hard','registered debts · recorded debts'],
+    ['Skolų pokyčių įrašai','debt-change records','History of how debts changed over time.','','hard','debt-change records · debt history'],
+    ['Skola VMI','tax debt','Owed to VMI (the tax office). ≠ skola Sodrai (social-security debt).','SKOH-lah VEH-EM-EE','mid','tax debt · debt to VMI'],
+    ['VMI','State Tax Inspectorate','Valstybinė mokesčių inspekcija — the tax authority.','VEH-EM-EE','mid','tax authority · tax office (LT) · State Tax Inspectorate'],
+    ['Mokestinė nepriemoka','tax arrears','Overdue, unpaid tax.','moh-kes-TIH-neh neh-pryeh-MOH-kah','hard','tax arrears · overdue tax · outstanding tax'],
+    ['Įmonės kodas','company registration code','The firm’s registry ID. ≠ PVM mokėtojo kodas (VAT code).','IM-oh-nehs KOH-das','mid','company code · registration number · legal-entity code'],
+    ['PVM mokėtojo kodas','VAT payer code','VAT registration ID. ≠ įmonės kodas (company code).','','mid','VAT number · VAT registration code · VAT payer code'],
+    ['Apdraustųjų skaičius','number of insured (employees)','Sodra-insured staff count.','ahp-drows-TOO-yoo SKY-choos','hard','insured headcount · number of insured'],
+    ['Finansinė ataskaita','financial statements','The annual accounts (balance sheet + P&L).','fih-nan-SIH-neh ah-tahs-KY-tah','mid','financial statements · annual accounts · financial report'],
   ]},
 ];
 
@@ -264,11 +287,11 @@ const UNITS_ADV = [
 // Front = a cue/question, back = the option or next step. Researched June 2026.
 const UNITS_TEACHER = [
   { id:'U1', title:'Qualifying to teach', cards:[
-    ['Do I need a pedagogo qualification?','For a state school yes — but you can start teaching and earn it in parallel','LT also requires state-language proficiency category 2–3','requirement','mid'],
-    ['60-credit pedagogy studies','1-year route if you already hold a science degree (physics/chem/bio/IT)','Adds the teacher qualification onto your existing subject degree','route A','mid'],
-    ['120-credit pedagogy studies','2-year route for the qualification + a brand-new teaching subject','Use if your degree doesn’t cover the subject you want to teach','route B','hard'],
-    ['"Pradedu mokyti Vilniuje"','Free Vilnius programme — start teaching now, train on the job','Open to career-changers, even with no pedagogy background','fast route','easy'],
-    ['Lithuanian language category 2–3','Get the state-language certificate early — it can gate the hire','Required to be employed as a teacher in Lithuania','requirement','mid'],
+    ['Pedagogo kvalifikacija','reikia norint dirbti valstybinėje mokykloje','Gali pradėti mokyti ir įgyti ją lygiagrečiai; privačios/tarptautinės mokyklos lankstesnės.','reikalavimas','mid'],
+    ['Pedagoginės studijos (60 kreditų)','1 metų kelias, jei jau turi dalyko diplomą','Prideda pedagogo kvalifikaciją prie tavo fizikos/chemijos/biologijos/IT diplomo.','kelias A','mid'],
+    ['Pedagoginės studijos (120 kreditų)','2 metų kelias: kvalifikacija + naujas dėstomas dalykas','Rinkis, jei dabartinis išsilavinimas neapima dalyko, kurį nori dėstyti.','kelias B','hard'],
+    ['„Pradedu mokyti Vilniuje“','nemokama Vilniaus programa — pradedi mokyti iškart','Tinka keičiantiems karjerą, net be pedagogikos; mokaisi dirbdamas.','greitas kelias','easy'],
+    ['Valstybinės kalbos kategorija 2–3','reikalinga įsidarbinti mokytoju','Pasidaryk pažymėjimą anksti — gali stabdyti įdarbinimą.','reikalavimas','mid'],
     ['Which science is most wanted?','Maths, physics & IT have the biggest shortages — easiest to get hired','Vilnius is short ~500 teachers each summer','leverage','easy'],
     ['Recognise a foreign degree','If your diploma is foreign, get it recognised (SMSM/SKVC) before applying','A school can’t formally hire you until it’s recognised','step','hard'],
   ]},
@@ -298,7 +321,7 @@ const UNITS_FITNESS = [
     ['Be the brand','You are the product — the visible ambassador of your service','One happy client can bring ten more','foundation','mid'],
     ['Show before/after proof','Clients check your socials for real results before booking','Document transformations (with permission)','trust','easy'],
     ['Define offer & price','Vilnius PT sessions run ~€10–30; set a clear package','Decide single sessions vs monthly programmes','setup','easy'],
-    ['Register individuali veikla','Get the individual-activity certificate to invoice clients legally','Needed to take paid clients properly in Lithuania','admin','mid'],
+    ['Individuali veikla','reikia, kad galėtum legaliai išrašyti sąskaitas','Įregistruok individualios veiklos pažymą, kad imtum apmokamus klientus.','admin','mid'],
     ['Specialise to charge more','Experience + a clear specialism lets you sit at the top of the range','Generic "trainer" competes on price; specialist on results','leverage','mid'],
   ]},
   { id:'U2', title:'Where clients come from', cards:[
@@ -329,7 +352,7 @@ const UNITS_WEB = [
     ['Build 2–3 portfolio pieces','Make sample sites for your niche before paying clients','Proof beats promises — show, don’t tell','foundation','mid'],
     ['Offer a retainer tier','Add a monthly care plan (hosting, updates, SEO, backups)','Retainers give ~3× the lifetime value of one-offs','revenue','mid'],
     ['Lead with reliability + results','Vilnius SMEs value dependable + niche over cheapest','Pitch outcomes (more bookings/leads), not tech','positioning','mid'],
-    ['Register individuali veikla','Get the individual-activity cert to invoice businesses','Lets you bill SMEs and look professional','admin','easy'],
+    ['Individuali veikla','reikia, kad galėtum legaliai išrašyti sąskaitas verslui','Įregistruok individualios veiklos pažymą — atrodysi profesionaliau.','admin','easy'],
   ]},
   { id:'U2', title:'Outreach channels', cards:[
     ['Audit local businesses','Find Vilnius SMEs with slow/old/no-mobile sites — that’s your opening','e.g. a bakery with an 8-sec mobile load = a warm pitch','do now','mid'],
@@ -365,7 +388,7 @@ function buildDeckCards(deck){
   const out=[];
   deck.units.forEach(u => u.cards.forEach((c,i)=> out.push({
     id: deck.id+':'+u.id+'-'+(i+1), deck: deck.id, unit: u.title,
-    target:c[0], natural:c[1], literal:c[2], gloss:c[3], tier:c[4],
+    target:c[0], natural:c[1], literal:c[2], gloss:c[3], tier:c[4], also:c[5]||'',
   })));
   deck._cards=out; return out;
 }
@@ -512,34 +535,39 @@ function dotStyle(rec,t){
 // survive every redeploy. Card IDs (U1-1, …) are stable too, so reviews stick.
 const KEY='lt-finance-tartaglia-v1';
 const FMT='ltfin1';
+const SEED={"stamp":"2026-06-25T18:01:26.850Z","records":{"d1:U1-1":{"status":"scheduled","last":1782402999941,"due":1782423436422.6084,"interval":340.608026807007,"reps":1,"lapses":0},"d1:U1-2":{"status":"scheduled","last":1782403996685,"due":1782409584773.5034,"interval":93.13480839156065,"reps":2,"lapses":1},"d1:U1-3":{"status":"scheduled","last":1782404006649,"due":1782424443130.6084,"interval":340.608026807007,"reps":2,"lapses":1},"d1:U1-4":{"status":"scheduled","last":1782404013009,"due":1782424449490.6084,"interval":340.608026807007,"reps":2,"lapses":1},"d1:U1-5":{"status":"scheduled","last":1782404020356,"due":1782424456837.6084,"interval":340.608026807007,"reps":2,"lapses":1},"d1:U2-1":{"status":"scheduled","last":1782403043491,"due":1782943815377.3884,"interval":9012.864773140243,"reps":1,"lapses":0},"d1:U2-2":{"status":"scheduled","last":1782403056242,"due":1782943828128.3884,"interval":9012.864773140243,"reps":1,"lapses":0},"d1:U2-3":{"status":"scheduled","last":1782404470876,"due":1782404775710.9546,"interval":5.080582575785908,"reps":4,"lapses":0},"d1:U2-4":{"status":"scheduled","last":1782404285323,"due":1782424721804.6084,"interval":340.608026807007,"reps":2,"lapses":0},"d1:U2-5":{"status":"scheduled","last":1782404310707,"due":1782424747188.6084,"interval":340.608026807007,"reps":2,"lapses":0},"d1:U2-6":{"status":"scheduled","last":1782404318241,"due":1782424754722.6084,"interval":340.608026807007,"reps":2,"lapses":0},"d1:U2-7":{"status":"scheduled","last":1782404381275,"due":1782424817756.6084,"interval":340.608026807007,"reps":2,"lapses":0},"d1:U3-1":{"status":"scheduled","last":1782404126232,"due":1782944898118.3884,"interval":9012.864773140243,"reps":1,"lapses":0},"d1:U3-2":{"status":"scheduled","last":1782404131694,"due":1782944903580.3884,"interval":9012.864773140243,"reps":1,"lapses":0},"d1:U3-3":{"status":"scheduled","last":1782404135363,"due":1782944907249.3884,"interval":9012.864773140243,"reps":1,"lapses":0},"d1:U3-4":{"status":"scheduled","last":1782404137934,"due":1782944909820.3884,"interval":9012.864773140243,"reps":1,"lapses":0},"d1:U3-5":{"status":"scheduled","last":1782404140613,"due":1782944912499.3884,"interval":9012.864773140243,"reps":1,"lapses":0},"d1:U3-6":{"status":"scheduled","last":1782404142886,"due":1782944914772.3884,"interval":9012.864773140243,"reps":1,"lapses":0},"d1:U3-7":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d1:U4-1":{"status":"scheduled","last":1782404437606,"due":1782424874087.6084,"interval":340.608026807007,"reps":2,"lapses":0},"d1:U4-2":{"status":"scheduled","last":1782404456321,"due":1782945228207.3884,"interval":9012.864773140243,"reps":2,"lapses":0},"d1:U4-3":{"status":"scheduled","last":1782404183258,"due":1782424619739.6084,"interval":340.608026807007,"reps":1,"lapses":0},"d1:U4-4":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d1:U4-5":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d1:U4-6":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d1:U4-7":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d1:U4-8":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d1:U4-9":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d1:U4-10":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d1:U5-1":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d1:U5-2":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d1:U5-3":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d1:U5-4":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d1:U5-5":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U1-1":{"status":"scheduled","last":1782410270275,"due":1782410870275,"interval":10,"reps":3,"lapses":1},"d2:U1-2":{"status":"scheduled","last":1782409594287,"due":1782410194287,"interval":10,"reps":2,"lapses":0},"d2:U1-3":{"status":"scheduled","last":1782410281613,"due":1782410881613,"interval":10,"reps":6,"lapses":4},"d2:U1-4":{"status":"scheduled","last":1782410055491,"due":1782410355491,"interval":5,"reps":7,"lapses":5},"d2:U1-5":{"status":"scheduled","last":1782409871678,"due":1782410171678,"interval":5,"reps":6,"lapses":3},"d2:U1-6":{"status":"scheduled","last":1782410062208,"due":1782410662208,"interval":10,"reps":3,"lapses":0},"d2:U1-7":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U1-8":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U2-1":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U2-2":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U2-3":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U2-4":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U2-5":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U2-6":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U2-7":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U2-8":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U2-9":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U2-10":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U3-1":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U3-2":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U3-3":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U3-4":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U3-5":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U3-6":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U3-7":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U3-8":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U3-9":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U3-10":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U3-11":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0},"d2:U3-12":{"status":"new","due":0,"last":null,"interval":0,"reps":0,"lapses":0}},"deleted":["d1:U3-6","d1:U3-7","d1:U4-4","d1:U4-5","d1:U4-6","d1:U4-7","d1:U4-8","d1:U4-9","d1:U4-10","d1:U5-1","d1:U5-2","d1:U5-3","d1:U5-4","d1:U5-5"],"purged":[],"settings":{"theme":"light","sortMode":"due","freeScroll":true,"hideTarget":false}};
+function modeFrom(o){ return ['order','scroll','auto'].includes(o&&o.mode) ? o.mode : ((o&&o.freeScroll)?'scroll':'order'); }
 function loadState(){
-  try{
-    const raw=localStorage.getItem(KEY);
-    if(raw){
-      const o=JSON.parse(raw);
-      // Migrate legacy single-deck ids (U1-1) to the deck-prefixed form (d1:U1-1)
-      // so progress saved before multi-deck carries over to the basics deck.
-      const fix = k => /^U\d/.test(k) ? 'd1:'+k : k;
-      const recs={}; for(const k in (o.records||{})) recs[fix(k)]=o.records[k];
-      return {
-        records:recs, deleted:(o.deleted||[]).map(fix), purged:(o.purged||[]).map(fix),
-        // remembered UI choices
-        deckId:o.deckId||null,
-        freeScroll:!!o.freeScroll, hideTarget:!!o.hideTarget,
-        bandIndex:Number.isInteger(o.bandIndex)?o.bandIndex:1,
-        sortMode:['due','longevity','topic'].includes(o.sortMode)?o.sortMode:'due',
-        theme:o.theme==='light'?'light':'dark',
-      };
-    }
-  }catch(e){}
-  return {records:{},deleted:[],purged:[],deckId:null,freeScroll:false,hideTarget:false,bandIndex:1,sortMode:'due',theme:'dark'};
+  let o=null;
+  try{ const raw=localStorage.getItem(KEY); if(raw) o=JSON.parse(raw); }catch(e){}
+  // Apply the embedded progress snapshot ONCE — when its stamp differs from what's stored.
+  if(!o || o.seedStamp!==SEED.stamp){
+    const s=SEED.settings||{};
+    return {
+      records:JSON.parse(JSON.stringify(SEED.records)), deleted:(SEED.deleted||[]).slice(), purged:(SEED.purged||[]).slice(),
+      seedStamp:SEED.stamp, deckId:(o&&o.deckId)||null,
+      mode: s.freeScroll?'scroll':'order', hideTarget:!!s.hideTarget, showBoth:false,
+      bandIndex:1, sortMode:['due','longevity','topic'].includes(s.sortMode)?s.sortMode:'due',
+      theme:s.theme==='light'?'light':'dark',
+    };
+  }
+  // Normal load + migrate legacy single-deck ids (U1-1 -> d1:U1-1).
+  const fix = k => /^U\d/.test(k) ? 'd1:'+k : k;
+  const recs={}; for(const k in (o.records||{})) recs[fix(k)]=o.records[k];
+  return {
+    records:recs, deleted:(o.deleted||[]).map(fix), purged:(o.purged||[]).map(fix),
+    seedStamp:o.seedStamp, deckId:o.deckId||null,
+    mode:modeFrom(o), hideTarget:!!o.hideTarget, showBoth:!!o.showBoth,
+    bandIndex:Number.isInteger(o.bandIndex)?o.bandIndex:1,
+    sortMode:['due','longevity','topic'].includes(o.sortMode)?o.sortMode:'due',
+    theme:o.theme==='light'?'light':'dark',
+  };
 }
 function saveState(){
   try{
     localStorage.setItem(KEY,JSON.stringify({
-      records:S.records, deleted:S.deleted, purged:S.purged, deckId:S.deckId,
-      freeScroll:S.freeScroll, hideTarget:S.hideTarget, bandIndex:S.bandIndex,
-      sortMode:S.sortMode, theme:S.theme,
+      records:S.records, deleted:S.deleted, purged:S.purged, deckId:S.deckId, seedStamp:S.seedStamp,
+      mode:S.mode, hideTarget:S.hideTarget, showBoth:S.showBoth, bandIndex:S.bandIndex, sortMode:S.sortMode, theme:S.theme,
     }));
   }catch(e){}
 }
@@ -568,14 +596,52 @@ if('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged=()=>{};
 // Defaults first (transient view state), then overlay the remembered values so
 // persisted choices win.
 const S = Object.assign({
-  idx:0, revealed:false, stepByBand:[2,2,2], importOpen:false, importText:'', histOpen:false, legendOpen:false, flashMsg:null, flashTimer:null,
-  deleted:[], purged:[], deckId:null,
+  idx:0, revealed:false, stepByBand:[2,2,2], importOpen:false, importText:'', histOpen:false, legendOpen:false, settingsOpen:false, flashMsg:null, flashTimer:null,
+  deleted:[], purged:[], deckId:null, mode:'order', pick:null, seedStamp:null, showBoth:false,
 }, loadState());
 
 function visibleCards(){ return activeCards().filter(c=>!S.deleted.includes(c.id) && !S.purged.includes(c.id)); }
 function dueCards(t){ return visibleCards().filter(c=>isDue(recordFor(c.id),t)); }
-function pool(t){ return S.freeScroll ? visibleCards() : dueCards(t); }
-function current(t){ const p=pool(t); if(!p.length) return null; if(S.idx>=p.length) S.idx=0; if(S.idx<0) S.idx=p.length-1; return p[S.idx]; }
+
+// --- Auto-due mode -----------------------------------------------------------
+// A scheduled card becomes eligible to surface once its freshness remaining drops
+// past a per-shape threshold: triangle ≤50% left, hexagon ≤75% left, circle/star
+// only when cold (0% left / fully due). If nothing scheduled is eligible, fall
+// back to new cards. Within the eligible set, coldest (most-due) first.
+function autoThreshold(rec){
+  const sh=bandFor(rec.interval).shape;
+  if(sh==='triangle') return 0.50;
+  if(sh==='hexagon')  return 0.75;
+  return 0; // circle & star: only when freshness hits 0 (cold/black)
+}
+function autoOrder(t){
+  const vis=visibleCards();
+  const fresh=c=>freshness(recordFor(c.id),t);
+  const sched=vis.filter(c=>recordFor(c.id).status!=='new');
+  const eligible=sched.filter(c=>fresh(c) <= autoThreshold(recordFor(c.id))+1e-9).sort((a,b)=>fresh(a)-fresh(b));
+  const news=vis.filter(c=>recordFor(c.id).status==='new');
+  const rest=sched.filter(c=>!eligible.includes(c)).sort((a,b)=>fresh(a)-fresh(b));
+  return [...eligible, ...news, ...rest]; // most-due first, then new, then not-yet-ready
+}
+function autoCurrent(t){
+  if(S.pick){ const c=visibleCards().find(x=>x.id===S.pick); if(c) return c; }
+  const o=autoOrder(t); return o.length?o[0]:null;
+}
+function pool(t){ return S.mode==='scroll' ? visibleCards() : dueCards(t); }
+function current(t){
+  if(S.mode==='auto') return autoCurrent(t);
+  const p = S.mode==='scroll' ? visibleCards() : dueCards(t);
+  if(!p.length) return null; if(S.idx>=p.length) S.idx=0; if(S.idx<0) S.idx=p.length-1; return p[S.idx];
+}
+// Navigate prev/next, honouring the active mode.
+function go(delta){
+  if(S.mode==='auto'){
+    const t=now(), o=autoOrder(t); if(!o.length) return;
+    const cur=autoCurrent(t); let i=Math.max(0,o.findIndex(x=>cur&&x.id===cur.id));
+    i=(i+delta+o.length)%o.length; S.pick=o[i].id;
+  } else { S.idx+=delta; }
+  S.revealed=false; render();
+}
 
 // Order for the memory map. due: soonest-due first (new cards count as due now);
 // longevity: shortest interval first; topic: original unit/deck order.
@@ -609,19 +675,19 @@ function el(tag,props,...kids){
 
 // Intro / deck-picker page.
 function renderIntro(app,t){
-  app.append(el('header',null,
-    el('div',null,
+  app.append(el('div',{class:'card headcard'},
+    el('div',{class:'headtop'}, el('span',{class:'ver'},'v'+VERSION),
+      el('button',{class:'pill'+(S.theme==='light'?' on':''),onclick:()=>{S.theme=S.theme==='light'?'dark':'light';saveState();render();}}, S.theme==='light'?'☀ Light':'🌙 Dark')),
+    el('div',{class:'headmain'}, el('div',null,
       el('h1',null,'Lithuanian finance'),
-      el('p',{class:'sub'},'Pick a deck to study'),
-    ),
-    el('button',{class:'pill'+(S.theme==='light'?' on':''),onclick:()=>{S.theme=S.theme==='light'?'dark':'light';saveState();render();}}, S.theme==='light'?'☀ Light':'🌙 Dark'),
+      el('p',{class:'sub'},'Pick a deck to study'))),
   ));
   DECKS.forEach(d=>{
     const cards=buildDeckCards(d);
     const vis=cards.filter(c=>!S.deleted.includes(c.id) && !S.purged.includes(c.id));
     const dueN=vis.filter(c=>isDue(recordFor(c.id),t)).length;
     const learnedN=cards.filter(c=>(S.records[c.id]||{reps:0}).reps>0).length;
-    app.append(el('button',{class:'deckcard',onclick:()=>{S.deckId=d.id;S.idx=0;S.revealed=false;saveState();render();}},
+    app.append(el('button',{class:'deckcard',onclick:()=>{S.deckId=d.id;S.idx=0;S.pick=null;S.revealed=false;saveState();render();}},
       el('div',{class:'dtitle'}, d.title),
       el('div',{class:'dsub'}, d.subtitle),
       el('div',{class:'dstat'},
@@ -630,22 +696,11 @@ function renderIntro(app,t){
       ),
     ));
   });
-  app.append(el('div',{class:'row',style:{marginTop:'4px'}},
+  app.append(el('div',{class:'row',style:{marginTop:'2px'}},
     el('button',{class:'pill',onclick:doDownload},'⬇ Download'),
     el('button',{class:'pill',onclick:doUpload},'⬆ Upload'),
   ));
-  app.append(el('footer',null,
-    el('span',null, el('span',{class:'ver'},'v'+VERSION), ' · ',
-      el('button',{onclick:()=>{S.histOpen=!S.histOpen;render();}},'📋 history')),
-    el('span',null,''),
-  ));
-  if(S.histOpen){
-    app.append(el('div',{class:'hist'},
-      el('div',{class:'histhead'},'Version history · '+VERSIONS.reduce((a,e)=>a+e.sp,0)+' sp total'),
-      VERSIONS.map(e=>el('div',{class:'histrow'},
-        el('span',{class:'hv'},'v'+e.v), el('span',{class:'hn'},e.note), el('span',{class:'hs'},e.sp+' sp'))),
-    ));
-  }
+  app.append(floatHistory());
   if(S.flashMsg) app.append(el('div',{class:'flash'}, S.flashMsg));
 }
 
@@ -663,54 +718,60 @@ function render(){
   const vis=visibleCards();
   const deck=deckById(S.deckId);
 
-  /* header — back to decks + active deck title */
-  app.append(el('header',null,
-    el('div',{style:{display:'flex',alignItems:'center',gap:'8px',minWidth:'0'}},
-      el('button',{class:'side back',title:'All decks',onclick:()=>{S.deckId=null;S.idx=0;saveState();render();}},'‹'),
+  /* header card — version on top, back + deck title, stats */
+  app.append(el('div',{class:'card headcard'},
+    el('div',{class:'headtop'},
+      el('span',{class:'ver'},'v'+VERSION),
+      el('div',{class:'stat'}, el('span',{class:'due'}, due+' due'), el('span',{class:'sep'},'·'), el('span',null, vis.length+' cards')),
+    ),
+    el('div',{class:'headmain'},
+      el('button',{class:'side back',title:'All decks',onclick:()=>{S.deckId=null;S.idx=0;S.pick=null;saveState();render();}},'‹'),
       el('div',{style:{minWidth:'0'}},
         el('h1',null,deck.title),
         el('p',{class:'sub'}, deck.lang==='lt' ? 'LT → EN · manual SRS' : 'Action notes · manual SRS'),
       ),
     ),
-    el('div',{class:'stat'},
-      el('div',{class:'due'}, due+' due'),
-      el('div',null, vis.length+' cards'),
-    ),
   ));
 
-  /* settings row */
+  /* control row — study mode + a settings (⚙) button */
+  const MODES=[['order','In order'],['scroll','Free scroll'],['auto','Auto-due']];
   app.append(el('div',{class:'row'},
-    el('button',{class:'pill'+(S.freeScroll?' on':''),onclick:()=>{S.freeScroll=!S.freeScroll;S.idx=0;saveState();render();}}, S.freeScroll?'Free scroll: on':'Free scroll: off'),
-    el('button',{class:'pill'+(S.hideTarget?' on':''),onclick:()=>{S.hideTarget=!S.hideTarget;saveState();render();}}, S.hideTarget?'Audio: hidden':'Audio: shown'),
-    el('button',{class:'pill'+(S.theme==='light'?' on':''),onclick:()=>{S.theme=S.theme==='light'?'dark':'light';saveState();render();}}, S.theme==='light'?'☀ Light':'🌙 Dark'),
-    el('button',{class:'pill',onclick:doDownload},'⬇ Download'),
-    el('button',{class:'pill',onclick:doUpload},'⬆ Upload'),
-    el('button',{class:'pill',onclick:doExport},'Export'),
-    el('button',{class:'pill',onclick:()=>{S.importOpen=!S.importOpen;render();}},'Import'),
-    el('button',{class:'pill',onclick:()=>{ if(confirm('Reset all progress?')){S.records={};S.deleted=[];S.purged=[];S.idx=0;saveState();render();} }},'Reset'),
+    el('div',{class:'seg'}, MODES.map(([m,lbl])=>el('button',{class:'segbtn'+(S.mode===m?' on':''),onclick:()=>{S.mode=m;S.idx=0;S.pick=null;S.revealed=false;saveState();render();}}, lbl))),
+    el('button',{class:'pill'+(S.showBoth?' on':''),title:'Review mode — show question + answer together',onclick:()=>{S.showBoth=!S.showBoth;saveState();render();}}, '👁 Both'),
+    deck.lang==='lt' ? el('button',{class:'pill'+(S.hideTarget?' on':''),title:'Hide the term, listen & guess',onclick:()=>{S.hideTarget=!S.hideTarget;saveState();render();}}, S.hideTarget?'🙈':'🔊') : null,
+    el('button',{class:'pill'+(S.settingsOpen?' on':''),onclick:()=>{S.settingsOpen=!S.settingsOpen;render();}, title:'Settings'},'⚙'),
   ));
 
-  if(S.importOpen){
-    const ta=el('textarea',{placeholder:'Paste a backup string…'}); ta.value=S.importText;
-    ta.addEventListener('input',e=>S.importText=e.target.value);
-    app.append(el('div',{class:'box',style:{padding:'8px'}}, ta,
-      el('button',{class:'apply',onclick:doImport},'Apply')));
+  if(S.settingsOpen){
+    app.append(el('div',{class:'box settings'},
+      el('div',{class:'row'},
+        el('button',{class:'pill'+(S.theme==='light'?' on':''),onclick:()=>{S.theme=S.theme==='light'?'dark':'light';saveState();render();}}, S.theme==='light'?'☀ Light':'🌙 Dark'),
+        el('button',{class:'pill',onclick:doDownload},'⬇ Download'),
+        el('button',{class:'pill',onclick:doUpload},'⬆ Upload'),
+        el('button',{class:'pill',onclick:doExport},'Export'),
+        el('button',{class:'pill',onclick:()=>{S.importOpen=!S.importOpen;render();}},'Import'),
+        el('button',{class:'pill danger',onclick:()=>{ if(confirm('Reset all progress?')){S.records={};S.deleted=[];S.purged=[];S.idx=0;S.pick=null;saveState();render();} }},'Reset'),
+      ),
+      S.importOpen ? (()=>{ const ta=el('textarea',{placeholder:'Paste a backup string…'}); ta.value=S.importText;
+        ta.addEventListener('input',e=>S.importText=e.target.value);
+        return el('div',{style:{marginTop:'6px'}}, ta, el('button',{class:'apply',onclick:doImport},'Apply')); })() : null,
+    ));
   }
 
   /* memory map — above the card */
   app.append(buildMap(cur,t,vis));
 
   /* card flanked by prev / next; hide & delete sit at the card top */
-  const prevBtn=el('button',{class:'side',title:'Previous',onclick:()=>{S.idx--;S.revealed=false;render();}},'‹');
-  const nextBtn=el('button',{class:'side',title:'Next',onclick:()=>{S.idx++;S.revealed=false;render();}},'›');
+  const prevBtn=el('button',{class:'side',title:'Previous',onclick:()=>go(-1)},'‹');
+  const nextBtn=el('button',{class:'side',title:'Next',onclick:()=>go(1)},'›');
   let cardEl;
   if(cur){
     const rec=recordFor(cur.id);
     const metaRight = rec.reps>0
       ? formatMinutes(rec.interval)+' · '+new Date(rec.due).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})
       : 'new';
-    const hide=()=>{ if(!S.deleted.includes(cur.id))S.deleted.push(cur.id); S.idx=0; S.revealed=false; saveState(); render(); };
-    const del=()=>{ if(!S.purged.includes(cur.id))S.purged.push(cur.id); S.idx=0; S.revealed=false; saveState(); render(); };
+    const hide=()=>{ if(!S.deleted.includes(cur.id))S.deleted.push(cur.id); S.idx=0; S.pick=null; S.revealed=false; saveState(); render(); };
+    const del=()=>{ if(!S.purged.includes(cur.id))S.purged.push(cur.id); S.idx=0; S.pick=null; S.revealed=false; saveState(); render(); };
     cardEl=el('div',{class:'card'},
       el('div',{class:'meta'},
         el('span',{class:'k'}, cur.tier+' · '+metaRight),
@@ -729,17 +790,19 @@ function render(){
         el('button',{class:'abtn',onclick:()=>speak(cur.target)},'🔊 Say it'),
       ) : null,
       el('div',{class:'answer'},
-        S.revealed
+        (S.revealed || S.showBoth)
           ? el('div',null,
               el('div',{class:'natural'}, cur.natural),
+              (deck.lang==='lt' && cur.also) ? el('div',{class:'syn'}, '✓ also counts: '+cur.also) : null,
               cur.literal ? el('div',{class:'literal'}, cur.literal) : null,
-              el('div',{class:'gloss'}, '['+cur.gloss+']'),
+              cur.gloss ? el('div',{class:'gloss'}, '['+cur.gloss+']') : null,
+              deck.lang==='lt' ? el('div',{class:'flexbadge '+(cur.also?'flex':'exact')}, cur.also?'⇄ flexible — any wording above counts':'⚑ exact term') : null,
             )
           : el('button',{class:'show',onclick:()=>{S.revealed=true;render();}},'Show meaning'),
       ),
     );
   } else {
-    cardEl=el('div',{class:'empty'}, '🎉 Nothing due. Turn on free scroll to browse.');
+    cardEl=el('div',{class:'empty'}, S.mode==='auto' ? '🎉 All caught up — nothing decayed enough yet.' : '🎉 Nothing due. Switch to Free scroll to browse.');
   }
   app.append(el('div',{class:'cardwrap'}, prevBtn, el('div',{class:'cardcol'}, cardEl), nextBtn));
 
@@ -769,7 +832,7 @@ function render(){
       el('button',{class:'commit',onclick:()=>{
         const mm=chosen();
         S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now());
-        saveState(); S.revealed=false; S.stepByBand=[2,2,2];
+        saveState(); S.revealed=false; S.stepByBand=[2,2,2]; S.pick=null; // auto advances
         flash('Scheduled in '+formatMinutes(mm));
       }},'Commit ↵'),
     ));
@@ -807,20 +870,17 @@ function render(){
       transition:'background-color .6s ease',
     });
     glyph.append(inner);
-    // stable id number, centred on the shape, readable on any fill (white text + dark halo)
-    const num=el('span',{}, String(numOf[c.id]||''));
-    Object.assign(num.style,{
-      position:'absolute', left:'0', top:'0', width:'100%', height:'100%',
-      display:'flex', alignItems:'center', justifyContent:'center',
-      fontSize:(Math.max(s.diameter*0.55,7)).toFixed(1)+'px', fontWeight:'800', lineHeight:'1',
-      color:'#fff', textShadow:'0 0 1px #000,0 0 1px #000,0 0 1px #000',
-      pointerEvents:'none', zIndex:'2',
-    });
-    glyph.append(num);
-    const btn=el('button',{class:'dot',title:'#'+(numOf[c.id]||'')+' · '+c.target+' · '+s.shape+' · '+(s.due?'due':statusAt(rec,t)),style:{width:size+'px',height:size+'px'},
-      onclick:()=>{ const p=pool(t); const i=p.findIndex(x=>x.id===c.id); if(i>=0){S.idx=i; S.revealed=false; render();} else flash('Hidden — in free scroll only'); }},
-      glyph);
-    if(isCur) btn.append(el('span',{class:'ring'})); // 25px circle marks the card on screen
+    // shape sits in a fixed slot; the stable id number reads BELOW it, one muted colour
+    const shapeBox=el('span',{class:'shapebox',style:{width:size+'px',height:size+'px'}}, glyph, isCur?el('span',{class:'ring'}):null);
+    const num=el('span',{class:'dotnum'+(isCur?' cur':'')}, String(numOf[c.id]||''));
+    const btn=el('button',{class:'dot',title:'#'+(numOf[c.id]||'')+' · '+c.target+' · '+s.shape+' · '+(s.due?'due':statusAt(rec,t)),
+      onclick:()=>{
+        if(S.mode==='auto'){ S.pick=c.id; S.revealed=false; render(); return; }
+        const p = S.mode==='scroll' ? visibleCards() : dueCards(t);
+        const i=p.findIndex(x=>x.id===c.id);
+        if(i>=0){ S.idx=i; S.revealed=false; render(); } else flash('Not in this mode’s queue');
+      }},
+      shapeBox, num);
     map.append(btn);
   });
   const SORT_LABEL={due:'due date',longevity:'longevity',topic:'topic'};
@@ -843,26 +903,29 @@ function render(){
       '△ &lt;30m (max orange) · ⬡ &lt;2d (max white) · ○ &lt;1mo (blue) · ✦ 1mo+ (blue). Faded = due. Each knob snaps to 5 fixed intervals.'}) : null,
   ));
 
-  app.append(el('footer',null,
-    el('span',null,
-      el('span',{class:'ver'},'v'+VERSION), ' · ',
-      el('button',{onclick:()=>{S.histOpen=!S.histOpen;render();}},'📋 history'),
-    ),
-    S.deleted.length>0 ? el('button',{onclick:()=>{S.deleted=[];saveState();render();}},'Restore '+S.deleted.length+' hidden') : el('span',null,''),
-  ));
-
-  if(S.histOpen){
-    app.append(el('div',{class:'hist'},
-      el('div',{class:'histhead'},'Version history · '+VERSIONS.reduce((a,e)=>a+e.sp,0)+' sp total'),
-      VERSIONS.map(e=>el('div',{class:'histrow'},
-        el('span',{class:'hv'},'v'+e.v),
-        el('span',{class:'hn'}, e.note),
-        el('span',{class:'hs'}, e.sp+' sp'),
-      )),
+  if(S.deleted.length>0){
+    app.append(el('footer',null,
+      el('button',{onclick:()=>{S.deleted=[];saveState();render();}},'Restore '+S.deleted.length+' hidden'),
+      el('span',null,''),
     ));
   }
 
+  app.append(floatHistory());
   if(S.flashMsg) app.append(el('div',{class:'flash'}, S.flashMsg));
+}
+
+// Floating ⓘ history button + popup, fixed bottom-right (shared by both pages).
+function floatHistory(){
+  const wrap=el('div',{class:'histfab'});
+  wrap.append(el('button',{class:'fab',title:'Version history',onclick:()=>{S.histOpen=!S.histOpen;render();}}, '📋'));
+  if(S.histOpen){
+    wrap.append(el('div',{class:'hist pop'},
+      el('div',{class:'histhead'},'v'+VERSION+' · history · '+VERSIONS.reduce((a,e)=>a+e.sp,0)+' sp'),
+      VERSIONS.map(e=>el('div',{class:'histrow'},
+        el('span',{class:'hv'},'v'+e.v), el('span',{class:'hn'}, e.note), el('span',{class:'hs'}, e.sp+' sp'))),
+    ));
+  }
+  return wrap;
 }
 
 function doExport(){
@@ -895,7 +958,7 @@ function buildSnapshot(){
   }).filter(Boolean).sort((a,b)=>b.reps-a.reps || b.intervalMin-a.intervalMin);
   return {
     app:'lt-finance-tartaglia', version:VERSION, exportedAt:new Date().toISOString(),
-    settings:{theme:S.theme, sortMode:S.sortMode, freeScroll:S.freeScroll, hideTarget:S.hideTarget},
+    settings:{theme:S.theme, sortMode:S.sortMode, mode:S.mode, hideTarget:S.hideTarget},
     counts:{total:allCards().length, reviewed:reviewed.length, hidden:S.deleted.length, deleted:S.purged.length},
     reviewed,
     hidden:S.deleted.map(id=>({id, lt:(cardById(id)||{}).target})),
@@ -937,10 +1000,10 @@ function doUpload(){
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='TEXTAREA') return;
   const cur=current(now()); if(!cur) return;
-  if(e.key==='Enter'){ const mm=BAND_STEPS[S.bandIndex][S.stepByBand[S.bandIndex]]; S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now()); saveState(); S.revealed=false; S.stepByBand=[2,2,2]; flash('Scheduled in '+formatMinutes(mm)); }
+  if(e.key==='Enter'){ const mm=BAND_STEPS[S.bandIndex][S.stepByBand[S.bandIndex]]; S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now()); saveState(); S.revealed=false; S.stepByBand=[2,2,2]; S.pick=null; flash('Scheduled in '+formatMinutes(mm)); }
   else if(e.key===' '){ e.preventDefault(); S.revealed=!S.revealed; render(); }
-  else if(e.key==='ArrowRight'){ S.idx++; S.revealed=false; render(); }
-  else if(e.key==='ArrowLeft'){ S.idx--; S.revealed=false; render(); }
+  else if(e.key==='ArrowRight'){ go(1); }
+  else if(e.key==='ArrowLeft'){ go(-1); }
 });
 
 render();
