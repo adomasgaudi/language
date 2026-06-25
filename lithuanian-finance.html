@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.10 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.11 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -138,6 +138,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.11',sp:0.5, note:'Per-shape colour caps: triangle→orange, hexagon→white, circle/star→blue'},
   {v:'0.1.10',sp:1,   note:'Strip slider labels/ticks/header; chosen time rides on the thumb; knobs 10px apart'},
   {v:'0.1.9', sp:0.5, note:'Round knob intervals to 20s/1m/5m/10m/30m · 10m/30m/4h/12h/48h · 12h/48h/5d/14d/30d'},
   {v:'0.1.8', sp:2,   note:'Compact one-view layout: halved margins, prev/next on sides, hide+delete atop card, crammed dots & knobs, collapsible key'},
@@ -273,12 +274,14 @@ const SIZE_MIN=10, SIZE_MAX=15;
 const GLOW_AT=0.78; // freshest shapes carry a soft glow — some shine, not the old halo
 const HEAT=[[1,[77,166,255]],[0.8,[235,245,255]],[0.6,[255,214,92]],[0.4,[255,138,30]],[0.2,[229,57,53]],[0,[58,42,42]]];
 
-// Longevity bands, smallest interval first.
+// Longevity bands, smallest interval first. `peak` caps how bright/cool the
+// freshness colour can get: triangles top out at orange, hexagons at brilliant
+// white, circles & stars reach full blue — so longer-held words glow cooler.
 const SHAPE_BANDS=[
-  {shape:'triangle', lo:0,     hi:30},      // up to 30 min
-  {shape:'hexagon',  lo:30,    hi:2880},    // 30 min – 2 d
-  {shape:'circle',   lo:2880,  hi:43200},   // 2 d – 1 mo
-  {shape:'star',     lo:43200, hi:Infinity},// 1 mo +  (JWST-style 4-point star)
+  {shape:'triangle', lo:0,     hi:30,       peak:0.4}, // up to 30 min · max orange
+  {shape:'hexagon',  lo:30,    hi:2880,     peak:0.8}, // 30 min – 2 d  · max white
+  {shape:'circle',   lo:2880,  hi:43200,    peak:1.0}, // 2 d – 1 mo    · up to blue
+  {shape:'star',     lo:43200, hi:Infinity, peak:1.0}, // 1 mo +        · up to blue
 ];
 function bandFor(m){
   for(const b of SHAPE_BANDS) if(m<b.hi) return b;
@@ -334,11 +337,12 @@ function dotStyle(rec,t){
   const f=freshness(rec,t);
   const due=!isNew && t>=rec.due;
   const b=bandFor(rec.interval);
+  const cf=f*b.peak;             // peak colour capped by longevity band
   return {
     shape:b.shape, clip:clipFor(b.shape),
-    diameter:bandSize(b,rec.interval), color:heatColor(f),
+    diameter:bandSize(b,rec.interval), color:heatColor(cf),
     isNew,                       // new = hollow outline, no fill
-    due, glow:!isNew && f>=GLOW_AT,
+    due, glow:!isNew && cf>=GLOW_AT,
   };
 }
 
@@ -606,8 +610,9 @@ function render(){
     el('button',{class:'legtoggle',onclick:()=>{S.legendOpen=!S.legendOpen;render();}}, (S.legendOpen?'▾':'▸')+' key'),
     S.legendOpen ? el('div',{class:'legend',html:
       '<b>How to use:</b> read the term, guess, hit <b>Show meaning</b>, pick an interval, <b>Commit</b>. '+
-      '<b>New cards</b> are a hollow outline; reviewed ones fill and heat from blue (fresh) → orange → coal as they fade. '+
-      'Shape = longevity: △ &lt;30m · ⬡ &lt;2d · ○ &lt;1mo · ✦ 1mo+. Faded = due. Each knob snaps to 5 log intervals.'}) : null,
+      '<b>New cards</b> are a hollow outline; reviewed ones fill and cool toward their peak as the word sets. '+
+      'Shape = longevity, and its peak colour grows cooler the longer you hold a word: '+
+      '△ &lt;30m (max orange) · ⬡ &lt;2d (max white) · ○ &lt;1mo (blue) · ✦ 1mo+ (blue). Faded = due. Each knob snaps to 5 fixed intervals.'}) : null,
   ));
 
   app.append(el('footer',null,
