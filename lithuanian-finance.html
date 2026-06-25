@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.13 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.14 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -146,6 +146,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.14',sp:4,   note:'3 personalised decks (teacher job, fitness clients, website clients — Vilnius, researched); numbered shapes to track cards across re-sorts'},
   {v:'0.1.13',sp:3,   note:'Intro deck-picker + 2nd deck (advanced rekvizitai finance, 30 cards); thin grey outline on shapes; legacy progress migrated'},
   {v:'0.1.12',sp:1.5, note:'Download/Upload progress as readable JSON; brighter white/yellow glow; greyer light-theme bg'},
   {v:'0.1.11',sp:0.5, note:'Per-shape colour caps: triangle→orange, hexagon→white, circle/star→blue'},
@@ -259,9 +260,103 @@ const UNITS_ADV = [
   ]},
 ];
 
+// ---- Deck 3: Science teacher job in Vilnius (action/knowledge cards) --------
+// Front = a cue/question, back = the option or next step. Researched June 2026.
+const UNITS_TEACHER = [
+  { id:'U1', title:'Qualifying to teach', cards:[
+    ['Do I need a pedagogo qualification?','For a state school yes — but you can start teaching and earn it in parallel','LT also requires state-language proficiency category 2–3','requirement','mid'],
+    ['60-credit pedagogy studies','1-year route if you already hold a science degree (physics/chem/bio/IT)','Adds the teacher qualification onto your existing subject degree','route A','mid'],
+    ['120-credit pedagogy studies','2-year route for the qualification + a brand-new teaching subject','Use if your degree doesn’t cover the subject you want to teach','route B','hard'],
+    ['"Pradedu mokyti Vilniuje"','Free Vilnius programme — start teaching now, train on the job','Open to career-changers, even with no pedagogy background','fast route','easy'],
+    ['Lithuanian language category 2–3','Get the state-language certificate early — it can gate the hire','Required to be employed as a teacher in Lithuania','requirement','mid'],
+    ['Which science is most wanted?','Maths, physics & IT have the biggest shortages — easiest to get hired','Vilnius is short ~500 teachers each summer','leverage','easy'],
+    ['Recognise a foreign degree','If your diploma is foreign, get it recognised (SMSM/SKVC) before applying','A school can’t formally hire you until it’s recognised','step','hard'],
+  ]},
+  { id:'U2', title:'Where to apply', cards:[
+    ['mokau.vilnius.lt','Register your profile on Vilnius’s free teacher job board first','Schools post vacancies and can offer you a job directly','do now','easy'],
+    ['Register even if not job-hunting','Stay listed (anonymously) so schools reach out for future openings','Costs nothing; keeps you in the pool','tactic','easy'],
+    ['mokytojodarbas.lt','Browse teacher & tutor vacancies across Vilnius','Covers both school posts and private tutoring','channel','easy'],
+    ['School "Darbo skelbimai" pages','Email Vilnius schools directly — many post only on their own site','A direct, polite email often beats waiting for a portal post','channel','mid'],
+    ['cvbankas.lt / cv.lt','Filter Švietimas + Vilnius on the big LT job portals','Private schools and companies post here too','channel','easy'],
+    ['Private & international schools','Target them — they’re flexible on formal pedagogy','Often value subject depth + English over a pedagogy diploma','option','mid'],
+    ['Apply in spring for September','Hiring peaks April–August for the new school year — apply early','The teacher gap is filled over the summer','timing','easy'],
+  ]},
+  { id:'U3', title:'Company route & getting picked', cards:[
+    ['Teach at a company, not a school','EdTech / STEM-education firms hire science explainers & content makers','Tutoring centres, science museums, course platforms','option','mid'],
+    ['Robotics & coding schools','Vilnius kids’ STEM clubs need science-minded instructors','Lower formal barrier than state schools','option','mid'],
+    ['Start as a tutor (korepetitorius)','Build a teaching reputation fast while you qualify','Platforms: superprof.lt, mokytojodarbas.lt — proves you can teach','bridge','easy'],
+    ['Pitch an after-school science club','Offer a school a physics/chem enrichment club to get a foot in','Low-risk way for a school to try you out','tactic','mid'],
+    ['Have a demo lesson ready','Schools often ask for a trial lesson — prepare one vivid 15-min topic','Rehearse it so you can teach on request','prep','mid'],
+    ['Lithuanian CV + motivation letter','Emphasise subject depth, any mentoring, and willingness to do pedagogy studies','Tailor it per school; keep it concrete','prep','easy'],
+  ]},
+];
+
+// ---- Deck 4: Finding fitness clients in Vilnius ----------------------------
+const UNITS_FITNESS = [
+  { id:'U1', title:'Positioning & setup', cards:[
+    ['Pick a niche','Specialise (busy-professional fat loss, post-injury, strength for women)','A narrow niche makes every post & ad pull the right people','foundation','mid'],
+    ['Be the brand','You are the product — the visible ambassador of your service','One happy client can bring ten more','foundation','mid'],
+    ['Show before/after proof','Clients check your socials for real results before booking','Document transformations (with permission)','trust','easy'],
+    ['Define offer & price','Vilnius PT sessions run ~€10–30; set a clear package','Decide single sessions vs monthly programmes','setup','easy'],
+    ['Register individuali veikla','Get the individual-activity certificate to invoice clients legally','Needed to take paid clients properly in Lithuania','admin','mid'],
+    ['Specialise to charge more','Experience + a clear specialism lets you sit at the top of the range','Generic "trainer" competes on price; specialist on results','leverage','mid'],
+  ]},
+  { id:'U2', title:'Where clients come from', cards:[
+    ['Instagram is your storefront','Post training clips, tips and client wins consistently','Most Vilnius PT clients discover coaches via IG','weekly','easy'],
+    ['Free trial session','Offer a free/cheap first session to lower the barrier','Mirrors how gyms convert (e.g. Lemon Gym 3-day trial)','tactic','easy'],
+    ['Base yourself at a gym','Train at a Vilnius club (Lemon Gym, Gym+, Impuls) for foot traffic','Members are warm leads already in the room','channel','mid'],
+    ['Facebook groups','Give value in Vilnius sport/health & local community groups','Answer questions first, then mention you coach — don’t spam','channel','easy'],
+    ['Listing platforms','List on paslaugos.lt, motifind.lt and trainer directories','People searching "asmeninis treneris Vilnius" find you','channel','easy'],
+    ['One-page website + Google','So "asmeninis treneris Vilnius" searches land on you','Show niche, prices, booking link, reviews','channel','mid'],
+    ['Referral reward','Give a free session for every new client a happy client refers','Word of mouth is the cheapest, warmest lead','tactic','easy'],
+    ['Free outdoor bootcamp','Run a free group session (e.g. Vingio parkas) to collect leads','A taster converts several people at once','tactic','mid'],
+  ]},
+  { id:'U3', title:'Convert & keep them', cards:[
+    ['Reply within the hour','Speed wins the booking — answer DMs fast','Open with "what’s your goal?"','sales','easy'],
+    ['Sell the outcome','Talk about their goal (lose 8 kg, run 10 k), not "training hours"','People buy results and accountability','sales','mid'],
+    ['Onboard with a goal chat','First session = assess + set a clear plan; shows professionalism','A structured start makes them stay','retention','mid'],
+    ['Keep them with check-ins','Regular messages + progress tracking cut drop-off','Retention is cheaper than finding new clients','retention','mid'],
+    ['Collect testimonials','After a win, ask for a short review/photo for your socials','Each testimonial sells the next client','growth','easy'],
+    ['Track where clients came from','Ask every new client how they found you; double down on it','Invest in the channel that actually delivers','analytics','mid'],
+  ]},
+];
+
+// ---- Deck 5: Finding website-building clients in Vilnius --------------------
+const UNITS_WEB = [
+  { id:'U1', title:'Positioning & offer', cards:[
+    ['Pick a niche industry','Focus on one type (restaurants, clinics, real estate, e-shops)','A niche pitch beats a generic "I build websites"','foundation','mid'],
+    ['Productise your offer','Sell a clear package ("5-page business site in 2 weeks, €X")','Easier to say yes to than an open-ended quote','setup','mid'],
+    ['Build 2–3 portfolio pieces','Make sample sites for your niche before paying clients','Proof beats promises — show, don’t tell','foundation','mid'],
+    ['Offer a retainer tier','Add a monthly care plan (hosting, updates, SEO, backups)','Retainers give ~3× the lifetime value of one-offs','revenue','mid'],
+    ['Lead with reliability + results','Vilnius SMEs value dependable + niche over cheapest','Pitch outcomes (more bookings/leads), not tech','positioning','mid'],
+    ['Register individuali veikla','Get the individual-activity cert to invoice businesses','Lets you bill SMEs and look professional','admin','easy'],
+  ]},
+  { id:'U2', title:'Outreach channels', cards:[
+    ['Audit local businesses','Find Vilnius SMEs with slow/old/no-mobile sites — that’s your opening','e.g. a bakery with an 8-sec mobile load = a warm pitch','do now','mid'],
+    ['Two-line cold email','Compliment + name one problem + offer a free 3-min audit','Short, specific, niche-tailored emails get replies','channel','mid'],
+    ['LinkedIn outreach','Optimise profile, post results, DM target-industry owners','Network with + showcase expertise to your niche','channel','mid'],
+    ['Lithuanian FB groups','Join "Webmasteriai", freelance & verslas groups; give value, then pitch','Job posts appear and you can present your services','channel','easy'],
+    ['freelancer.lt / paslaugos.lt','List where LT businesses post web work','People searching "svetainių kūrimas" find you','channel','easy'],
+    ['Upwork for early volume','Big international demand — build proof + reviews fast','Lower rates at first; use it to build a portfolio','channel','mid'],
+    ['Ask for referrals','Every finished site → ask the owner for 1–2 referrals','Happy SME owners know other SME owners','tactic','easy'],
+    ['Partner with agencies','Subcontract overflow from marketing agencies & designers','Steady work without doing the selling yourself','channel','mid'],
+  ]},
+  { id:'U3', title:'Close & grow', cards:[
+    ['Free site audit hook','Offer a quick free audit; it opens the sales conversation','Give value first, earn the meeting','sales','easy'],
+    ['Sell business outcomes','Frame it as more leads/bookings, not "a website"','Owners buy revenue, not HTML','sales','mid'],
+    ['Show a fast mock-up','A quick homepage mock makes the project feel real → closes deals','Seeing it beats describing it','sales','mid'],
+    ['Take a deposit','Invoice 30–50% upfront before building','Filters serious clients and protects your time','process','easy'],
+    ['Upsell care plan at launch','At handover, offer the monthly retainer for updates & SEO','Best moment to turn a one-off into recurring income','growth','mid'],
+    ['Track your pipeline','Log every lead and its source; focus on the best channel','Stop random outreach — invest where deals close','analytics','mid'],
+  ]},
+];
+
 const DECKS = [
-  {id:'d1', title:'Finance basics', subtitle:'Data Explorer terms · 34 cards', units:UNITS_CORE},
-  {id:'d2', title:'Advanced finance', subtitle:'Financial statements & credit · 30 cards', units:UNITS_ADV},
+  {id:'d1', lang:'lt', title:'Finance basics', subtitle:'Data Explorer terms · LT→EN · 34 cards', units:UNITS_CORE},
+  {id:'d2', lang:'lt', title:'Advanced finance', subtitle:'Financial statements & credit · LT→EN · 30 cards', units:UNITS_ADV},
+  {id:'d3', lang:'en', title:'Science teacher job', subtitle:'Get a teaching job in Vilnius · 20 cards', units:UNITS_TEACHER},
+  {id:'d4', lang:'en', title:'Fitness clients', subtitle:'Find PT clients in Vilnius · 20 cards', units:UNITS_FITNESS},
+  {id:'d5', lang:'en', title:'Website clients', subtitle:'Find web-build clients in Vilnius · 20 cards', units:UNITS_WEB},
 ];
 
 // Build a deck's cards once, with globally-unique ids (deck-prefixed).
@@ -574,7 +669,7 @@ function render(){
       el('button',{class:'side back',title:'All decks',onclick:()=>{S.deckId=null;S.idx=0;saveState();render();}},'‹'),
       el('div',{style:{minWidth:'0'}},
         el('h1',null,deck.title),
-        el('p',{class:'sub'},'LT → EN · manual SRS'),
+        el('p',{class:'sub'}, deck.lang==='lt' ? 'LT → EN · manual SRS' : 'Action notes · manual SRS'),
       ),
     ),
     el('div',{class:'stat'},
@@ -630,9 +725,9 @@ function render(){
           : el('div',{class:'term'}, cur.target),
         (!S.hideTarget) ? el('div',{class:'from'}, cur.unit.split(' · ')[0]) : null,
       ),
-      el('div',{class:'audio'},
+      deck.lang==='lt' ? el('div',{class:'audio'},
         el('button',{class:'abtn',onclick:()=>speak(cur.target)},'🔊 Say it'),
-      ),
+      ) : null,
       el('div',{class:'answer'},
         S.revealed
           ? el('div',null,
@@ -683,6 +778,8 @@ function render(){
   function buildMap(cur,t,vis){
   const map=el('div',{class:'map'});
   const sorted=sortCards(vis,t);
+  // stable 1-based number per card (deck order), so you can follow one as they re-sort
+  const numOf={}; activeCards().forEach((c,i)=>numOf[c.id]=i+1);
   sorted.forEach(c=>{
     const rec=recordFor(c.id), s=dotStyle(rec,t), isCur=cur&&c.id===cur.id;
     const size=Math.max(s.diameter, isCur?25:14); // tap target; fit the 25px ring when current
@@ -710,7 +807,17 @@ function render(){
       transition:'background-color .6s ease',
     });
     glyph.append(inner);
-    const btn=el('button',{class:'dot',title:c.target+' · '+s.shape+' · '+(s.due?'due':statusAt(rec,t)),style:{width:size+'px',height:size+'px'},
+    // stable id number, centred on the shape, readable on any fill (white text + dark halo)
+    const num=el('span',{}, String(numOf[c.id]||''));
+    Object.assign(num.style,{
+      position:'absolute', left:'0', top:'0', width:'100%', height:'100%',
+      display:'flex', alignItems:'center', justifyContent:'center',
+      fontSize:(Math.max(s.diameter*0.55,7)).toFixed(1)+'px', fontWeight:'800', lineHeight:'1',
+      color:'#fff', textShadow:'0 0 1px #000,0 0 1px #000,0 0 1px #000',
+      pointerEvents:'none', zIndex:'2',
+    });
+    glyph.append(num);
+    const btn=el('button',{class:'dot',title:'#'+(numOf[c.id]||'')+' · '+c.target+' · '+s.shape+' · '+(s.due?'due':statusAt(rec,t)),style:{width:size+'px',height:size+'px'},
       onclick:()=>{ const p=pool(t); const i=p.findIndex(x=>x.id===c.id); if(i>=0){S.idx=i; S.revealed=false; render();} else flash('Hidden — in free scroll only'); }},
       glyph);
     if(isCur) btn.append(el('span',{class:'ring'})); // 25px circle marks the card on screen
