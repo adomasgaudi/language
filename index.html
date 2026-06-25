@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.21 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.22 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -24,6 +24,7 @@
     --t400:#a1a1aa; --t500:#71717a; --t600:#52525b;
     --sky:#38bdf8; --sky300:#7dd3fc; --sky400:#38bdf8; --sky500:#0ea5e9;
     --rose:#fb7185; --outline:#8b8b93; --knob:#52606e; --knob-edge:#6b7785; --ok:#34d399;
+    --zA:#16384a; --zB:#2b6f93;
   }
   body.light{
     --bg:#dcdfe6; --panel:rgba(255,255,255,.82); --panel-solid:#ffffff;
@@ -32,6 +33,7 @@
     --t400:#52525b; --t500:#71717a; --t600:#a1a1aa;
     --sky:#0ea5e9; --sky300:#0284c7; --sky400:#0ea5e9; --sky500:#0ea5e9;
     --rose:#e11d48; --outline:#9aa0ab; --knob:#cbd2da; --knob-edge:#aeb6c0; --ok:#059669;
+    --zA:#bcdcef; --zB:#7cc1e6;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%}
@@ -105,9 +107,10 @@
   .syn{font-size:13px;color:var(--ok);margin-top:4px;line-height:1.4}
   .literal{font-size:13px;color:var(--t400);margin-top:5px;line-height:1.4}
   .gloss{font-size:12px;color:var(--t500);margin-top:4px;font-style:italic}
-  .flexbadge{display:inline-block;margin-top:8px;font-size:10px;font-weight:700;letter-spacing:.02em;padding:3px 9px;border-radius:6px}
-  .flexbadge.flex{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
-  .flexbadge.exact{background:var(--line);color:var(--t400)}
+  .infotoggle{display:inline-block;margin-top:8px;background:transparent;color:var(--sky300);font-size:12px;font-weight:600}
+  .infotoggle:hover{filter:brightness(1.15)}
+  .infobox{margin-top:6px;text-align:left;font-size:12.5px;line-height:1.55;color:var(--t300);background:var(--line);border-radius:8px;padding:9px 11px}
+  .infobox b{color:var(--t100);font-weight:700}
   .show{display:flex;align-items:center;justify-content:center;width:100%;min-height:64px;border:1px solid var(--line2);border-radius:10px;padding:8px 20px;font-size:15px;font-weight:600;color:var(--t300);background:transparent}
   .show:hover{background:var(--line)} .show:active{transform:scale(.99)}
   /* three bare knobs, very tight stack, small (non-pill) corners */
@@ -180,6 +183,7 @@
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.22',sp:3,   note:'Zoned knob track (blue/brighter/dashed/grey vs last interval); per-card "nuance & origin" dropdowns (synonym differences, usage, etymology); Auto-due only shows almost-due/new cards, else "all reviewed"'},
   {v:'0.1.21',sp:1,   note:'Knob auto-pre-sets to one step above the card’s last interval (shaded track = last interval)'},
   {v:'0.1.20',sp:0.5, note:'Memory map: side padding + crammed dots (tighter horizontal spacing, smaller boxes)'},
   {v:'0.1.19',sp:2,   note:'Knob track filled to the card’s last-scheduled interval; tighter slider gaps + small (non-pill) corners; solid history popup; emoji replaced with minimalist line icons'},
@@ -215,7 +219,7 @@ document.title = 'Lithuanian finance v' + VERSION;
 // Tuple: [lt, primary EN, note(definition + ≠ distinctions), pronunciation, tier, synonyms(all count)]
 const UNITS_CORE = [
   { id:'U1', title:'Pajamos ir apyvarta · Revenue & turnover', cards:[
-    ['Apyvarta','turnover','Total sales value incl. pass-through (e.g. media ad spend). The dashboard’s "Turnover (apyvarta)". ≠ spėjamos pajamos (fee income only).','ah-pih-VAR-tah','mid','gross turnover · sales · (loosely) revenue'],
+    ['Apyvarta','turnover','Total sales value incl. pass-through (e.g. media ad spend). The dashboard’s "Turnover (apyvarta)". ≠ spėjamos pajamos (fee income only).','ah-pih-VAR-tah','mid','gross turnover · sales · (loosely) revenue','<b>Etymology:</b> apie- (“around”) + varta (“a turning”) — literally “turnover”, money turning over through the business. <b>Nuance:</b> apyvarta is the gross top line, so for an agency it includes media it buys for clients and overstates what it actually earns — that’s why it’s paired with spėjamos pajamos (fee income). English “revenue” is looser and often equals pajamos rather than this gross figure.'],
     ['Pajamos','income / revenue','General word for money coming in; context picks the exact sense. ≠ apyvarta (specifically turnover).','pah-YAH-mos','mid','income · revenue · earnings · proceeds'],
     ['Spėjamos pajamos','estimated revenue (fee income)','Fee income, pass-through excluded — the dashboard’s "Revenue (spėjamos pajamos)". ≠ apyvarta (turnover, includes pass-through).','SPAY-yah-mos pah-YAH-mos','hard','projected revenue · estimated income · fee income'],
     ['Pardavimo pajamos','sales revenue','Revenue from sales — the P&L top line. ≈ pajamos in most contexts.','par-DAH-vih-mo pah-YAH-mos','hard','sales · revenue from sales · net sales'],
@@ -223,10 +227,10 @@ const UNITS_CORE = [
   ]},
   { id:'U2', title:'Pelnas ir sąnaudos · Profit & costs', cards:[
     ['Pelnas','profit','Generic profit. Add a qualifier for precision: grynasis = net, bendrasis = gross, prieš mokesčius = pre-tax.','PEL-nas','easy','earnings · gain · income (profit sense)'],
-    ['Grynasis pelnas','net profit','Profit after ALL costs and tax (the bottom line). ≠ gross profit (before opex) and ≠ pre-tax profit (before tax).','grih-NAH-sis PEL-nas','mid','net income · net earnings · profit after tax · bottom line'],
+    ['Grynasis pelnas','net profit','Profit after ALL costs and tax (the bottom line). ≠ gross profit (before opex) and ≠ pre-tax profit (before tax).','grih-NAH-sis PEL-nas','mid','net income · net earnings · profit after tax · bottom line','<b>grynas</b> = “pure / clean”, so grynasis pelnas is the “clean” profit left after every cost and tax — the single number behind “the company made €X”. <b>Synonyms interchangeable:</b> net income, net earnings, bottom line all name this; “bottom line” is literally the last line of the profit-and-loss statement.'],
     ['Nuostoliai','losses','Negative result; the opposite of pelnas. A negative net result = net loss.','noo-OST-oh-lyay','hard','loss · net loss · deficit'],
     ['Sąnaudos','costs / expenses','General costs. ≠ savikaina (specifically cost of sales).','SAW-now-dos','mid','costs · expenses · expenditure · outlays'],
-    ['DU sąnaudos','wage costs','DU = darbo užmokestis. Salaries plus related employer costs.','DEH-OO SAW-now-dos','hard','payroll costs · labour costs · staff costs · personnel costs'],
+    ['DU sąnaudos','wage costs','DU = darbo užmokestis. Salaries plus related employer costs.','DEH-OO SAW-now-dos','hard','payroll costs · labour costs · staff costs · personnel costs','<b>DU</b> abbreviates darbo užmokestis (“work pay” = wages); you’ll see it spelled out or abbreviated in statements. <b>Nuance:</b> it’s the full employer cost of staff — gross pay plus employer Sodra contributions — not employees’ take-home pay.'],
     ['Ne-atlyginimų sąnaudos','non-salary costs','All costs except wages.','neh-at-lih-GIH-nih-moo SAW-now-dos','hard','non-wage costs · non-payroll costs'],
     ['Pelno mokestis','corporate income tax','Tax on company profit. ≠ PVM (VAT, a sales tax).','PEL-no MOH-kes-tis','mid','corporate tax · profit tax · CIT'],
   ]},
@@ -265,13 +269,13 @@ const UNITS_CORE = [
 // balance-sheet, P&L and creditworthiness line items. No simple words.
 const UNITS_ADV = [
   { id:'U1', title:'Pelno (nuostolių) ataskaita · Profit & loss', cards:[
-    ['Pelnas prieš mokesčius','profit before tax','Profit before the profit tax. ≠ net profit (after tax) and ≠ operating profit (before interest & tax).','PEL-nas pryesh MOH-kes-choos','hard','pre-tax profit · PBT · earnings before tax · EBT'],
+    ['Pelnas prieš mokesčius','profit before tax','Profit before the profit tax. ≠ net profit (after tax) and ≠ operating profit (before interest & tax).','PEL-nas pryesh MOH-kes-choos','hard','pre-tax profit · PBT · earnings before tax · EBT','<b>Position:</b> profit after all operating costs and interest but BEFORE the corporate profit tax. <b>Why it matters:</b> shows operating performance without tax distortions. “Pre-tax profit” = “PBT” = “earnings before tax (EBT)”. Subtract pelno mokestis from it to get grynasis pelnas.'],
     ['Pelnas (nuostoliai) prieš mokesčius','profit (loss) before tax','Same as pelnas prieš mokesčius; the "(nuostoliai)" just flags it may be a loss.','','hard','pre-tax profit or loss · PBT · EBT'],
-    ['Pelningumas','profitability / margin','Ambiguous on its own — an umbrella for a profit-as-%-of-revenue ratio. The qualifier decides which: grynasis = net, prieš mokesčius = pre-tax.','pel-NIN-goo-mas','hard','profitability · margin · profit margin · return'],
-    ['Grynasis pelningumas','net margin','= net profit ÷ revenue. ⇄ "net margin" = "net profit margin" = "net profitability" (all interchangeable). ≠ gross margin (gross profit) and ≠ pre-tax margin (pre-tax profit).','grih-NAH-sis pel-NIN-goo-mas','hard','net margin · net profit margin · net profitability'],
-    ['Pelningumas prieš mokesčius','pre-tax margin','= pre-tax profit ÷ revenue. ⇄ "pre-tax margin" = "pre-tax profit margin" = "PBT margin". ≠ net margin (after tax).','','hard','pre-tax margin · pre-tax profit margin · PBT margin'],
-    ['Bendrasis pelnas','gross profit','= revenue − cost of sales. ≠ net profit (after all costs). Its ratio is gross margin.','BEN-drah-sis PEL-nas','mid','gross profit · gross income'],
-    ['Savikaina','cost of sales','Direct cost of what was sold. ≠ sąnaudos (all expenses) and ≠ veiklos sąnaudos (operating expenses).','sah-vih-KY-nah','mid','cost of sales · cost of goods sold · COGS · cost price'],
+    ['Pelningumas','profitability / margin','Ambiguous on its own — an umbrella for a profit-as-%-of-revenue ratio. The qualifier decides which: grynasis = net, prieš mokesčius = pre-tax.','pel-NIN-goo-mas','hard','profitability · margin · profit margin · return','<b>Word-build:</b> pelnas (profit) → pelningas (profitable) → pelningumas (profitability), the -umas suffix making a quality noun. <b>Nuance:</b> bare pelningumas is genuinely ambiguous — it only says “some profit ratio”. Always read the qualifier. In English “margin” usually implies a specific % (e.g. 12% margin) while “profitability” can be qualitative (“low profitability”).'],
+    ['Grynasis pelningumas','net margin','= net profit ÷ revenue. ⇄ "net margin" = "net profit margin" = "net profitability" (all interchangeable). ≠ gross margin (gross profit) and ≠ pre-tax margin (pre-tax profit).','grih-NAH-sis pel-NIN-goo-mas','hard','net margin · net profit margin · net profitability','<b>Formula:</b> grynasis pelnas ÷ pardavimo pajamos, as a %. <b>Truly interchangeable:</b> “net margin”, “net profit margin” and “net profitability” all name this exact ratio — say whichever. <b>Don’t confuse</b> with gross margin (uses bendrasis pelnas, before operating costs) or pre-tax margin (before profit tax). For a profitable firm net margin is the smallest of the three, because the most has been subtracted.'],
+    ['Pelningumas prieš mokesčius','pre-tax margin','= pre-tax profit ÷ revenue. ⇄ "pre-tax margin" = "pre-tax profit margin" = "PBT margin". ≠ net margin (after tax).','','hard','pre-tax margin · pre-tax profit margin · PBT margin','<b>Formula:</b> pelnas prieš mokesčius ÷ pardavimo pajamos. “Pre-tax margin” = “pre-tax profit margin” = “PBT margin”. <b>Why use it:</b> it sits between gross and net margin and strips out tax, so it’s the fairest way to compare firms across countries with different corporate-tax rates.'],
+    ['Bendrasis pelnas','gross profit','= revenue − cost of sales. ≠ net profit (after all costs). Its ratio is gross margin.','BEN-drah-sis PEL-nas','mid','gross profit · gross income','<b>bendras</b> = “common / overall”, so bendrasis pelnas is the “overall” profit before operating costs: pardavimo pajamos − savikaina. Its ratio is gross margin. <b>Position:</b> it’s the first profit line on a P&L; operating costs, interest and tax are all subtracted after it to reach grynasis pelnas.'],
+    ['Savikaina','cost of sales','Direct cost of what was sold. ≠ sąnaudos (all expenses) and ≠ veiklos sąnaudos (operating expenses).','sah-vih-KY-nah','mid','cost of sales · cost of goods sold · COGS · cost price','<b>Etymology:</b> savi- (“own”) + kaina (“price”) — the “own price” of what you sell, i.e. what it cost you to make/buy it. <b>Nuance:</b> only the DIRECT cost of goods/services sold (COGS), not all expenses (sąnaudos) and not operating costs (veiklos sąnaudos). pardavimo pajamos − savikaina = bendrasis pelnas.'],
     ['Veiklos sąnaudos','operating expenses','Costs of running the business, excluding cost of sales. ≠ savikaina (cost of sales).','VAYK-los SAW-now-dos','mid','operating expenses · operating costs · OPEX'],
   ]},
   { id:'U2', title:'Balansas · Balance sheet', cards:[
@@ -279,15 +283,15 @@ const UNITS_ADV = [
     ['Turtas','assets','What the company owns; splits into ilgalaikis (non-current) + trumpalaikis (current).','TOOR-tas','mid','assets · property (accounting sense)'],
     ['Ilgalaikis turtas','non-current assets','Held over a year (property, equipment). ≠ trumpalaikis turtas (current).','il-gah-LY-kis TOOR-tas','hard','non-current assets · fixed assets · long-term assets'],
     ['Trumpalaikis turtas','current assets','Held under a year (cash, stock, receivables). ≠ ilgalaikis turtas (non-current).','troom-pah-LY-kis TOOR-tas','hard','current assets · short-term assets'],
-    ['Nuosavas kapitalas','equity','= assets − liabilities (all of the owners’ stake). ≠ įstatinis kapitalas (just the registered share capital).','noo-OH-sah-vas kah-pih-TAH-las','hard','equity · shareholders’ equity · owners’ equity · net assets'],
-    ['Įstatinis kapitalas','share capital','The registered capital — only one part of total equity. ≠ nuosavas kapitalas (all equity).','is-tah-TIH-nis kah-pih-TAH-las','hard','share capital · authorised capital · registered capital'],
-    ['Įsipareigojimai','liabilities','What the firm owes. ≠ nuosavas kapitalas (equity).','i-sih-pah-ray-go-YEE-my','hard','liabilities · obligations · debts (balance-sheet)'],
+    ['Nuosavas kapitalas','equity','= assets − liabilities (all of the owners’ stake). ≠ įstatinis kapitalas (just the registered share capital).','noo-OH-sah-vas kah-pih-TAH-las','hard','equity · shareholders’ equity · owners’ equity · net assets','<b>nuosavas</b> = “one’s own”. Equity is the owners’ own stake = turtas − įsipareigojimai (what’s left after selling everything and paying all debts). <b>Key distinction:</b> nuosavas kapitalas is the WHOLE equity (share capital + retained earnings + reserves); įstatinis kapitalas is only the registered share-capital slice of it.'],
+    ['Įstatinis kapitalas','share capital','The registered capital — only one part of total equity. ≠ nuosavas kapitalas (all equity).','is-tah-TIH-nis kah-pih-TAH-las','hard','share capital · authorised capital · registered capital','<b>įstatinis</b> comes from įstatai (“articles / statutes”) — the capital written into the company’s founding statutes (min €1,000 for a UAB). <b>Nuance:</b> a fixed registered figure and only a SUBSET of nuosavas kapitalas; it doesn’t move as the firm earns or loses money, whereas total equity does.'],
+    ['Įsipareigojimai','liabilities','What the firm owes. ≠ nuosavas kapitalas (equity).','i-sih-pah-ray-go-YEE-my','hard','liabilities · obligations · debts (balance-sheet)','<b>įsipareigoti</b> = “to commit / undertake”, so įsipareigojimai = “commitments” = what the firm owes. <b>Usage:</b> the formal balance-sheet word; skola is the everyday word for one specific debt. The balance-sheet identity: turtas = nuosavas kapitalas + įsipareigojimai.'],
     ['Mokėtinos sumos ir įsipareigojimai','payables and liabilities','Rekvizitai balance line: trade payables + other liabilities.','','hard','amounts payable and liabilities · payables'],
     ['Atsargos','inventories','Goods/materials on hand; a current asset.','aht-SAR-gos','mid','inventories · inventory · stock'],
-    ['Pinigų srautas','cash flow','Cash actually moving in/out. ≠ pelnas (accrual profit, which isn’t cash).','PIH-nih-goo SROW-tas','hard','cash flow · cash flows'],
+    ['Pinigų srautas','cash flow','Cash actually moving in/out. ≠ pelnas (accrual profit, which isn’t cash).','PIH-nih-goo SROW-tas','hard','cash flow · cash flows','<b>pinigai</b> (money) + srautas (stream/flow). <b>Key nuance vs profit:</b> pelnas is accrual-based — it counts a sale when invoiced; pinigų srautas counts cash only when it actually arrives. A profitable firm can still run out of cash if clients pay late, which is why both are tracked.'],
   ]},
   { id:'U3', title:'Kreditas, skolos, registras · Credit, debt, registry', cards:[
-    ['Kreditingumas','creditworthiness','How creditworthy a firm is (e.g. the Juris LT score).','kreh-dih-TIN-goo-mas','hard','creditworthiness · credit rating · credit standing · credit score'],
+    ['Kreditingumas','creditworthiness','How creditworthy a firm is (e.g. the Juris LT score).','kreh-dih-TIN-goo-mas','hard','creditworthiness · credit rating · credit standing · credit score','<b>Word-build:</b> kreditingas (“creditworthy”) → kreditingumas. A measure of how likely the firm is to repay debt (e.g. the Juris LT rating on rekvizitai). <b>Synonyms:</b> creditworthiness / credit rating / credit standing are interchangeable; a “credit score” implies the numeric version specifically.'],
     ['Įvertinimas','rating / assessment','A score or grade; context picks the exact sense.','i-ver-TIH-nih-mas','mid','rating · score · assessment · evaluation · appraisal'],
     ['Kreditavimo rizika','credit risk','Risk a borrower defaults. ≈ kredito rizika.','','mid','credit risk · lending risk · default risk'],
     ['Registruotos skolos','registered debts','Debts officially on record.','reh-gis-TROO-oh-tos SKOH-los','hard','registered debts · recorded debts'],
@@ -407,7 +411,7 @@ function buildDeckCards(deck){
   const out=[];
   deck.units.forEach(u => u.cards.forEach((c,i)=> out.push({
     id: deck.id+':'+u.id+'-'+(i+1), deck: deck.id, unit: u.title,
-    target:c[0], natural:c[1], literal:c[2], gloss:c[3], tier:c[4], also:c[5]||'',
+    target:c[0], natural:c[1], literal:c[2], gloss:c[3], tier:c[4], also:c[5]||'', info:c[6]||'',
   })));
   deck._cards=out; return out;
 }
@@ -461,6 +465,20 @@ const LADDER = [
 ];
 function suggestNext(interval){ for(const r of LADDER) if(r.m>interval+1e-9) return r; return LADDER[LADDER.length-1]; }
 function bandNextStep(i,interval){ const st=BAND_STEPS[i]; for(let j=0;j<STEPS;j++) if(st[j]>interval+1e-9) return j; return STEPS-1; }
+// ladder rung (1-11) for each band+step, and the rung a last interval sits at (0 = new)
+const LPOS = BAND_STEPS.map(st=>st.map(m=>LADDER.findIndex(r=>Math.abs(r.m-m)<1e-6)+1));
+function lastLadder(interval){ let L=0; for(let k=0;k<LADDER.length;k++) if(LADDER[k].m<=interval+1e-6) L=k+1; return L; }
+// Zone of rung p vs last rung L: ≤L-2 blue · L-1..L brighter · L+1..L+2 dashed · ≥L+3 grey.
+function zoneCol(p,L){ if(p<=L-2) return 'var(--zA)'; if(p<=L) return 'var(--zB)'; if(p<=L+2) return 'transparent'; return 'var(--line)'; }
+// Layered track background for band i: solid zones over a dashed layer over the grey base.
+function trackBg(i,L){
+  const bnd=[0,12.5,37.5,62.5,87.5,100];
+  let solid='linear-gradient(90deg';
+  LPOS[i].forEach((p,j)=>{ solid+=`, ${zoneCol(p,L)} ${bnd[j]}% ${bnd[j+1]}%`; });
+  solid+=')';
+  const dash='repeating-linear-gradient(45deg, var(--sky400) 0 2px, rgba(0,0,0,0) 2px 5px)';
+  return `${solid}, ${dash}, var(--line)`;
+}
 function formatMinutes(m){
   if(m<1) return Math.round(m*60)+'s';
   if(m<60) return Math.round(m)+'m';
@@ -625,7 +643,7 @@ if('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged=()=>{};
 // persisted choices win.
 const S = Object.assign({
   idx:0, revealed:false, stepByBand:[2,2,2], importOpen:false, importText:'', histOpen:false, legendOpen:false, settingsOpen:false, flashMsg:null, flashTimer:null,
-  deleted:[], purged:[], deckId:null, mode:'order', pick:null, seedStamp:null, showBoth:false, suggestedFor:null,
+  deleted:[], purged:[], deckId:null, mode:'order', pick:null, seedStamp:null, showBoth:false, suggestedFor:null, infoOpen:false,
 }, loadState());
 
 function visibleCards(){ return activeCards().filter(c=>!S.deleted.includes(c.id) && !S.purged.includes(c.id)); }
@@ -648,8 +666,7 @@ function autoOrder(t){
   const sched=vis.filter(c=>recordFor(c.id).status!=='new');
   const eligible=sched.filter(c=>fresh(c) <= autoThreshold(recordFor(c.id))+1e-9).sort((a,b)=>fresh(a)-fresh(b));
   const news=vis.filter(c=>recordFor(c.id).status==='new');
-  const rest=sched.filter(c=>!eligible.includes(c)).sort((a,b)=>fresh(a)-fresh(b));
-  return [...eligible, ...news, ...rest]; // most-due first, then new, then not-yet-ready
+  return [...eligible, ...news]; // ONLY almost-due + new; not-yet-due cards are left alone
 }
 function autoCurrent(t){
   if(S.pick){ const c=visibleCards().find(x=>x.id===S.pick); if(c) return c; }
@@ -668,7 +685,7 @@ function go(delta){
     const cur=autoCurrent(t); let i=Math.max(0,o.findIndex(x=>cur&&x.id===cur.id));
     i=(i+delta+o.length)%o.length; S.pick=o[i].id;
   } else { S.idx+=delta; }
-  S.revealed=false; render();
+  S.revealed=false; S.infoOpen=false; render();
 }
 
 // Order for the memory map. due: soonest-due first (new cards count as due now);
@@ -815,8 +832,8 @@ function render(){
     const metaRight = rec.reps>0
       ? formatMinutes(rec.interval)+' · '+new Date(rec.due).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})
       : 'new';
-    const hide=()=>{ if(!S.deleted.includes(cur.id))S.deleted.push(cur.id); S.idx=0; S.pick=null; S.revealed=false; saveState(); render(); };
-    const del=()=>{ if(!S.purged.includes(cur.id))S.purged.push(cur.id); S.idx=0; S.pick=null; S.revealed=false; saveState(); render(); };
+    const hide=()=>{ if(!S.deleted.includes(cur.id))S.deleted.push(cur.id); S.idx=0; S.pick=null; S.revealed=false; S.infoOpen=false; saveState(); render(); };
+    const del=()=>{ if(!S.purged.includes(cur.id))S.purged.push(cur.id); S.idx=0; S.pick=null; S.revealed=false; S.infoOpen=false; saveState(); render(); };
     cardEl=el('div',{class:'card'},
       el('div',{class:'meta'},
         el('span',{class:'k'}, cur.tier+' · '+metaRight),
@@ -841,13 +858,14 @@ function render(){
               (deck.lang==='lt' && cur.also) ? el('div',{class:'syn'}, '✓ also counts: '+cur.also) : null,
               cur.literal ? el('div',{class:'literal'}, cur.literal) : null,
               cur.gloss ? el('div',{class:'gloss'}, '['+cur.gloss+']') : null,
-              deck.lang==='lt' ? el('div',{class:'flexbadge '+(cur.also?'flex':'exact')}, cur.also?'flexible — any wording above counts':'exact term') : null,
+              cur.info ? el('button',{class:'infotoggle',onclick:()=>{S.infoOpen=!S.infoOpen;render();}}, (S.infoOpen?'▾':'▸')+' nuance & origin') : null,
+              (cur.info && S.infoOpen) ? el('div',{class:'infobox',html:cur.info}) : null,
             )
           : el('button',{class:'show',onclick:()=>{S.revealed=true;render();}},'Show meaning'),
       ),
     );
   } else {
-    cardEl=el('div',{class:'empty'}, icon('check',22), el('div',{style:{marginTop:'4px'}}, S.mode==='auto' ? 'All caught up — nothing decayed enough yet.' : 'Nothing due. Switch to Free scroll to browse.'));
+    cardEl=el('div',{class:'empty'}, icon('check',22), el('div',{style:{marginTop:'4px'}}, S.mode==='auto' ? 'All reviewed — nothing due yet.' : 'Nothing due. Switch to Free scroll to browse.'));
   }
   // swipe left/right anywhere on the card = prev/next (replaces the side buttons)
   let _sx=0,_sy=0;
@@ -869,10 +887,7 @@ function render(){
       else { S.stepByBand=BANDS.map((b,i)=>bandNextStep(i,lastInt)); S.bandIndex=suggestNext(lastInt).b; }
       S.suggestedFor=cur.id;
     }
-    // how far across band i the last interval sits (0..1), for the track fill
-    const lastFrac=(i)=>{ const st=BAND_STEPS[i]; if(lastInt<=st[0]) return 0; if(lastInt>=st[STEPS-1]) return 1;
-      for(let j=0;j<STEPS-1;j++) if(lastInt>=st[j]&&lastInt<=st[j+1]) return (j+(lastInt-st[j])/(st[j+1]-st[j]))/(STEPS-1); return 0; };
-    const fillBg=(i)=>{ const p=(lastFrac(i)*100).toFixed(1); return `linear-gradient(90deg, rgba(56,189,248,.40) 0 ${p}%, var(--line) ${p}% 100%)`; };
+    const L=lastLadder(lastInt); // last interval's rung (1-11), drives the track zones
     const chosen=()=>BAND_STEPS[S.bandIndex][S.stepByBand[S.bandIndex]];
     const thumbLeft=(i)=>`calc((100% - 22px) * ${S.stepByBand[i]/(STEPS-1)} + 11px)`;
     const paintRow=(i)=>{ const lab=document.getElementById('kv'+i); if(lab){ lab.textContent=formatMinutes(BAND_STEPS[i][S.stepByBand[i]]); lab.style.left=thumbLeft(i); } };
@@ -880,7 +895,7 @@ function render(){
     const rows = BANDS.map((b,i)=>{
       const r=el('input',{type:'range',min:'0',max:String(STEPS-1),step:'1','aria-label':b.label+' interval',class:'knob'});
       r.value=String(S.stepByBand[i]);
-      r.style.background=fillBg(i); // colour the track up to where it was last scheduled
+      r.style.background=trackBg(i,L); // zoned track: blue / brighter / dashed / grey vs last interval
       r.addEventListener('pointerdown',()=>{ if(S.bandIndex!==i) setActive(i); });
       r.addEventListener('input',e=>{
         S.stepByBand[i]=Number(e.target.value);
@@ -896,7 +911,7 @@ function render(){
     const doCommit=(verb)=>{
       const mm=chosen();
       S.records[cur.id]=commitInterval(recordFor(cur.id),mm,now());
-      saveState(); S.revealed=false; S.suggestedFor=null; S.pick=null; // next card re-suggests; auto advances
+      saveState(); S.revealed=false; S.infoOpen=false; S.suggestedFor=null; S.pick=null; // next card re-suggests; auto advances
       flash((verb||'Scheduled')+' · '+formatMinutes(mm));
     };
     app.append(el('div',{class:'card slider'},
