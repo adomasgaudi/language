@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.5 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -82,6 +82,7 @@
   .dot .glyph{display:block}
   .dot .crack{position:absolute;pointer-events:none}
   .dot .here{position:absolute;bottom:-4px;width:4px;height:4px;border-radius:9999px;background:var(--sky300)}
+  .dot .ring{position:absolute;width:25px;height:25px;border-radius:9999px;border:1.5px solid var(--sky300);box-sizing:border-box;pointer-events:none}
   footer{margin-top:auto;display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--t600);padding-top:8px}
   footer button{color:var(--t600);background:transparent}
   footer button:hover{color:var(--t400)}
@@ -91,6 +92,13 @@
   .flash{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--t100);color:#18181b;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.4)}
   .legend{font-size:11px;color:var(--t600);line-height:1.7}
   .legend b{color:var(--t400);font-weight:600}
+  footer .ver{color:var(--t400);font-weight:600;font-variant-numeric:tabular-nums}
+  .hist{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:10px 12px;font-size:11px}
+  .histhead{color:var(--t400);font-weight:600;margin-bottom:6px}
+  .histrow{display:flex;gap:8px;align-items:baseline;padding:2px 0;color:var(--t500)}
+  .histrow .hv{color:var(--sky300);font-weight:600;font-variant-numeric:tabular-nums;min-width:42px}
+  .histrow .hn{flex:1;color:var(--t400)}
+  .histrow .hs{color:var(--t600);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -98,6 +106,22 @@
 
 <script>
 "use strict";
+/* ============================================================================
+ * VERSION LOG — one continuous counter, bumped on every update/deploy (vz
+ * BULD-02). Newest first; story points = effort, not LOC (BULD-03). The top
+ * entry's `v` drives the <title> and the footer badge.
+ * ==========================================================================*/
+const VERSIONS = [
+  {v:'0.1.5', sp:0.5, note:'Sizes 10–15px; ring the current bubble with a 25px circle'},
+  {v:'0.1.4', sp:1,   note:'Version badge + 📋 SP history log'},
+  {v:'0.1.3', sp:1.5, note:'Remember UI choices in cache across reloads/redeploys'},
+  {v:'0.1.2', sp:3,   note:'Memory map: shape = longevity, dimmer glow, 10px cap'},
+  {v:'0.1.1', sp:0.5, note:'Cap memory-map dots at 20px'},
+  {v:'0.1.0', sp:5,   note:'Lithuanian finance deck — Tartaglia SRS, 34 vz terms'},
+];
+const VERSION = VERSIONS[0].v;
+document.title = 'Lithuanian finance v' + VERSION;
+
 /* ============================================================================
  * CONTENT — Lithuanian financial terms from the vz Data Explorer.
  * [lithuanian, english(natural), literal/note, pronunciation, tier]
@@ -212,7 +236,7 @@ function dueLabel(m,t){
  *             triangle <30m · square 30m–4h · pentagon 4h–2d · hexagon 2d–5d
  *             · heptagon 5d–1mo · circle >1mo.
  *   SIZE    = position within the band, 5px (just entered the band) -> 10px. */
-const SIZE_MIN=5, SIZE_MAX=10;
+const SIZE_MIN=10, SIZE_MAX=15;
 const GLOW_AT=0.9; // only the freshest shapes carry a faint glow ("less shining")
 const HEAT=[[1,[77,166,255]],[0.8,[235,245,255]],[0.6,[255,214,92]],[0.4,[255,138,30]],[0.2,[229,57,53]],[0,[58,42,42]]];
 
@@ -326,7 +350,7 @@ if('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged=()=>{};
 // Defaults first (transient view state), then overlay the remembered values so
 // persisted choices win.
 const S = Object.assign({
-  idx:0, revealed:false, pos:0.4, importOpen:false, importText:'', flashMsg:null, flashTimer:null,
+  idx:0, revealed:false, pos:0.4, importOpen:false, importText:'', histOpen:false, flashMsg:null, flashTimer:null,
 }, loadState());
 
 function visibleCards(){ return CARDS.filter(c=>!S.deleted.includes(c.id)); }
@@ -462,7 +486,7 @@ function render(){
   const SHAPE_NAME={3:'triangle',4:'square',5:'pentagon',6:'hexagon',7:'heptagon',0:'circle'};
   vis.forEach(c=>{
     const rec=recordFor(c.id), s=dotStyle(rec,t), isCur=cur&&c.id===cur.id;
-    const size=Math.max(s.diameter,16); // tap target stays comfortable
+    const size=Math.max(s.diameter, isCur?25:16); // tap target; fit the 25px ring when current
     const glyph=el('span',{class:'glyph'});
     Object.assign(glyph.style,{
       width:s.diameter+'px', height:s.diameter+'px', display:'block',
@@ -472,13 +496,12 @@ function render(){
       // gentle glow only when freshest; clip-path means glow rides as a soft drop-shadow
       filter:s.glow?`drop-shadow(0 0 2px ${s.color})`:'none',
       opacity:s.due?0.45:1, // faded when due, otherwise full
-      transform:isCur?'scale(1.3)':'scale(1)',
       transition:'background-color .6s ease, filter .6s ease, opacity .6s ease, transform .2s ease',
     });
     const btn=el('button',{class:'dot',title:c.target+' · '+SHAPE_NAME[s.sides]+' · '+(s.due?'due':statusAt(rec,t)),style:{width:size+'px',height:size+'px'},
       onclick:()=>{ const p=pool(t); const i=p.findIndex(x=>x.id===c.id); if(i>=0){S.idx=i; S.revealed=false; render();} else flash('Hidden — in free scroll only'); }},
       glyph);
-    if(isCur) btn.append(el('span',{class:'here'}));
+    if(isCur) btn.append(el('span',{class:'ring'})); // 25px circle marks the card on screen
     map.append(btn);
   });
   app.append(el('div',null, el('div',{class:'maplabel'},'Memory map — colour = freshness · shape = how long you’ve held it'), map));
@@ -490,9 +513,23 @@ function render(){
     '△ &lt;30m · ◻ 30m–4h · ⬠ 4h–2d · ⬡ 2d–5d · heptagon 5d–1mo · ○ 1mo+. Faded = due now.'}));
 
   app.append(el('footer',null,
-    el('span',null,'Tartaglia engine · LT finance deck'),
+    el('span',null,
+      el('span',{class:'ver'},'v'+VERSION), ' · ',
+      el('button',{onclick:()=>{S.histOpen=!S.histOpen;render();}},'📋 history'),
+    ),
     S.deleted.length>0 ? el('button',{onclick:()=>{S.deleted=[];saveState();render();}},'Restore '+S.deleted.length+' hidden') : el('span',null,''),
   ));
+
+  if(S.histOpen){
+    app.append(el('div',{class:'hist'},
+      el('div',{class:'histhead'},'Version history · '+VERSIONS.reduce((a,e)=>a+e.sp,0)+' sp total'),
+      VERSIONS.map(e=>el('div',{class:'histrow'},
+        el('span',{class:'hv'},'v'+e.v),
+        el('span',{class:'hn'}, e.note),
+        el('span',{class:'hs'}, e.sp+' sp'),
+      )),
+    ));
+  }
 
   if(S.flashMsg) app.append(el('div',{class:'flash'}, S.flashMsg));
 }
