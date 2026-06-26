@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.32 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.33 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -216,6 +216,7 @@ const AUTO_LONG_MIN  = 43200;  // interval (minutes) at the "long" end (30 days)
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.33',sp:3,   note:'New deck "Beyond the basics · Claude Code" (19 cards): agentic engineering talk distilled into note cards — Access/Memory/Tooling levers, in-context learning vs fine-tuning, the Bitter Lesson, Post-Tool-Use hooks, subagents, and the ~16-worktree "no cherry-picking" setup'},
   {v:'0.1.32',sp:3,   note:'All card types (vocab · action note · multiple-choice) now render through ONE base <flash-card> Web Component — add a card type by registering a body, no more separate components or render branches'},
   {v:'0.1.31',sp:0.5, note:'First two slider rungs are now 30s & 90s (were 20s & 60s); sub-2-minute intervals read in seconds'},
   {v:'0.1.30',sp:3,   note:'Consolidated the 3 review knobs into 2 (30s–48h · 12h–1mo), same interval ladder; the two overlap at 12h & 48h — picking either snaps the other and both rows light up. Auto-due now jumps in on its own the instant the first card enters the review range (no waiting)'},
@@ -473,6 +474,42 @@ const UNITS_MATH = [
   ]},
 ];
 
+// ---- Deck 7: Beyond the Basics with Claude Code (agentic engineering) -------
+// Distilled from the "Beyond the basics with Claude Code" talk (Anthropic,
+// Claude Code team) + the "My actual setup" worktrees slide. Note cards:
+// [front (question/cue), back (answer), note (detail), tag, tier].
+const UNITS_CC = [
+  { id:'U1', title:'Agentic engineering & the three levers', cards:[
+    ['What is "agentic engineering"?','Engineering the system *around* the agent — not just coding with it','Set up access, memory and tooling so agents handle complex work. Agentic engineering ≠ agentic coding.','concept','mid'],
+    ['The three levers for customising an agent','Access · Memory · Tooling','The three categories where customising an agent pays off most.','framework','easy'],
+    ['Your job as an engineer with agents','Make many clones of yourself — parallelise across agents','Scale your abilities to many agents instead of doing one task at a time.','mindset','mid'],
+  ]},
+  { id:'U2', title:'Access — give Claude what you can reach', cards:[
+    ['The one takeaway about Access',"If Claude can't access something, it can't do its job",'Give it access to everything you can reach — not just code: Slack, email, CI/CD, dashboards.','thesis','easy'],
+    ['Why feed Slack threads & emails to Claude?',"They hold the 'why' that lives only in people's heads",'e.g. why a strategy will not work — context the model cannot otherwise know.','access','mid'],
+    ['Why wire agents into CI/CD?','CI is always critical — never merge on red','Agents are good at reading CI and fixing failures fast.','access','mid'],
+    ['Why give agents dashboards / observability?','So they can diagnose production issues','When something breaks in prod, the agent needs the same info you would look at.','access','mid'],
+  ]},
+  { id:'U3', title:'Memory — context engineering', cards:[
+    ['Why not fine-tune a model for your codebase?',"Fine-tuning a frontier model isn't cost-efficient",'Even big companies rarely do it for something small; steer with in-context learning instead.','memory','mid'],
+    ['What is in-context learning (ICL)?','Steering the model with context instead of retraining weights','Your main lever now that fine-tuning a frontier model is impractical.','memory','mid'],
+    ['What does the Bitter Lesson imply here?','General methods that scale beat hand-specialised ones','So bet on steering the general model with context, not building narrow specialised models.','principle','hard'],
+    ['Main knobs for in-context learning','CLAUDE.md and other context files','The files you write to steer the model toward good results.','memory','easy'],
+    ['Is a bigger context window always better?','No — polluting context hurts, even at ~1M tokens','Keep context efficient; feed what is needed, not everything.','memory','mid'],
+  ]},
+  { id:'U4', title:'Tooling — edits, hooks, subagents', cards:[
+    ['How does Claude edit code (vs an IDE)?','A string-replace edit tool (ed-like) — no LSP/autocomplete','It matches exact text and replaces it. Hard to do well; an opening to add better tools.','tooling','mid'],
+    ['An opportunity in agent tooling','Give agents agentic versions of LSP, completion & search','IDE features re-imagined as tools the agent can call.','tooling','hard'],
+    ['Why are Post-Tool-Use hooks powerful?','They run a check after each edit and feed the result back','e.g. a linter/LSP runs after an edit — a tight, deterministic feedback loop for the agent.','hooks','mid'],
+    ['Why use subagents?','To parallelise work and isolate context','Spin up clones so the main thread stays focused and efficient.','tooling','mid'],
+    ['How do you package & share customisations?','Plugins, slash commands & a plugin marketplace','Reusable agent customisations others can install.','tooling','easy'],
+  ]},
+  { id:'U5', title:'The actual setup — worktrees', cards:[
+    ["Daisy's setup for parallel work",'~16 permanent git worktrees of the repo, one branch each','claude-code-{0..9,a..f} — many agents run at once, each parked on its own branch.','workflow','mid'],
+    ['Why "No cherry-picking" with worktrees?','Each worktree/branch is independent — work stays isolated','Separate pools per repo: claude-code (~16), anthropic (4), apps (9), cc-marketplace (3).','workflow','hard'],
+  ]},
+];
+
 const DECKS = [
   {id:'d1', lang:'lt', title:'Finance basics', subtitle:'Data Explorer terms · LT→EN · 34 cards', units:UNITS_CORE},
   {id:'d2', lang:'lt', title:'Advanced finance', subtitle:'Financial statements & credit · LT→EN · 30 cards', units:UNITS_ADV},
@@ -480,6 +517,7 @@ const DECKS = [
   {id:'d3', lang:'en', title:'Science teacher job', subtitle:'Get a teaching job in Vilnius · 20 cards', units:UNITS_TEACHER},
   {id:'d4', lang:'en', title:'Fitness clients', subtitle:'Find PT clients in Vilnius · 20 cards', units:UNITS_FITNESS},
   {id:'d5', lang:'en', title:'Website clients', subtitle:'Find web-build clients in Vilnius · 20 cards', units:UNITS_WEB},
+  {id:'d7', lang:'en', title:'Beyond the basics · Claude Code', subtitle:'Agentic engineering talk · 19 cards', units:UNITS_CC},
 ];
 
 // Build a deck's cards once, with globally-unique ids (deck-prefixed).
