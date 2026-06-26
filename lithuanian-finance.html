@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.31 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.32 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -81,7 +81,8 @@
   .fab:hover{filter:brightness(1.1)} .fab:active{transform:scale(.94)}
   .hist.pop{order:-1;max-width:300px;max-height:55vh;overflow:auto;background:var(--panel-solid);box-shadow:0 10px 30px rgba(0,0,0,.5)}
   .card,.box{border:1px solid var(--line);background:var(--panel);border-radius:14px}
-  .card{padding:12px 14px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+  .card{display:block;padding:12px 14px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+  flash-card{display:block}
   /* card spans full width; swipe left/right to navigate */
   .cardwrap{display:block}
   .cardwrap .card{touch-action:pan-y}
@@ -215,6 +216,7 @@ const AUTO_LONG_MIN  = 43200;  // interval (minutes) at the "long" end (30 days)
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.32',sp:3,   note:'All card types (vocab · action note · multiple-choice) now render through ONE base <flash-card> Web Component — add a card type by registering a body, no more separate components or render branches'},
   {v:'0.1.31',sp:0.5, note:'First two slider rungs are now 30s & 90s (were 20s & 60s); sub-2-minute intervals read in seconds'},
   {v:'0.1.30',sp:3,   note:'Consolidated the 3 review knobs into 2 (30s–48h · 12h–1mo), same interval ladder; the two overlap at 12h & 48h — picking either snaps the other and both rows light up. Auto-due now jumps in on its own the instant the first card enters the review range (no waiting)'},
   {v:'0.1.29',sp:1,   note:'Auto-due tuning sliders in ⚙ Settings (early/late thresholds, persisted); memory-map glow now covers all colours except red & coal'},
@@ -496,6 +498,7 @@ function buildDeckCards(deck){
   }
   deck.units.forEach(u => u.cards.forEach((c,i)=> out.push({
     id: deck.id+':'+u.id+'-'+(i+1), deck: deck.id, unit: u.title,
+    kind: deck.lang==='lt' ? 'vocab' : 'note',   // single field the base card routes on
     target:c[0], natural:c[1], literal:c[2], gloss:c[3], tier:c[4], also:c[5]||'', info:c[6]||'',
   })));
   deck._cards=out; return out;
@@ -880,6 +883,82 @@ function tuneRow(label, val, suffix, set){
   return el('div',{class:'tunerow'}, el('span',{class:'tunelabel'}, label), r, v);
 }
 
+/* ============================================================================
+ * <flash-card> — the ONE base card component
+ * ----------------------------------------------------------------------------
+ * Every deck and every study mode renders through this single Web Component.
+ * A card's `kind` selects a body builder from CARD_TYPES; the shell (meta row,
+ * swipe-to-navigate, the .card frame) is shared. Adding a new card type means
+ * registering one entry here — never a new component or a branch in render().
+ * ==========================================================================*/
+const CARD_TYPES = {
+  // multiple-choice formula card: tap an option to reveal correct/wrong
+  mc(card){
+    const answered = (S.mcPick!=null) || S.showBoth;
+    return [
+      el('div',{class:'mcq'}, card.target),
+      el('div',{class:'mcopts'}, card.options.map((opt,k)=>{
+        let cls='mcopt';
+        if(answered){ if(k===card.answer) cls+=' correct'; else if(k===S.mcPick) cls+=' wrong'; }
+        return el('button',{class:cls, onclick:()=>{ if(S.mcPick==null && !S.showBoth){ S.mcPick=k; render(); } }}, opt);
+      })),
+      answered ? el('div',{class:'mcexpl'+(S.showBoth?'':(S.mcPick===card.answer?' ok':' no'))},
+        (S.showBoth?'':(S.mcPick===card.answer?'Correct. ':'Not quite. ')) + (card.info||'')) : null,
+    ];
+  },
+  // LT vocab: hideable term + audio + flexible-synonyms + nuance dropdown
+  vocab(card){ return vocabBody(card,true); },
+  // EN action note: same body, no audio / synonyms
+  note(card){ return vocabBody(card,false); },
+};
+function vocabBody(card, isLt){
+  return [
+    el('div',{class:'prompt'},
+      S.hideTarget
+        ? el('div',{class:'hidden-face'}, el('div',{class:'eye'}, icon('eyeoff',26)), el('div',{style:{marginTop:'4px',fontSize:'13px'}},'Listen & guess — term hidden'))
+        : el('div',{class:'term'}, card.target),
+      (!S.hideTarget) ? el('div',{class:'from'}, card.unit.split(' · ')[0]) : null,
+    ),
+    isLt ? el('div',{class:'audio'}, el('button',{class:'abtn',onclick:()=>speak(card.target)}, icon('audio'),'Say it')) : null,
+    el('div',{class:'answer'},
+      (S.revealed || S.showBoth)
+        ? el('div',null,
+            el('div',{class:'natural'}, card.natural),
+            (isLt && card.also) ? el('div',{class:'syn'}, '✓ also counts: '+card.also) : null,
+            card.literal ? el('div',{class:'literal'}, card.literal) : null,
+            card.gloss ? el('div',{class:'gloss'}, '['+card.gloss+']') : null,
+            card.info ? el('button',{class:'infotoggle',onclick:()=>{S.infoOpen=!S.infoOpen;render();}}, (S.infoOpen?'▾':'▸')+' nuance & origin') : null,
+            (card.info && S.infoOpen) ? el('div',{class:'infobox',html:card.info}) : null,
+          )
+        : el('button',{class:'show',onclick:()=>{S.revealed=true;render();}},'Show meaning'),
+    ),
+  ];
+}
+// Build the body nodes for any card (used by the element and testable on its own).
+function cardBody(card){ return (CARD_TYPES[card.kind]||CARD_TYPES.vocab)(card); }
+
+class FlashCard extends HTMLElement {
+  // Assign `.card = {card, meta, onSwipe}`; the element draws itself.
+  set card(spec){ this._spec=spec; this._draw(); }
+  get card(){ return this._spec; }
+  _draw(){
+    const {card, meta, onSwipe} = this._spec;
+    this.className='card';
+    this.textContent='';
+    if(meta) this.append(meta);
+    cardBody(card).forEach(n=>{ if(n!=null && n!==false) this.append(n); });
+    if(onSwipe){
+      let sx=0,sy=0;
+      this.addEventListener('pointerdown',e=>{ sx=e.clientX; sy=e.clientY; });
+      this.addEventListener('pointerup',e=>{
+        const dx=e.clientX-sx, dy=e.clientY-sy;
+        if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.4) onSwipe(dx<0?1:-1);
+      });
+    }
+  }
+}
+if(typeof customElements!=='undefined' && !customElements.get('flash-card')) customElements.define('flash-card', FlashCard);
+
 // Intro / deck-picker page.
 function renderIntro(app,t){
   app.append(el('div',{class:'card headcard'},
@@ -999,54 +1078,13 @@ function render(){
         el('button',{class:'cardbtn del',title:'Delete (gone until reset)',onclick:del}, icon('trash',13),'Delete'),
       ),
     );
-    if(cur.kind==='mc'){
-      // multiple-choice formula card: tap an option to reveal correct/wrong
-      const answered = (S.mcPick!=null) || S.showBoth;
-      cardEl=el('div',{class:'card'}, metaRow,
-        el('div',{class:'mcq'}, cur.target),
-        el('div',{class:'mcopts'}, cur.options.map((opt,k)=>{
-          let cls='mcopt';
-          if(answered){ if(k===cur.answer) cls+=' correct'; else if(k===S.mcPick) cls+=' wrong'; }
-          return el('button',{class:cls, onclick:()=>{ if(S.mcPick==null && !S.showBoth){ S.mcPick=k; render(); } }}, opt);
-        })),
-        answered ? el('div',{class:'mcexpl'+(S.showBoth?'':(S.mcPick===cur.answer?' ok':' no'))},
-          (S.showBoth?'':(S.mcPick===cur.answer?'Correct. ':'Not quite. ')) + (cur.info||'')) : null,
-      );
-    } else {
-    cardEl=el('div',{class:'card'}, metaRow,
-      el('div',{class:'prompt'},
-        S.hideTarget
-          ? el('div',{class:'hidden-face'}, el('div',{class:'eye'}, icon('eyeoff',26)), el('div',{style:{marginTop:'4px',fontSize:'13px'}},'Listen & guess — term hidden'))
-          : el('div',{class:'term'}, cur.target),
-        (!S.hideTarget) ? el('div',{class:'from'}, cur.unit.split(' · ')[0]) : null,
-      ),
-      deck.lang==='lt' ? el('div',{class:'audio'},
-        el('button',{class:'abtn',onclick:()=>speak(cur.target)}, icon('audio'),'Say it'),
-      ) : null,
-      el('div',{class:'answer'},
-        (S.revealed || S.showBoth)
-          ? el('div',null,
-              el('div',{class:'natural'}, cur.natural),
-              (deck.lang==='lt' && cur.also) ? el('div',{class:'syn'}, '✓ also counts: '+cur.also) : null,
-              cur.literal ? el('div',{class:'literal'}, cur.literal) : null,
-              cur.gloss ? el('div',{class:'gloss'}, '['+cur.gloss+']') : null,
-              cur.info ? el('button',{class:'infotoggle',onclick:()=>{S.infoOpen=!S.infoOpen;render();}}, (S.infoOpen?'▾':'▸')+' nuance & origin') : null,
-              (cur.info && S.infoOpen) ? el('div',{class:'infobox',html:cur.info}) : null,
-            )
-          : el('button',{class:'show',onclick:()=>{S.revealed=true;render();}},'Show meaning'),
-      ),
-    );
-    }
+    // One base component renders every card type (mc / vocab / note).
+    cardEl=document.createElement('flash-card');
+    cardEl.card={card:cur, meta:metaRow, onSwipe:go};
   } else {
     cardEl=el('div',{class:'empty'}, icon('check',22), el('div',{style:{marginTop:'4px'}}, S.mode==='auto' ? 'All reviewed — nothing due yet.' : 'Nothing due. Switch to Free scroll to browse.'));
   }
-  // swipe left/right anywhere on the card = prev/next (replaces the side buttons)
-  let _sx=0,_sy=0;
-  cardEl.addEventListener('pointerdown',e=>{ _sx=e.clientX; _sy=e.clientY; });
-  cardEl.addEventListener('pointerup',e=>{
-    const dx=e.clientX-_sx, dy=e.clientY-_sy;
-    if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.4) go(dx<0?1:-1); // left = next, right = prev
-  });
+  // swipe left/right = prev/next is handled inside <flash-card> (onSwipe).
   app.append(el('div',{class:'cardwrap'}, cardEl));
 
   /* review control — two bare knobs; the chosen time rides on each thumb.
