@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.40 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.41 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -102,6 +102,26 @@
   .catleft{display:flex;align-items:center;gap:8px}
   .catchev{display:inline-block;min-width:10px}
   .catcount{font-size:11px;color:var(--t600)}
+  /* DeepSWE deck card styling */
+  .dsw-wrap{display:grid;gap:10px}
+  .dsw-tags{display:flex;flex-wrap:wrap;gap:6px}
+  .dsw-tag{font-size:10px;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--line2);background:var(--panel-solid);color:var(--t300);padding:3px 7px;border-radius:999px}
+  .dsw-q{font-size:24px;line-height:1.2;font-weight:700;color:var(--t50)}
+  .dsw-sub{font-size:12px;color:var(--t500)}
+  .dsw-answer{padding-top:6px}
+  .dsw-short{font-size:28px;line-height:1.15;font-weight:800;color:var(--sky300)}
+  .dsw-micro{font-size:12px;color:var(--t400);margin-top:4px}
+  .dsw-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+  .dsw-kpi{border:1px solid var(--line2);background:rgba(2,6,23,.45);padding:8px 10px;border-radius:10px}
+  .dsw-kpi .k{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--t500)}
+  .dsw-kpi .v{font-size:18px;font-weight:700;color:var(--t100);margin-top:2px}
+  .dsw-bars{margin-top:10px;display:grid;gap:7px}
+  .dsw-barline{display:grid;grid-template-columns:48px 1fr auto;gap:8px;align-items:center;font-size:11px;color:var(--t400)}
+  .dsw-barline .bar{height:8px;border-radius:999px;background:#1f2937;overflow:hidden}
+  .dsw-barline .bar i{display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#0284c7)}
+  .dsw-barline .bar i.cost{background:linear-gradient(90deg,#f59e0b,#d97706)}
+  .dsw-barline b{font-size:11px;color:var(--t300);font-weight:700}
+  .dsw-note{margin-top:10px;font-size:11px;color:var(--t500);line-height:1.35}
   .meta{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px;color:var(--t500);margin-bottom:2px}
   .meta .k{text-transform:uppercase;letter-spacing:.04em}
   .acts{display:flex;align-items:center;gap:2px}
@@ -222,6 +242,7 @@ const AUTO_LONG_MIN  = 43200;  // interval (minutes) at the "long" end (30 days)
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.41',sp:3,   note:'Deleted old SWE/Terminal deck and rewrote as "Claude DeepSWE Matrix" using official DeepSWE rows (updated 2026-06-24); added richer card UI for this deck: badges, short answers, KPI blocks, and mini bar graphs'},
   {v:'0.1.40',sp:2,   note:'Deck folders are now collapsed by default; new AI deck "Claude SWE/Terminal API Matrix" (24 cards): prompt = "<benchmark> <model> <date> <effort>", answer = API cost + performance'},
   {v:'0.1.39',sp:2,   note:'New deck "Benchmark Category Map" (8 cards): prompt = category type (Knowledge/Math/Code/Agentic/Vision/LongCtx/Instruct/Abstract), answer = benchmark names in that category'},
   {v:'0.1.38',sp:2,   note:'AI Model Benchmarks deck rewritten: all cards are now fact-based (exact numbers, scores, prices) — removed opinion/advice framing; split into 4 units (Benchmarks, OpenAI, Anthropic, Cursor)'},
@@ -583,37 +604,50 @@ const UNITS_BENCHCAT = [
   ]},
 ];
 
-// ---- Deck 10: Claude SWE/Terminal API Matrix -------------------------------
-// Prompt format requested: "<benchmark> <model> <date> <effort>".
-// Answer = API cost + performance status.
-const UNITS_CLAUDE_SWE_TERM = [
-  { id:'U1', title:'SWE-bench (Claude models x effort)', cards:[
-    ['SWE-bench Opus 4.5 2026-06-27 low','Cost (API, MTok): $5 input / $25 output · Performance: N/A (no public low-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
-    ['SWE-bench Opus 4.5 2026-06-27 medium','Cost (API, MTok): $5 input / $25 output · Performance: N/A (no public medium-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
-    ['SWE-bench Opus 4.5 2026-06-27 high','Cost (API, MTok): $5 input / $25 output · Performance: 76.8% resolved (Claude 4.5 Opus high reasoning, mini-SWE-agent).','Source basis: SWE-bench Verified row checked 2026-06-27.','swebench','hard'],
-    ['SWE-bench Fable 5 2026-06-27 low','Cost (API, MTok): $10 input / $50 output · Performance: N/A (no public low-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
-    ['SWE-bench Fable 5 2026-06-27 medium','Cost (API, MTok): $10 input / $50 output · Performance: N/A (no public medium-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
-    ['SWE-bench Fable 5 2026-06-27 high','Cost (API, MTok): $10 input / $50 output · Performance: N/A (no public high-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
-    ['SWE-bench Sonnet 4.6 2026-06-27 low','Cost (API, MTok): $3 input / $15 output · Performance: N/A (no public low-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
-    ['SWE-bench Sonnet 4.6 2026-06-27 medium','Cost (API, MTok): $3 input / $15 output · Performance: N/A (no public medium-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
-    ['SWE-bench Sonnet 4.6 2026-06-27 high','Cost (API, MTok): $3 input / $15 output · Performance: N/A (no public high-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
-    ['SWE-bench Haiku 4.5 2026-06-27 low','Cost (API, MTok): $1 input / $5 output · Performance: N/A (no public low-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
-    ['SWE-bench Haiku 4.5 2026-06-27 medium','Cost (API, MTok): $1 input / $5 output · Performance: N/A (no public medium-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
-    ['SWE-bench Haiku 4.5 2026-06-27 high','Cost (API, MTok): $1 input / $5 output · Performance: N/A (no public high-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
+// ---- Deck 10: Claude DeepSWE Matrix ----------------------------------------
+// Replaces the old SWE/Terminal deck with official DeepSWE rows.
+function deepInfo(score,cost,tok,steps,apiIn,apiOut,note){
+  const s=(score==null?0:Math.round(score));
+  const c=(cost==null?0:Math.min(25,Math.round(cost)));
+  return `
+    <div class="dsw-grid">
+      <div class="dsw-kpi"><div class="k">Pass@1</div><div class="v">${score==null?'N/A':score+'%'}</div></div>
+      <div class="dsw-kpi"><div class="k">Avg cost/task</div><div class="v">${cost==null?'N/A':'$'+cost.toFixed(2)}</div></div>
+      <div class="dsw-kpi"><div class="k">Out tok</div><div class="v">${tok==null?'N/A':tok+'k'}</div></div>
+      <div class="dsw-kpi"><div class="k">Steps</div><div class="v">${steps==null?'N/A':steps}</div></div>
+    </div>
+    <div class="dsw-bars">
+      <div class="dsw-barline"><span>Score</span><div class="bar"><i style="width:${s}%;"></i></div><b>${score==null?'N/A':score+'%'}</b></div>
+      <div class="dsw-barline"><span>Cost</span><div class="bar"><i class="cost" style="width:${cost==null?0:(c/25*100)}%;"></i></div><b>${cost==null?'N/A':'$'+cost.toFixed(2)}</b></div>
+    </div>
+    <div class="dsw-note">API (Anthropic, MTok): $${apiIn} input / $${apiOut} output. ${note}</div>
+  `;
+}
+
+const UNITS_CLAUDE_DEEPSWE = [
+  { id:'U1', title:'Published DeepSWE rows (official)', cards:[
+    ['DeepSWE · Claude Fable 5 · 2026-06-24 · max','70% top, costly','$21.63/task · 119k out · 88 steps','official','hard','',deepInfo(70,21.63,119,88,10,50,'Official DeepSWE leaderboard row (v1.1, updated 2026-06-24).')],
+    ['DeepSWE · Claude Opus 4.8 · 2026-06-24 · max','59% strong mid-cost','$13.22/task · 135k out · 120 steps','official','hard','',deepInfo(59,13.22,135,120,5,25,'Official DeepSWE leaderboard row (v1.1, updated 2026-06-24).')],
+    ['DeepSWE · Claude Sonnet 4.6 · 2026-06-24 · high','30% lower, efficient','$5.52/task · 76k out · 134 steps','official','hard','',deepInfo(30,5.52,76,134,3,15,'Official DeepSWE leaderboard row (v1.1, updated 2026-06-24).')],
+    ['DeepSWE · Claude Haiku 4.5 · 2026-06-24 · max','No public row yet','No official leaderboard entry in current DeepSWE model list.','official','mid','',deepInfo(null,null,null,null,1,5,'No published DeepSWE row was listed for Claude Haiku 4.5 on 2026-06-24.')],
   ]},
-  { id:'U2', title:'Terminal-Bench (Claude models x effort)', cards:[
-    ['Terminal-Bench Opus 4.5 2026-06-27 low','Cost (API, MTok): $5 input / $25 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
-    ['Terminal-Bench Opus 4.5 2026-06-27 medium','Cost (API, MTok): $5 input / $25 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
-    ['Terminal-Bench Opus 4.5 2026-06-27 high','Cost (API, MTok): $5 input / $25 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
-    ['Terminal-Bench Fable 5 2026-06-27 low','Cost (API, MTok): $10 input / $50 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
-    ['Terminal-Bench Fable 5 2026-06-27 medium','Cost (API, MTok): $10 input / $50 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
-    ['Terminal-Bench Fable 5 2026-06-27 high','Cost (API, MTok): $10 input / $50 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
-    ['Terminal-Bench Sonnet 4.6 2026-06-27 low','Cost (API, MTok): $3 input / $15 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
-    ['Terminal-Bench Sonnet 4.6 2026-06-27 medium','Cost (API, MTok): $3 input / $15 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
-    ['Terminal-Bench Sonnet 4.6 2026-06-27 high','Cost (API, MTok): $3 input / $15 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
-    ['Terminal-Bench Haiku 4.5 2026-06-27 low','Cost (API, MTok): $1 input / $5 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
-    ['Terminal-Bench Haiku 4.5 2026-06-27 medium','Cost (API, MTok): $1 input / $5 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
-    ['Terminal-Bench Haiku 4.5 2026-06-27 high','Cost (API, MTok): $1 input / $5 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
+  { id:'U2', title:'Claude effort matrix (requested format)', cards:[
+    ['DeepSWE · Claude Fable 5 · 2026-06-24 · low','No public row yet','DeepSWE currently publishes Fable 5 at max in official rows.','matrix','mid','',deepInfo(null,null,null,null,10,50,'Requested effort exists in deck format, but this effort is not published on official DeepSWE rows.')],
+    ['DeepSWE · Claude Fable 5 · 2026-06-24 · medium','No public row yet','DeepSWE currently publishes Fable 5 at max in official rows.','matrix','mid','',deepInfo(null,null,null,null,10,50,'Requested effort exists in deck format, but this effort is not published on official DeepSWE rows.')],
+    ['DeepSWE · Claude Fable 5 · 2026-06-24 · high','No public row yet','DeepSWE currently publishes Fable 5 at max in official rows.','matrix','mid','',deepInfo(null,null,null,null,10,50,'Requested effort exists in deck format, but this effort is not published on official DeepSWE rows.')],
+    ['DeepSWE · Claude Fable 5 · 2026-06-24 · max','70% top, costly','$21.63/task official row.','matrix','mid','',deepInfo(70,21.63,119,88,10,50,'This effort/value pair is published on DeepSWE official leaderboard (v1.1, 2026-06-24).')],
+    ['DeepSWE · Claude Opus 4.8 · 2026-06-24 · low','No public row yet','DeepSWE currently publishes Opus 4.8 at max in official rows.','matrix','mid','',deepInfo(null,null,null,null,5,25,'Requested effort exists in deck format, but this effort is not published on official DeepSWE rows.')],
+    ['DeepSWE · Claude Opus 4.8 · 2026-06-24 · medium','No public row yet','DeepSWE currently publishes Opus 4.8 at max in official rows.','matrix','mid','',deepInfo(null,null,null,null,5,25,'Requested effort exists in deck format, but this effort is not published on official DeepSWE rows.')],
+    ['DeepSWE · Claude Opus 4.8 · 2026-06-24 · high','No public row yet','DeepSWE currently publishes Opus 4.8 at max in official rows.','matrix','mid','',deepInfo(null,null,null,null,5,25,'Requested effort exists in deck format, but this effort is not published on official DeepSWE rows.')],
+    ['DeepSWE · Claude Opus 4.8 · 2026-06-24 · max','59% strong mid-cost','$13.22/task official row.','matrix','mid','',deepInfo(59,13.22,135,120,5,25,'This effort/value pair is published on DeepSWE official leaderboard (v1.1, 2026-06-24).')],
+    ['DeepSWE · Claude Sonnet 4.6 · 2026-06-24 · low','No public row yet','DeepSWE currently publishes Sonnet 4.6 at high in official rows.','matrix','mid','',deepInfo(null,null,null,null,3,15,'Requested effort exists in deck format, but this effort is not published on official DeepSWE rows.')],
+    ['DeepSWE · Claude Sonnet 4.6 · 2026-06-24 · medium','No public row yet','DeepSWE currently publishes Sonnet 4.6 at high in official rows.','matrix','mid','',deepInfo(null,null,null,null,3,15,'Requested effort exists in deck format, but this effort is not published on official DeepSWE rows.')],
+    ['DeepSWE · Claude Sonnet 4.6 · 2026-06-24 · high','30% lower, efficient','$5.52/task official row.','matrix','mid','',deepInfo(30,5.52,76,134,3,15,'This effort/value pair is published on DeepSWE official leaderboard (v1.1, 2026-06-24).')],
+    ['DeepSWE · Claude Sonnet 4.6 · 2026-06-24 · max','No public row yet','DeepSWE currently publishes Sonnet 4.6 at high in official rows.','matrix','mid','',deepInfo(null,null,null,null,3,15,'Requested effort exists in deck format, but this effort is not published on official DeepSWE rows.')],
+    ['DeepSWE · Claude Haiku 4.5 · 2026-06-24 · low','No public row yet','No official DeepSWE row currently listed for Haiku 4.5.','matrix','mid','',deepInfo(null,null,null,null,1,5,'Haiku 4.5 is not listed in the published DeepSWE v1.1 leaderboard rows checked on 2026-06-24.')],
+    ['DeepSWE · Claude Haiku 4.5 · 2026-06-24 · medium','No public row yet','No official DeepSWE row currently listed for Haiku 4.5.','matrix','mid','',deepInfo(null,null,null,null,1,5,'Haiku 4.5 is not listed in the published DeepSWE v1.1 leaderboard rows checked on 2026-06-24.')],
+    ['DeepSWE · Claude Haiku 4.5 · 2026-06-24 · high','No public row yet','No official DeepSWE row currently listed for Haiku 4.5.','matrix','mid','',deepInfo(null,null,null,null,1,5,'Haiku 4.5 is not listed in the published DeepSWE v1.1 leaderboard rows checked on 2026-06-24.')],
+    ['DeepSWE · Claude Haiku 4.5 · 2026-06-24 · max','No public row yet','No official DeepSWE row currently listed for Haiku 4.5.','matrix','mid','',deepInfo(null,null,null,null,1,5,'Haiku 4.5 is not listed in the published DeepSWE v1.1 leaderboard rows checked on 2026-06-24.')],
   ]},
 ];
 
@@ -634,7 +668,7 @@ const DECKS = [
   {id:'d7', cat:'other', lang:'en', title:'Beyond the basics · Claude Code', subtitle:'Agentic engineering talk · 19 cards', units:UNITS_CC},
   {id:'d8', cat:'ai', lang:'en', title:'AI Model Benchmarks', subtitle:'ChatGPT, Claude, Cursor: effort, benchmarks, token costs · 31 cards', units:UNITS_AI},
   {id:'d9', cat:'ai', lang:'en', title:'Benchmark Category Map', subtitle:'8 categories → benchmark names · 8 cards', units:UNITS_BENCHCAT},
-  {id:'d10', cat:'ai', lang:'en', title:'Claude SWE/Terminal API Matrix', subtitle:'SWE-bench <model> <date> <effort> · Terminal-Bench <model> <date> <effort> · 24 cards', units:UNITS_CLAUDE_SWE_TERM},
+  {id:'d10', cat:'ai', lang:'en', title:'Claude DeepSWE Matrix', subtitle:'DeepSWE <model> <date> <effort> · API cost + score cards · 20 cards', units:UNITS_CLAUDE_DEEPSWE},
 ];
 
 // Build a deck's cards once, with globally-unique ids (deck-prefixed).
@@ -1067,6 +1101,7 @@ const CARD_TYPES = {
   note(card){ return vocabBody(card,false); },
 };
 function vocabBody(card, isLt){
+  if(card.deck==='d10') return deepSweBody(card);
   return [
     el('div',{class:'prompt'},
       S.hideTarget
@@ -1086,6 +1121,36 @@ function vocabBody(card, isLt){
             (card.info && S.infoOpen) ? el('div',{class:'infobox',html:card.info}) : null,
           )
         : el('button',{class:'show',onclick:()=>{S.revealed=true;render();}},'Show meaning'),
+    ),
+  ];
+}
+function deepSweBody(card){
+  const parts=(card.target||'').split(' · ');
+  const bench=parts[0]||'DeepSWE';
+  const model=parts[1]||'Claude';
+  const date=parts[2]||'date';
+  const effort=(parts[3]||'effort').toUpperCase();
+  return [
+    el('div',{class:'dsw-wrap'},
+      el('div',{class:'dsw-tags'},
+        el('span',{class:'dsw-tag'},bench),
+        el('span',{class:'dsw-tag'},model),
+        el('span',{class:'dsw-tag'},date),
+        el('span',{class:'dsw-tag'},effort),
+      ),
+      el('div',{class:'dsw-q'},'What are cost + performance?'),
+      el('div',{class:'dsw-sub'}, card.target),
+    ),
+    el('div',{class:'answer dsw-answer'},
+      (S.revealed || S.showBoth)
+        ? el('div',null,
+            el('div',{class:'dsw-short'}, card.natural),
+            card.literal ? el('div',{class:'dsw-micro'}, card.literal) : null,
+            card.gloss ? el('div',{class:'gloss'}, '['+card.gloss+']') : null,
+            card.info ? el('button',{class:'infotoggle',onclick:()=>{S.infoOpen=!S.infoOpen;render();}}, (S.infoOpen?'▾':'▸')+' details + graph') : null,
+            (card.info && S.infoOpen) ? el('div',{class:'infobox',html:card.info}) : null,
+          )
+        : el('button',{class:'show',onclick:()=>{S.revealed=true;render();}},'Show answer'),
     ),
   ];
 }
