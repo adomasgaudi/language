@@ -20,7 +20,7 @@ describe('<App />', () => {
     const text = container.textContent ?? ''
     expect(text).toContain('AI Model Benchmarks')
     expect(text).toContain('benchmark properties')
-    expect(text).toContain('v0.1.34')
+    expect(text).toContain('v0.1.35')
     expect(text).toContain('due')
     expect(text).toContain('Memory map')
   })

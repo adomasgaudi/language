@@ -5,9 +5,13 @@ import { CardView } from './components/CardView'
 import { IntervalSlider } from './components/IntervalSlider'
 import { MemoryMap } from './components/MemoryMap'
 
-const VERSION = '0.1.34'
+const VERSION = '0.1.35'
 
 const VERSION_HISTORY = [
+  {
+    version: '0.1.35',
+    note: 'Version bump.',
+  },
   {
     version: '0.1.34',
     note: 'Add bottom-right version history.',
