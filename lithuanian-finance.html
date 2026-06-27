@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.39 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.40 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -96,8 +96,12 @@
   .dsub{font-size:12px;color:var(--t500);margin-top:2px}
   .dstat{display:flex;gap:14px;margin-top:8px;font-size:12px;color:var(--t500)}
   .dstat .due{color:var(--sky300);font-weight:600}
-  .cathead{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t400);margin:14px 2px 2px}
+  .cathead{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t400);margin:14px 2px 2px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--panel)}
+  .cathead:hover{background:var(--line)}
   .cathead:first-of-type{margin-top:4px}
+  .catleft{display:flex;align-items:center;gap:8px}
+  .catchev{display:inline-block;min-width:10px}
+  .catcount{font-size:11px;color:var(--t600)}
   .meta{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px;color:var(--t500);margin-bottom:2px}
   .meta .k{text-transform:uppercase;letter-spacing:.04em}
   .acts{display:flex;align-items:center;gap:2px}
@@ -218,6 +222,7 @@ const AUTO_LONG_MIN  = 43200;  // interval (minutes) at the "long" end (30 days)
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.40',sp:2,   note:'Deck folders are now collapsed by default; new AI deck "Claude SWE/Terminal API Matrix" (24 cards): prompt = "<benchmark> <model> <date> <effort>", answer = API cost + performance'},
   {v:'0.1.39',sp:2,   note:'New deck "Benchmark Category Map" (8 cards): prompt = category type (Knowledge/Math/Code/Agentic/Vision/LongCtx/Instruct/Abstract), answer = benchmark names in that category'},
   {v:'0.1.38',sp:2,   note:'AI Model Benchmarks deck rewritten: all cards are now fact-based (exact numbers, scores, prices) — removed opinion/advice framing; split into 4 units (Benchmarks, OpenAI, Anthropic, Cursor)'},
   {v:'0.1.37',sp:1,   note:'Deck picker now groups decks into category folders — Finance, Job, AI, Other'},
@@ -578,6 +583,40 @@ const UNITS_BENCHCAT = [
   ]},
 ];
 
+// ---- Deck 10: Claude SWE/Terminal API Matrix -------------------------------
+// Prompt format requested: "<benchmark> <model> <date> <effort>".
+// Answer = API cost + performance status.
+const UNITS_CLAUDE_SWE_TERM = [
+  { id:'U1', title:'SWE-bench (Claude models x effort)', cards:[
+    ['SWE-bench Opus 4.5 2026-06-27 low','Cost (API, MTok): $5 input / $25 output · Performance: N/A (no public low-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
+    ['SWE-bench Opus 4.5 2026-06-27 medium','Cost (API, MTok): $5 input / $25 output · Performance: N/A (no public medium-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
+    ['SWE-bench Opus 4.5 2026-06-27 high','Cost (API, MTok): $5 input / $25 output · Performance: 76.8% resolved (Claude 4.5 Opus high reasoning, mini-SWE-agent).','Source basis: SWE-bench Verified row checked 2026-06-27.','swebench','hard'],
+    ['SWE-bench Fable 5 2026-06-27 low','Cost (API, MTok): $10 input / $50 output · Performance: N/A (no public low-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
+    ['SWE-bench Fable 5 2026-06-27 medium','Cost (API, MTok): $10 input / $50 output · Performance: N/A (no public medium-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
+    ['SWE-bench Fable 5 2026-06-27 high','Cost (API, MTok): $10 input / $50 output · Performance: N/A (no public high-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
+    ['SWE-bench Sonnet 4.6 2026-06-27 low','Cost (API, MTok): $3 input / $15 output · Performance: N/A (no public low-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
+    ['SWE-bench Sonnet 4.6 2026-06-27 medium','Cost (API, MTok): $3 input / $15 output · Performance: N/A (no public medium-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
+    ['SWE-bench Sonnet 4.6 2026-06-27 high','Cost (API, MTok): $3 input / $15 output · Performance: N/A (no public high-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
+    ['SWE-bench Haiku 4.5 2026-06-27 low','Cost (API, MTok): $1 input / $5 output · Performance: N/A (no public low-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
+    ['SWE-bench Haiku 4.5 2026-06-27 medium','Cost (API, MTok): $1 input / $5 output · Performance: N/A (no public medium-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
+    ['SWE-bench Haiku 4.5 2026-06-27 high','Cost (API, MTok): $1 input / $5 output · Performance: N/A (no public high-effort row found in checked sources).','Source basis: Anthropic API pricing + SWE-bench Verified rows checked 2026-06-27.','swebench','hard'],
+  ]},
+  { id:'U2', title:'Terminal-Bench (Claude models x effort)', cards:[
+    ['Terminal-Bench Opus 4.5 2026-06-27 low','Cost (API, MTok): $5 input / $25 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
+    ['Terminal-Bench Opus 4.5 2026-06-27 medium','Cost (API, MTok): $5 input / $25 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
+    ['Terminal-Bench Opus 4.5 2026-06-27 high','Cost (API, MTok): $5 input / $25 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
+    ['Terminal-Bench Fable 5 2026-06-27 low','Cost (API, MTok): $10 input / $50 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
+    ['Terminal-Bench Fable 5 2026-06-27 medium','Cost (API, MTok): $10 input / $50 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
+    ['Terminal-Bench Fable 5 2026-06-27 high','Cost (API, MTok): $10 input / $50 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
+    ['Terminal-Bench Sonnet 4.6 2026-06-27 low','Cost (API, MTok): $3 input / $15 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
+    ['Terminal-Bench Sonnet 4.6 2026-06-27 medium','Cost (API, MTok): $3 input / $15 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
+    ['Terminal-Bench Sonnet 4.6 2026-06-27 high','Cost (API, MTok): $3 input / $15 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
+    ['Terminal-Bench Haiku 4.5 2026-06-27 low','Cost (API, MTok): $1 input / $5 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
+    ['Terminal-Bench Haiku 4.5 2026-06-27 medium','Cost (API, MTok): $1 input / $5 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
+    ['Terminal-Bench Haiku 4.5 2026-06-27 high','Cost (API, MTok): $1 input / $5 output · Performance: N/A (no public per-model/per-effort Terminal-Bench row found in checked sources).','Source basis: Anthropic API pricing + Terminal-Bench public benchmark references checked 2026-06-27.','terminal','hard'],
+  ]},
+];
+
 const CATEGORIES = [
   {id:'finance', label:'Finance'},
   {id:'job',     label:'Job'},
@@ -595,6 +634,7 @@ const DECKS = [
   {id:'d7', cat:'other', lang:'en', title:'Beyond the basics · Claude Code', subtitle:'Agentic engineering talk · 19 cards', units:UNITS_CC},
   {id:'d8', cat:'ai', lang:'en', title:'AI Model Benchmarks', subtitle:'ChatGPT, Claude, Cursor: effort, benchmarks, token costs · 31 cards', units:UNITS_AI},
   {id:'d9', cat:'ai', lang:'en', title:'Benchmark Category Map', subtitle:'8 categories → benchmark names · 8 cards', units:UNITS_BENCHCAT},
+  {id:'d10', cat:'ai', lang:'en', title:'Claude SWE/Terminal API Matrix', subtitle:'SWE-bench <model> <date> <effort> · Terminal-Bench <model> <date> <effort> · 24 cards', units:UNITS_CLAUDE_SWE_TERM},
 ];
 
 // Build a deck's cards once, with globally-unique ids (deck-prefixed).
@@ -876,7 +916,7 @@ if('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged=()=>{};
 // Defaults first (transient view state), then overlay the remembered values so
 // persisted choices win.
 const S = Object.assign({
-  idx:0, revealed:false, stepByBand:[2,0], importOpen:false, importText:'', histOpen:false, legendOpen:false, settingsOpen:false, flashMsg:null, flashTimer:null,
+  idx:0, revealed:false, stepByBand:[2,0], importOpen:false, importText:'', histOpen:false, legendOpen:false, settingsOpen:false, flashMsg:null, flashTimer:null, catOpen:{},
   deleted:[], purged:[], deckId:null, mode:'order', pick:null, seedStamp:null, showBoth:false, suggestedFor:null, infoOpen:false, mcPick:null,
   autoEarly:AUTO_EARLY, autoLate:AUTO_LATE, autoTimer:null,
 }, loadState());
@@ -1103,8 +1143,15 @@ function renderIntro(app,t){
   CATEGORIES.forEach(cat=>{
     const decks=DECKS.filter(d=> (known.has(d.cat)?d.cat:'other') === cat.id);
     if(!decks.length) return;
-    app.append(el('div',{class:'cathead'}, cat.label));
-    decks.forEach(d=>app.append(deckCard(d)));
+    const open=!!S.catOpen[cat.id];
+    app.append(el('button',{class:'cathead',onclick:()=>{ S.catOpen[cat.id]=!open; render(); }},
+      el('span',{class:'catleft'},
+        el('span',{class:'catchev'}, open?'▾':'▸'),
+        el('span',null,cat.label),
+      ),
+      el('span',{class:'catcount'}, decks.length+' deck'+(decks.length===1?'':'s')),
+    ));
+    if(open) decks.forEach(d=>app.append(deckCard(d)));
   });
   app.append(el('div',{class:'row',style:{marginTop:'2px'}},
     el('button',{class:'pill',onclick:doDownload}, icon('download'),'Download'),
