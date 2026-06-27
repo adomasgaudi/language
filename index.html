@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.36 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.37 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -96,6 +96,8 @@
   .dsub{font-size:12px;color:var(--t500);margin-top:2px}
   .dstat{display:flex;gap:14px;margin-top:8px;font-size:12px;color:var(--t500)}
   .dstat .due{color:var(--sky300);font-weight:600}
+  .cathead{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t400);margin:14px 2px 2px}
+  .cathead:first-of-type{margin-top:4px}
   .meta{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px;color:var(--t500);margin-bottom:2px}
   .meta .k{text-transform:uppercase;letter-spacing:.04em}
   .acts{display:flex;align-items:center;gap:2px}
@@ -216,6 +218,7 @@ const AUTO_LONG_MIN  = 43200;  // interval (minutes) at the "long" end (30 days)
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.37',sp:1,   note:'Deck picker now groups decks into category folders — Finance, Job, AI, Other'},
   {v:'0.1.36',sp:3,   note:'New deck "AI Model Benchmarks" (32 cards): ChatGPT/Claude/Cursor effort levels, SWE-bench Verified, LiveCodeBench, Terminal-Bench, LMArena, and token pricing — ported from app/ to live index.html'},
   {v:'0.1.35',sp:0,   note:'Version bump'},
   {v:'0.1.34',sp:0.5, note:'Add bottom-right version history'},
@@ -552,15 +555,23 @@ const UNITS_AI = [
   ]},
 ];
 
+// Deck "folders" — decks are grouped under these categories on the picker.
+const CATEGORIES = [
+  {id:'finance', label:'Finance'},
+  {id:'job',     label:'Job'},
+  {id:'ai',      label:'AI'},
+  {id:'other',   label:'Other'},
+];
+
 const DECKS = [
-  {id:'d1', lang:'lt', title:'Finance basics', subtitle:'Data Explorer terms · LT→EN · 34 cards', units:UNITS_CORE},
-  {id:'d2', lang:'lt', title:'Advanced finance', subtitle:'Financial statements & credit · LT→EN · 30 cards', units:UNITS_ADV},
-  {id:'d6', lang:'mc', type:'mc', title:'Finance formulas', subtitle:'Multiple-choice math · 20 cards', units:UNITS_MATH},
-  {id:'d3', lang:'en', title:'Science teacher job', subtitle:'Get a teaching job in Vilnius · 20 cards', units:UNITS_TEACHER},
-  {id:'d4', lang:'en', title:'Fitness clients', subtitle:'Find PT clients in Vilnius · 20 cards', units:UNITS_FITNESS},
-  {id:'d5', lang:'en', title:'Website clients', subtitle:'Find web-build clients in Vilnius · 20 cards', units:UNITS_WEB},
-  {id:'d7', lang:'en', title:'Beyond the basics · Claude Code', subtitle:'Agentic engineering talk · 19 cards', units:UNITS_CC},
-  {id:'d8', lang:'en', title:'AI Model Benchmarks', subtitle:'ChatGPT, Claude, Cursor: effort, benchmarks, token costs · 32 cards', units:UNITS_AI},
+  {id:'d1', cat:'finance', lang:'lt', title:'Finance basics', subtitle:'Data Explorer terms · LT→EN · 34 cards', units:UNITS_CORE},
+  {id:'d2', cat:'finance', lang:'lt', title:'Advanced finance', subtitle:'Financial statements & credit · LT→EN · 30 cards', units:UNITS_ADV},
+  {id:'d6', cat:'finance', lang:'mc', type:'mc', title:'Finance formulas', subtitle:'Multiple-choice math · 20 cards', units:UNITS_MATH},
+  {id:'d3', cat:'job', lang:'en', title:'Science teacher job', subtitle:'Get a teaching job in Vilnius · 20 cards', units:UNITS_TEACHER},
+  {id:'d4', cat:'job', lang:'en', title:'Fitness clients', subtitle:'Find PT clients in Vilnius · 20 cards', units:UNITS_FITNESS},
+  {id:'d5', cat:'job', lang:'en', title:'Website clients', subtitle:'Find web-build clients in Vilnius · 20 cards', units:UNITS_WEB},
+  {id:'d7', cat:'other', lang:'en', title:'Beyond the basics · Claude Code', subtitle:'Agentic engineering talk · 19 cards', units:UNITS_CC},
+  {id:'d8', cat:'ai', lang:'en', title:'AI Model Benchmarks', subtitle:'ChatGPT, Claude, Cursor: effort, benchmarks, token costs · 32 cards', units:UNITS_AI},
 ];
 
 // Build a deck's cards once, with globally-unique ids (deck-prefixed).
@@ -1049,19 +1060,28 @@ function renderIntro(app,t){
       el('h1',null,'Lithuanian finance'),
       el('p',{class:'sub'},'Pick a deck to study'))),
   ));
-  DECKS.forEach(d=>{
+  const deckCard=(d)=>{
     const cards=buildDeckCards(d);
     const vis=cards.filter(c=>!S.deleted.includes(c.id) && !S.purged.includes(c.id));
     const dueN=vis.filter(c=>isDue(recordFor(c.id),t)).length;
     const learnedN=cards.filter(c=>(S.records[c.id]||{reps:0}).reps>0).length;
-    app.append(el('button',{class:'deckcard',onclick:()=>{S.deckId=d.id;S.idx=0;S.pick=null;S.revealed=false;saveState();render();}},
+    return el('button',{class:'deckcard',onclick:()=>{S.deckId=d.id;S.idx=0;S.pick=null;S.revealed=false;saveState();render();}},
       el('div',{class:'dtitle'}, d.title),
       el('div',{class:'dsub'}, d.subtitle),
       el('div',{class:'dstat'},
         el('span',{class:'due'}, dueN+' due'),
         el('span',null, learnedN+'/'+cards.length+' learned'),
       ),
-    ));
+    );
+  };
+  // Group decks into their category "folders" (CATEGORIES order; any deck with
+  // an unknown/missing cat falls into "other").
+  const known=new Set(CATEGORIES.map(c=>c.id));
+  CATEGORIES.forEach(cat=>{
+    const decks=DECKS.filter(d=> (known.has(d.cat)?d.cat:'other') === cat.id);
+    if(!decks.length) return;
+    app.append(el('div',{class:'cathead'}, cat.label));
+    decks.forEach(d=>app.append(deckCard(d)));
   });
   app.append(el('div',{class:'row',style:{marginTop:'2px'}},
     el('button',{class:'pill',onclick:doDownload}, icon('download'),'Download'),
