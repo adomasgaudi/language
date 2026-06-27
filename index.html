@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.33 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.35 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -216,6 +216,8 @@ const AUTO_LONG_MIN  = 43200;  // interval (minutes) at the "long" end (30 days)
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.35',sp:0,   note:'Version bump'},
+  {v:'0.1.34',sp:0.5, note:'Add bottom-right version history'},
   {v:'0.1.33',sp:3,   note:'New deck "Beyond the basics · Claude Code" (19 cards): agentic engineering talk distilled into note cards — Access/Memory/Tooling levers, in-context learning vs fine-tuning, the Bitter Lesson, Post-Tool-Use hooks, subagents, and the ~16-worktree "no cherry-picking" setup'},
   {v:'0.1.32',sp:3,   note:'All card types (vocab · action note · multiple-choice) now render through ONE base <flash-card> Web Component — add a card type by registering a body, no more separate components or render branches'},
   {v:'0.1.31',sp:0.5, note:'First two slider rungs are now 30s & 90s (were 20s & 60s); sub-2-minute intervals read in seconds'},
