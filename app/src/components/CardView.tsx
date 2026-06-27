@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { Card, SrsRecord } from '../engine/types'
 import { play } from '../engine/audio'
 import { formatMinutes } from '../engine/interval'
@@ -10,16 +10,13 @@ interface Props {
   hideTarget: boolean
 }
 
-/** The study card: French prompt, button-to-flip translations, per-word and
- *  per-line audio. In audio-only mode the French text is hidden so you train
- *  your ear without reading it in an English accent. */
+/** Study card renderer for language prompts and knowledge quiz cards. */
 export function CardView({ card, record, lineText, hideTarget }: Props) {
-  const [revealed, setRevealed] = useState(false)
-
-  // New card -> hide the answer again.
-  useEffect(() => {
-    setRevealed(false)
-  }, [card.id])
+  const [revealState, setRevealState] = useState({
+    cardId: card.id,
+    revealed: false,
+  })
+  const revealed = revealState.cardId === card.id && revealState.revealed
 
   const playWord = () =>
     play({ clip: card.audio?.clip, segmentKey: card.target, text: card.target })
@@ -31,57 +28,64 @@ export function CardView({ card, record, lineText, hideTarget }: Props) {
       text: lineText,
     })
 
+  const kindLabel =
+    card.kind === 'quiz' ? 'Quiz' : card.kind === 'line' ? 'Line' : 'Word'
+  const hasAudio = Boolean(card.audio)
+
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-xl">
       <div className="mb-1 flex items-center justify-between text-xs text-zinc-500">
         <span className="uppercase tracking-wide">
-          {card.kind === 'line' ? 'Line' : 'Word'} · {card.tier}
+          {kindLabel} - {card.tier}
         </span>
         <span className="tabular-nums">
           {record.reps > 0
-            ? `${formatMinutes(record.interval)} · ${new Date(record.due).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+            ? `${formatMinutes(record.interval)} - ${new Date(record.due).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
             : 'new'}
         </span>
       </div>
 
-      {/* Prompt */}
       <div className="min-h-[88px] py-3 text-center">
         {hideTarget ? (
           <div className="text-zinc-500">
-            <div className="text-3xl">🙈</div>
-            <div className="mt-1 text-sm">Listen &amp; guess — French hidden</div>
+            <div className="text-3xl">?</div>
+            <div className="mt-1 text-sm">
+              {hasAudio ? 'Listen & guess - prompt hidden' : 'Prompt hidden'}
+            </div>
           </div>
         ) : (
-          <div className="text-3xl font-semibold leading-snug text-zinc-50">
+          <div
+            className={`${card.kind === 'quiz' ? 'text-xl' : 'text-3xl'} font-semibold leading-snug text-zinc-50`}
+          >
             {card.target}
           </div>
         )}
         {card.kind === 'word' && lineText && !hideTarget && (
-          <div className="mt-1 text-sm text-zinc-500">from “{lineText}”</div>
+          <div className="mt-1 text-sm text-zinc-500">from "{lineText}"</div>
         )}
       </div>
 
-      {/* Audio */}
-      <div className="flex justify-center gap-2">
-        <button
-          type="button"
-          onClick={playWord}
-          className="rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-700"
-        >
-          🔊 {card.kind === 'line' ? 'Line' : 'Word'}
-        </button>
-        {card.kind === 'word' && lineText && (
+      {hasAudio && (
+        <div className="flex justify-center gap-2">
           <button
             type="button"
-            onClick={playLine}
+            onClick={playWord}
             className="rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-700"
           >
-            ▶ In context
+            Play {card.kind === 'line' ? 'line' : 'word'}
           </button>
-        )}
-      </div>
+          {card.kind === 'word' && lineText && (
+            <button
+              type="button"
+              onClick={playLine}
+              className="rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-700"
+            >
+              In context
+            </button>
+          )}
+        </div>
+      )}
 
-      {/* Answer */}
       <div className="mt-4 border-t border-zinc-800 pt-4">
         {revealed ? (
           <div className="space-y-2 text-center">
@@ -94,16 +98,18 @@ export function CardView({ card, record, lineText, hideTarget }: Props) {
               </div>
             )}
             {card.gloss && (
-              <div className="text-xs text-zinc-500">{card.gloss}</div>
+              <div className="text-xs leading-relaxed text-zinc-500">
+                {card.gloss}
+              </div>
             )}
           </div>
         ) : (
           <button
             type="button"
-            onClick={() => setRevealed(true)}
+            onClick={() => setRevealState({ cardId: card.id, revealed: true })}
             className="mx-auto block rounded-lg border border-zinc-700 px-5 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-800"
           >
-            Show meaning
+            {card.kind === 'quiz' ? 'Show answer' : 'Show meaning'}
           </button>
         )}
       </div>

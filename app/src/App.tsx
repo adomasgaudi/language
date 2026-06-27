@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStudy } from './app/useStudy'
-import { frStromae, lineOf } from './content/fr-stromae'
+import { aiModelBenchmarks, lineOf } from './content/ai-model-benchmarks'
 import { CardView } from './components/CardView'
 import { IntervalSlider } from './components/IntervalSlider'
 import { MemoryMap } from './components/MemoryMap'
@@ -8,13 +8,14 @@ import { MemoryMap } from './components/MemoryMap'
 const VERSION = '0.1.0'
 
 export default function App() {
-  const study = useStudy(frStromae)
+  const study = useStudy(aiModelBenchmarks)
   const [importOpen, setImportOpen] = useState(false)
   const [importText, setImportText] = useState('')
   const [flash, setFlash] = useState<string | null>(null)
 
   const { current } = study
   const lineText = current ? lineOf(study.course, current) : undefined
+  const hasAudio = study.cards.some((card) => Boolean(card.audio))
 
   const note = (msg: string) => {
     setFlash(msg)
@@ -70,7 +71,13 @@ export default function App() {
           onClick={() => study.setHideTarget(!study.hideTarget)}
           className={`rounded-lg px-2.5 py-1 ${study.hideTarget ? 'bg-sky-500 text-white' : 'bg-zinc-800 text-zinc-300'}`}
         >
-          {study.hideTarget ? 'Audio: hidden' : 'Audio: shown'}
+          {hasAudio
+            ? study.hideTarget
+              ? 'Audio: hidden'
+              : 'Audio: shown'
+            : study.hideTarget
+              ? 'Prompt: hidden'
+              : 'Prompt: shown'}
         </button>
         <button
           type="button"

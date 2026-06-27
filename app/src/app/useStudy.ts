@@ -79,7 +79,9 @@ export function useStudy(course: Course): Study {
 
   // Use a ref so navigation callbacks don't churn on every tick.
   const nowRef = useRef(now)
-  nowRef.current = now
+  useEffect(() => {
+    nowRef.current = now
+  }, [now])
 
   const next = useCallback(() => {
     if (cards.length === 0) return

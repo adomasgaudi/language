@@ -4,7 +4,7 @@
 
 export type Tier = 'obvious' | 'easy' | 'mid' | 'hard'
 
-export type CardKind = 'line' | 'word'
+export type CardKind = 'line' | 'word' | 'quiz'
 
 export interface Translation {
   /** Strict source-order rendering; editorial additions in [brackets]. */

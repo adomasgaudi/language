@@ -5,11 +5,11 @@ import App from './App'
 
 describe('<App />', () => {
   beforeEach(() => {
-    localStorage.clear()
+    globalThis.localStorage?.clear()
     document.body.innerHTML = ''
   })
 
-  it('mounts and shows the course and a French card', async () => {
+  it('mounts and shows the AI model benchmark deck', async () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
 
@@ -18,9 +18,9 @@ describe('<App />', () => {
     })
 
     const text = container.textContent ?? ''
-    expect(text).toContain('French · Stromae')
-    expect(text).toContain('Qui dit') // first line card is shown
-    expect(text).toContain('due') // the due counter rendered
+    expect(text).toContain('AI Model Benchmarks')
+    expect(text).toContain('benchmark properties')
+    expect(text).toContain('due')
     expect(text).toContain('Memory map')
   })
 })

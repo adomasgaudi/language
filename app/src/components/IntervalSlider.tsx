@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   BANDS,
   dueLabel,
@@ -20,14 +20,11 @@ interface Props {
  */
 export function IntervalSlider({ initialMinutes, onCommit, now }: Props) {
   const [bandIndex, setBandIndex] = useState(1)
-  const [pos, setPos] = useState(0.4)
+  const [pos, setPos] = useState(() =>
+    initialMinutes === undefined ? 0.4 : 0.4,
+  )
   const band = BANDS[bandIndex]
   const minutes = minutesFromPos(band, pos)
-
-  // Reset toward the suggested interval when the card changes.
-  useEffect(() => {
-    setPos(0.4)
-  }, [initialMinutes])
 
   return (
     <div className="select-none">
