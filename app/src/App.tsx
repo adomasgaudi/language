@@ -5,7 +5,18 @@ import { CardView } from './components/CardView'
 import { IntervalSlider } from './components/IntervalSlider'
 import { MemoryMap } from './components/MemoryMap'
 
-const VERSION = '0.1.0'
+const VERSION = '0.1.34'
+
+const VERSION_HISTORY = [
+  {
+    version: '0.1.34',
+    note: 'Add bottom-right version history.',
+  },
+  {
+    version: '0.1.33',
+    note: 'Add AI model benchmark study deck.',
+  },
+]
 
 export default function App() {
   const study = useStudy(aiModelBenchmarks)
@@ -187,8 +198,7 @@ export default function App() {
         />
       </div>
 
-      <footer className="mt-auto flex items-center justify-between pt-2 text-[10px] text-zinc-600">
-        <span>v{VERSION}</span>
+      <footer className="mt-auto flex items-end justify-between gap-4 pt-2 text-[10px] text-zinc-600">
         {study.deletedIds.length > 0 && (
           <button
             type="button"
@@ -198,6 +208,19 @@ export default function App() {
             Restore {study.deletedIds.length} hidden
           </button>
         )}
+        <details className="ml-auto text-right">
+          <summary className="cursor-pointer list-none hover:text-zinc-400">
+            v{VERSION}
+          </summary>
+          <div className="mt-1 space-y-1">
+            {VERSION_HISTORY.map((entry) => (
+              <div key={entry.version}>
+                <span className="font-medium text-zinc-500">v{entry.version}</span>{' '}
+                <span>{entry.note}</span>
+              </div>
+            ))}
+          </div>
+        </details>
       </footer>
 
       {flash && (
