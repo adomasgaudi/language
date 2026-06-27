@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.37 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.38 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -218,6 +218,7 @@ const AUTO_LONG_MIN  = 43200;  // interval (minutes) at the "long" end (30 days)
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.38',sp:2,   note:'AI Model Benchmarks deck rewritten: all cards are now fact-based (exact numbers, scores, prices) — removed opinion/advice framing; split into 4 units (Benchmarks, OpenAI, Anthropic, Cursor)'},
   {v:'0.1.37',sp:1,   note:'Deck picker now groups decks into category folders — Finance, Job, AI, Other'},
   {v:'0.1.36',sp:3,   note:'New deck "AI Model Benchmarks" (32 cards): ChatGPT/Claude/Cursor effort levels, SWE-bench Verified, LiveCodeBench, Terminal-Bench, LMArena, and token pricing — ported from app/ to live index.html'},
   {v:'0.1.35',sp:0,   note:'Version bump'},
@@ -517,41 +518,46 @@ const UNITS_CC = [
 ];
 
 // ---- Deck 8: AI Model Benchmarks (ChatGPT, Claude, Cursor) -----------------
-// Ported from app/src/content/ai-model-benchmarks.ts — quiz-style note cards.
+// Synced from app/src/content/ai-model-benchmarks.ts — fact-based note cards.
 const UNITS_AI = [
-  { id:'U1', title:'Benchmarks, effort, cost', cards:[
-    ['What benchmark properties matter most if you want to avoid saturated, vendor-trained leaderboard trivia?','Prefer third-party, unaffiliated, held-out or continuously refreshed benchmarks with realistic tasks and public methodology.','Good examples for this deck: SWE-bench Verified, LiveCodeBench, Terminal-Bench, and LMArena. Treat static near-100% tests as weak signals.','benchmark','easy'],
-    ['Why is LiveCodeBench a better coding-generation signal than many old coding benchmarks?','It is designed as a holistic, contamination-free coding benchmark with problems released over time.','Metric used in the deck: pass@1 on programming problems. Dynamic release windows reduce train-set memorization risk.','livecodebench','easy'],
-    ['On the latest LiveCodeBench window sampled for this deck, which OpenAI effort setting led the table: O4-Mini low, medium, or high?','O4-Mini High led among those three at about 82.0 pass@1.','Same latest window: O4-Mini Medium about 76.8; O4-Mini Low about 68.1. Higher effort bought meaningful coding accuracy.','livecodebench','mid'],
-    ['In the sampled LiveCodeBench window, did Claude Opus 4 Thinking beat plain Claude Opus 4?','Yes. Claude Opus 4 Thinking was about 60.0 pass@1 vs about 50.8 for plain Opus 4.','This is a useful effort-level lesson: thinking/reasoning modes can matter more than model family alone on hard coding tasks.','livecodebench','mid'],
-    ['What does SWE-bench Verified measure?','Whether an agent can resolve real GitHub software issues; the headline score is percent resolved.','It is third-party and closer to agentic coding than pure code-completion tests, though leaderboard systems and scaffolds still matter.','swebench','easy'],
-    ['On SWE-bench Verified rows checked for this deck, what resolved scores did the top Claude and top OpenAI entries reach?','Claude 4.5 Opus high reasoning: 76.8% resolved. GPT-5-2 Codex: 72.8% resolved.','Both used mini-SWE-agent. The deck treats these as benchmark-specific results, not universal model quality.','swebench','hard'],
-    ['SWE-bench Verified run cost check: which was cheaper, GPT-5 mini medium reasoning or Claude 4.5 Opus high reasoning?','GPT-5 mini medium was much cheaper: about $17.74 total vs about $376.95 for Claude 4.5 Opus high reasoning.','The resolved scores differed too: GPT-5 mini medium about 59.8%, Claude 4.5 Opus high about 76.8%. Cost per task matters.','swebench','hard'],
-    ['What kind of capability does Terminal-Bench target?','Terminal-agent skill: solving tasks in a shell environment, not just answering text questions.','Terminal-Bench 2.x leaderboards require submissions through its Harbor flow, which is intended to standardize evaluations.','terminalbench','mid'],
-    ['What does LMArena tell you, and what is the caveat?','It gives blind human preference rankings, useful for broad chat quality, but it is not a controlled task benchmark.','Use it as a taste/preference signal beside task benchmarks like SWE-bench Verified or LiveCodeBench.','lmarena','easy'],
-    ['What reasoning effort levels does the current OpenAI reasoning guide list?','none, minimal, low, medium, high, and xhigh.','Lower effort favors speed and lower token usage; higher effort spends more reasoning tokens for harder work.','openai','mid'],
-    ['What is the documented default reasoning effort for gpt-5.5?','medium.','The docs describe medium as the starting balance of quality, reliability, and performance for gpt-5.5.','openai','easy'],
-    ['Standard OpenAI API pricing check: what are gpt-5.5 short-context input, cached-input, and output prices per 1M tokens?','$5.00 input, $0.50 cached input, $30.00 output.','Long-context standard gpt-5.5 is higher: $10.00 input, $1.00 cached input, $45.00 output.','openai','hard'],
-    ['Batch/Flex pricing check: what are gpt-5.5 short-context input, cached-input, and output prices per 1M tokens?','$2.50 input, $0.25 cached input, $15.00 output.','Batch/Flex was half of standard for this row when checked. Priority was higher: $12.50 input, $1.25 cached, $75 output.','openai','hard'],
-    ['OpenAI price ladder: what are gpt-5.4-mini standard short-context prices per 1M tokens?','$0.75 input, $0.075 cached input, $4.50 output.','gpt-5.4-nano was lower: $0.20 input, $0.02 cached input, $1.25 output.','openai','hard'],
-    ['Older GPT-5 family API price memory: what were gpt-5-mini and gpt-5-nano standard short-context output prices per 1M tokens?','gpt-5-mini: $2.00 output. gpt-5-nano: $0.40 output.','Their input prices were $0.25/M and $0.05/M respectively; cached input was one tenth of input.','openai','mid'],
-    ['Why should you be careful with OpenAI Pro-model pricing cards?','Pro rows can be dramatically more expensive and may lack cached-input pricing; check the exact context and service tier.','Example checked: gpt-5.5-pro standard short context was $30/M input and $180/M output.','openai','mid'],
-    ['Anthropic pricing table memory: what do the five Claude price columns represent?','Base input, 5-minute cache write, 1-hour cache write, cache hits/refreshes, and output, all per million tokens.','Claude docs label MTok as million tokens.','claude','mid'],
-    ['What were Claude Fable 5 and Claude Mythos 5 base input and output prices per MTok when checked?','$10/M input and $50/M output.','Their cache prices were $12.50/M for 5-minute writes, $20/M for 1-hour writes, and $1/M for cache hits/refreshes.','claude','hard'],
-    ['What were Claude Opus 4.8 base input and output prices per MTok when checked?','$5/M input and $25/M output.','Opus 4.8, 4.7, 4.6, and 4.5 shared this current row. Older Opus 4.1/4 rows were $15/M input and $75/M output.','claude','hard'],
-    ['What were Claude Sonnet 4.6 base input and output prices per MTok when checked?','$3/M input and $15/M output.','Cache hit/refresh price was $0.30/M; 5-minute and 1-hour cache writes were $3.75/M and $6/M.','claude','hard'],
-    ['What were Claude Haiku 4.5 base input and output prices per MTok when checked?','$1/M input and $5/M output.','Haiku 4.5 was the cheapest current Claude 4.5 row in the checked pricing table.','claude','mid'],
-    ['In Anthropic extended thinking, what is the minimum thinking budget for budget_tokens?','1,024 tokens.','The docs recommend starting at the minimum and increasing gradually; larger budgets increase latency and cost.','claude','mid'],
-    ['How did Anthropic describe thinking control for Claude Fable 5, Mythos 5, Opus 4.8, and Opus 4.7?','They use adaptive thinking; newer rows use effort to control thinking depth instead of budget_tokens.','The docs marked budget_tokens as not supported for Fable 5, Mythos 5, Opus 4.8, and Opus 4.7.','claude','hard'],
-    ['What are Cursor\'s two model usage pools?','Auto + Composer pool, and API pool.','Auto/Composer draw from Cursor pricing. Specific model selection and Premium routing draw from the API pool at provider API rates.','cursor','easy'],
-    ['Cursor Auto pricing check: what are input/cache-write, output, and cache-read prices per 1M tokens?','$1.25 input + cache write, $6.00 output, $0.25 cache read.','Composer 2.5 and Auto draw from the same Auto + Composer pool according to Cursor docs.','cursor','hard'],
-    ['What is Composer 2.5 in Cursor?','Cursor\'s own model for agentic coding; both Auto and Composer 2.5 draw from the Auto + Composer pool.','Use this card to distinguish Cursor-native routing from selecting a named provider model.','cursor','easy'],
-    ['What does Cursor Premium routing do?','It lets Cursor select more capable models for complex tasks, priced from the selected model\'s API rate.','Cursor says it selects Premium models based on internal benchmarks, evaluations, and user feedback.','cursor','mid'],
-    ['What does Cursor Max Mode change?','It extends context to the maximum a model supports and uses token-based pricing at the model API rate.','More context can improve codebase understanding but consumes included usage faster.','cursor','mid'],
-    ['On Cursor Teams plans, what extra token rate can apply to non-Auto agent requests?','$0.25 per 1M tokens as the Cursor Token Rate.','Cursor docs say Auto is exempt; the rate applies on top of model API pricing for included, on-demand, and BYOK usage.','cursor','hard'],
-    ['Cursor individual plan memory: what API usage was included in Pro, Pro Plus, and Ultra when checked?','Pro: $20. Pro Plus: $70. Ultra: $400.','Plan prices were $20/mo, $60/mo, and $200/mo respectively when checked.','cursor','hard'],
-    ['What token-pricing trap should you remember across OpenAI, Anthropic, and Cursor?','Output tokens are usually much more expensive than input tokens, and reasoning/thinking can increase billable token use.','Example: gpt-5.5 standard short output was 6x input; Claude Opus 4.8 output was 5x input.','cost','easy'],
-    ['What is the basic tradeoff behind higher reasoning effort or thinking depth?','Higher effort can improve hard-task quality but usually increases latency and token cost.','The benchmark lesson: compare quality gain against extra tokens, not only raw leaderboard rank.','effort','easy'],
+  { id:'U1', title:'Benchmarks', cards:[
+    ['What four benchmarks/leaderboards does this deck draw data from?','SWE-bench Verified, LiveCodeBench, Terminal-Bench, and LMArena.','Data checked 2026-06-27 from official leaderboards and provider documentation.','benchmark','easy'],
+    ['What is the key design property of LiveCodeBench that distinguishes it from static coding benchmarks?','Problems are released continuously over time, reducing the risk of train-set contamination.','Metric: pass@1 on programming problems.','livecodebench','easy'],
+    ['On the LiveCodeBench window sampled for this deck, what pass@1 scores did O4-Mini Low, Medium, and High achieve?','Low: 68.1  ·  Medium: 76.8  ·  High: 82.0','Spread between Low and High: about 13.9 pass@1 points.','livecodebench','mid'],
+    ['On the sampled LiveCodeBench window, what pass@1 scores did Claude Opus 4 and Claude Opus 4 Thinking achieve?','Claude Opus 4: 50.8  ·  Claude Opus 4 Thinking: 60.0','Difference: about 9.2 pass@1 points in favour of Thinking.','livecodebench','mid'],
+    ['What does SWE-bench Verified measure, and what is the headline metric?','Whether an agent resolves real GitHub software issues; headline metric is percent of issues resolved.','Leaderboard entries specify the scaffold used (e.g. mini-SWE-agent).','swebench','easy'],
+    ['On SWE-bench Verified (mini-SWE-agent), what resolved % did Claude 4.5 Opus high reasoning and GPT-5-2 Codex achieve?','Claude 4.5 Opus high reasoning: 76.8%  ·  GPT-5-2 Codex: 72.8%','','swebench','hard'],
+    ['On SWE-bench Verified (mini-SWE-agent), what was the total run cost for GPT-5 mini medium vs Claude 4.5 Opus high reasoning?','GPT-5 mini medium: $17.74  ·  Claude 4.5 Opus high reasoning: $376.95','Resolved scores: GPT-5 mini medium 59.8%, Claude 4.5 Opus high 76.8%.','swebench','hard'],
+    ['What capability does Terminal-Bench evaluate?','Agent performance on tasks solved inside a shell (terminal) environment.','Terminal-Bench 2.x leaderboard submissions go through its Harbor flow.','terminalbench','mid'],
+    ['What ranking method does LMArena use?','Blind pairwise human preference voting between model outputs.','Rankings reflect human chat preferences, not task accuracy metrics.','lmarena','easy'],
+  ]},
+  { id:'U2', title:'OpenAI reasoning & pricing', cards:[
+    ['What six reasoning effort levels does the OpenAI reasoning guide define?','none · minimal · low · medium · high · xhigh','Each level controls how many reasoning tokens the model allocates.','openai','mid'],
+    ['What is the documented default reasoning effort for gpt-5.5?','medium','Applies unless the caller overrides the effort parameter.','openai','easy'],
+    ['gpt-5.5 standard short-context prices per 1M tokens (input · cached input · output)?','$5.00  ·  $0.50  ·  $30.00','Long-context standard: $10.00 input · $1.00 cached · $45.00 output.','openai','hard'],
+    ['gpt-5.5 Batch/Flex short-context prices per 1M tokens (input · cached input · output)?','$2.50  ·  $0.25  ·  $15.00','Priority tier: $12.50 input · $1.25 cached · $75.00 output.','openai','hard'],
+    ['gpt-5.5-pro standard short-context prices per 1M tokens (input · output)?','$30.00 input  ·  $180.00 output','No cached-input price was listed for this row when checked.','openai','hard'],
+    ['gpt-5.4-mini standard short-context prices per 1M tokens (input · cached input · output)?','$0.75  ·  $0.075  ·  $4.50','gpt-5.4-nano: $0.20 input · $0.02 cached · $1.25 output.','openai','hard'],
+    ['gpt-5-mini and gpt-5-nano standard short-context output prices per 1M tokens?','gpt-5-mini: $2.00  ·  gpt-5-nano: $0.40','Input prices: $0.25/M (mini) and $0.05/M (nano); cached input = 1/10 of input.','openai','mid'],
+    ['What is the output-to-input price ratio for gpt-5.5 standard short-context?','6 : 1  ($30.00 output vs $5.00 input per 1M tokens)','Claude Opus 4.8 ratio: 5 : 1 ($25/M output vs $5/M input).','openai','mid'],
+  ]},
+  { id:'U3', title:'Anthropic / Claude pricing', cards:[
+    ['What are the five price columns in Anthropic\'s Claude pricing table (per MTok)?','Base input · 5-min cache write · 1-hour cache write · cache hits/refreshes · output','','claude','mid'],
+    ['Claude Fable 5 and Claude Mythos 5 prices per MTok (base input · 5-min cache write · 1-hour cache write · cache hit · output)?','$10  ·  $12.50  ·  $20  ·  $1  ·  $50','','claude','hard'],
+    ['Claude Opus 4.8 prices per MTok (base input · output)?','$5 input  ·  $25 output','Opus 4.8, 4.7, 4.6, and 4.5 shared this row. Older Opus 4.1/4: $15 input · $75 output.','claude','hard'],
+    ['Claude Sonnet 4.6 prices per MTok (base input · 5-min cache write · 1-hour cache write · cache hit · output)?','$3  ·  $3.75  ·  $6  ·  $0.30  ·  $15','','claude','hard'],
+    ['Claude Haiku 4.5 prices per MTok (base input · output)?','$1 input  ·  $5 output','Lowest-priced Claude 4.5-family row in the checked pricing table.','claude','mid'],
+    ['What is the minimum value for budget_tokens in Anthropic extended thinking?','1,024 tokens','budget_tokens is not supported for Claude Fable 5, Mythos 5, Opus 4.8, or Opus 4.7 — those models use effort instead.','claude','mid'],
+    ['Which Claude models use effort (not budget_tokens) to control thinking depth?','Claude Fable 5, Mythos 5, Opus 4.8, and Opus 4.7','The Anthropic docs mark budget_tokens as not supported for those rows.','claude','hard'],
+  ]},
+  { id:'U4', title:'Cursor pricing & routing', cards:[
+    ['What are Cursor\'s two model usage pools?','Auto + Composer pool  ·  API pool','Auto + Composer: Cursor pricing. Specific model selection and Premium routing: API pool at provider API rates.','cursor','easy'],
+    ['Cursor Auto prices per 1M tokens (input + cache write · output · cache read)?','$1.25  ·  $6.00  ·  $0.25','Composer 2.5 and Auto draw from the same Auto + Composer pool.','cursor','hard'],
+    ['What is Composer 2.5 in Cursor, and which pool does it draw from?','Cursor\'s own agentic-coding model; draws from the Auto + Composer pool.','','cursor','easy'],
+    ['What does Cursor Premium routing do, and how is it priced?','Cursor selects more capable models for complex tasks; priced from the selected model\'s API rate.','Cursor states it selects Premium models based on internal benchmarks, evaluations, and user feedback.','cursor','mid'],
+    ['What does Cursor Max Mode change about context and pricing?','Extends context to the model\'s maximum supported length; uses token-based pricing at the model API rate.','','cursor','mid'],
+    ['On Cursor Teams plans, what is the Cursor Token Rate that can apply to non-Auto agent requests?','$0.25 per 1M tokens, on top of model API pricing.','Auto requests are exempt from this rate.','cursor','hard'],
+    ['What are the plan prices and included API usage for Cursor Pro, Pro Plus, and Ultra?','Pro: $20/mo · $20 usage  ·  Pro Plus: $60/mo · $70 usage  ·  Ultra: $200/mo · $400 usage','','cursor','hard'],
   ]},
 ];
 
@@ -571,7 +577,7 @@ const DECKS = [
   {id:'d4', cat:'job', lang:'en', title:'Fitness clients', subtitle:'Find PT clients in Vilnius · 20 cards', units:UNITS_FITNESS},
   {id:'d5', cat:'job', lang:'en', title:'Website clients', subtitle:'Find web-build clients in Vilnius · 20 cards', units:UNITS_WEB},
   {id:'d7', cat:'other', lang:'en', title:'Beyond the basics · Claude Code', subtitle:'Agentic engineering talk · 19 cards', units:UNITS_CC},
-  {id:'d8', cat:'ai', lang:'en', title:'AI Model Benchmarks', subtitle:'ChatGPT, Claude, Cursor: effort, benchmarks, token costs · 32 cards', units:UNITS_AI},
+  {id:'d8', cat:'ai', lang:'en', title:'AI Model Benchmarks', subtitle:'ChatGPT, Claude, Cursor: effort, benchmarks, token costs · 31 cards', units:UNITS_AI},
 ];
 
 // Build a deck's cards once, with globally-unique ids (deck-prefixed).
