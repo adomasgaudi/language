@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.38 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.39 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -218,6 +218,7 @@ const AUTO_LONG_MIN  = 43200;  // interval (minutes) at the "long" end (30 days)
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.39',sp:2,   note:'New deck "Benchmark Category Map" (8 cards): prompt = category type (Knowledge/Math/Code/Agentic/Vision/LongCtx/Instruct/Abstract), answer = benchmark names in that category'},
   {v:'0.1.38',sp:2,   note:'AI Model Benchmarks deck rewritten: all cards are now fact-based (exact numbers, scores, prices) — removed opinion/advice framing; split into 4 units (Benchmarks, OpenAI, Anthropic, Cursor)'},
   {v:'0.1.37',sp:1,   note:'Deck picker now groups decks into category folders — Finance, Job, AI, Other'},
   {v:'0.1.36',sp:3,   note:'New deck "AI Model Benchmarks" (32 cards): ChatGPT/Claude/Cursor effort levels, SWE-bench Verified, LiveCodeBench, Terminal-Bench, LMArena, and token pricing — ported from app/ to live index.html'},
@@ -562,6 +563,21 @@ const UNITS_AI = [
 ];
 
 // Deck "folders" — decks are grouped under these categories on the picker.
+// ---- Deck 9: Benchmark Category Map ----------------------------------------
+// Prompt = category name + what it measures; Answer = benchmark names in it.
+const UNITS_BENCHCAT = [
+  { id:'U1', title:'Benchmark category map', cards:[
+    ['Knowledge & reasoning — academic recall + multi-step thinking\nWhich benchmarks belong here?','MMLU-Pro · GPQA Diamond · Humanity\'s Last Exam · BBH · MMLU','MIXED · MMLU is saturated; GPQA Diamond and HLE still differentiate frontier models.','knowledge','mid'],
+    ['Abstract / fluid reasoning — novel pattern induction\nWhich benchmark belongs here?','ARC-AGI-2','LIVE · SOTA ~mid-60s, well below human performance.','abstract','easy'],
+    ['Mathematics — multi-step symbolic problem solving\nWhich benchmarks belong here?','AIME · MATH-500 · FrontierMath · GSM8K','LIVE at the top (AIME / FrontierMath); GSM8K is saturated.','math','mid'],
+    ['Code & software engineering — generation verified by execution\nWhich benchmarks belong here?','SWE-bench Verified · SWE-bench Pro · LiveCodeBench · HumanEval','LIVE · SWE-bench is the current gold standard; HumanEval is saturated.','code','mid'],
+    ['Agentic & tool use — multi-step tasks in live environments\nWhich benchmarks belong here?','Terminal-Bench · WebArena · OSWorld · GAIA · τ-bench','LIVE · fastest-moving, least mature category.','agentic','hard'],
+    ['Multimodal / vision — reasoning over images + text\nWhich benchmarks belong here?','MMMU · MathVista','MIXED · MMMU is a current differentiator across frontier models.','vision','easy'],
+    ['Long context & retrieval — finding + using info across huge inputs\nWhich benchmarks belong here?','RULER · HELMET · MRCR · Needle-in-a-Haystack','MIXED · simple retrieval is solved; reasoning over distributed context is still hard.','longctx','hard'],
+    ['Instruction following & factuality — obedience + not making things up\nWhich benchmarks belong here?','IFEval · IFBench · Multi-IF · SimpleQA · FACTS Grounding','LIVE · cheap to verify, very practical signal for production use.','instruct','mid'],
+  ]},
+];
+
 const CATEGORIES = [
   {id:'finance', label:'Finance'},
   {id:'job',     label:'Job'},
@@ -578,6 +594,7 @@ const DECKS = [
   {id:'d5', cat:'job', lang:'en', title:'Website clients', subtitle:'Find web-build clients in Vilnius · 20 cards', units:UNITS_WEB},
   {id:'d7', cat:'other', lang:'en', title:'Beyond the basics · Claude Code', subtitle:'Agentic engineering talk · 19 cards', units:UNITS_CC},
   {id:'d8', cat:'ai', lang:'en', title:'AI Model Benchmarks', subtitle:'ChatGPT, Claude, Cursor: effort, benchmarks, token costs · 31 cards', units:UNITS_AI},
+  {id:'d9', cat:'ai', lang:'en', title:'Benchmark Category Map', subtitle:'8 categories → benchmark names · 8 cards', units:UNITS_BENCHCAT},
 ];
 
 // Build a deck's cards once, with globally-unique ids (deck-prefixed).
