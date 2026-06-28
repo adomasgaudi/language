@@ -242,6 +242,7 @@ const AUTO_LONG_MIN  = 43200;  // interval (minutes) at the "long" end (30 days)
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.42',sp:1,   note:'DeepSWE cards now show the leaderboard version (v1.1) on the benchmark tag, and the effort tag sits next to the model tag instead of after the date'},
   {v:'0.1.41',sp:3,   note:'Deleted old SWE/Terminal deck and rewrote as "Claude DeepSWE Matrix" using official DeepSWE rows (updated 2026-06-24); added richer card UI for this deck: badges, short answers, KPI blocks, and mini bar graphs'},
   {v:'0.1.40',sp:2,   note:'Deck folders are now collapsed by default; new AI deck "Claude SWE/Terminal API Matrix" (24 cards): prompt = "<benchmark> <model> <date> <effort>", answer = API cost + performance'},
   {v:'0.1.39',sp:2,   note:'New deck "Benchmark Category Map" (8 cards): prompt = category type (Knowledge/Math/Code/Agentic/Vision/LongCtx/Instruct/Abstract), answer = benchmark names in that category'},
@@ -1130,13 +1131,17 @@ function deepSweBody(card){
   const model=parts[1]||'Claude';
   const date=parts[2]||'date';
   const effort=(parts[3]||'effort').toUpperCase();
+  // DeepSWE leaderboard version: read it from the card's note (e.g. "v1.1"),
+  // defaulting to v1.1 (current published leaderboard) when none is stated.
+  const vm=(card.info||'').match(/v1\.1|v1(?![\d.])/i);
+  const version=vm?vm[0].toLowerCase():'v1.1';
   return [
     el('div',{class:'dsw-wrap'},
       el('div',{class:'dsw-tags'},
-        el('span',{class:'dsw-tag'},bench),
+        el('span',{class:'dsw-tag'},bench+' '+version),
         el('span',{class:'dsw-tag'},model),
-        el('span',{class:'dsw-tag'},date),
         el('span',{class:'dsw-tag'},effort),
+        el('span',{class:'dsw-tag'},date),
       ),
       el('div',{class:'dsw-q'},'What are cost + performance?'),
       el('div',{class:'dsw-sub'}, card.target),
