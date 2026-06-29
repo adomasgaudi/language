@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lithuanian finance v0.1.41 — Tartaglia deck</title>
+<title>Lithuanian finance v0.1.42 — Tartaglia deck</title>
 <!--
   Self-contained port of the "language" repo's Tartaglia learning app.
   One file, no build, no network. Teaches the Lithuanian financial terms used
@@ -242,6 +242,7 @@ const AUTO_LONG_MIN  = 43200;  // interval (minutes) at the "long" end (30 days)
  * entry's `v` drives the <title> and the footer badge.
  * ==========================================================================*/
 const VERSIONS = [
+  {v:'0.1.42',sp:3,   note:'New "Math" folder + deck "Calculus: derivatives & integrals" (26 cards): power rule and derivatives of x^n, 1/x, √x, eˣ, aˣ, ln x, sin/cos/tan, plus the matching antiderivatives/integrals including the ∫1/x = ln|x| exception'},
   {v:'0.1.41',sp:3,   note:'Deleted old SWE/Terminal deck and rewrote as "Claude DeepSWE Matrix" using official DeepSWE rows (updated 2026-06-24); added richer card UI for this deck: badges, short answers, KPI blocks, and mini bar graphs'},
   {v:'0.1.40',sp:2,   note:'Deck folders are now collapsed by default; new AI deck "Claude SWE/Terminal API Matrix" (24 cards): prompt = "<benchmark> <model> <date> <effort>", answer = API cost + performance'},
   {v:'0.1.39',sp:2,   note:'New deck "Benchmark Category Map" (8 cards): prompt = category type (Knowledge/Math/Code/Agentic/Vision/LongCtx/Instruct/Abstract), answer = benchmark names in that category'},
@@ -651,8 +652,49 @@ const UNITS_CLAUDE_DEEPSWE = [
   ]},
 ];
 
+// ---- Deck 11: Calculus — derivatives & antiderivatives ----------------------
+// Note cards: [front (d/dx … = ? or ∫ … dx = ?), back (result), note, tag, tier].
+// Plain-text math: ^ = power, · = times, √ = sqrt, ∫ … dx = integral, + C const.
+const UNITS_CALCULUS = [
+  { id:'U1', title:'Derivatives · power functions', cards:[
+    ['d/dx [ xⁿ ] = ?','n·xⁿ⁻¹','The power rule: drop the exponent in front, subtract one from it. Works for any real n.','power rule','mid'],
+    ['d/dx [ c ]  (a constant) = ?','0','A constant never changes, so its rate of change is zero.','basic','easy'],
+    ['d/dx [ x ] = ?','1','x = x¹ → 1·x⁰ = 1.','power rule','easy'],
+    ['d/dx [ x² ] = ?','2x','Power rule with n=2: 2·x¹.','power rule','easy'],
+    ['d/dx [ x³ ] = ?','3x²','Power rule with n=3: 3·x².','power rule','easy'],
+    ['d/dx [ 1/x ] = ?','−1/x²','Rewrite 1/x = x⁻¹, then power rule: −1·x⁻² = −1/x².','power rule','mid'],
+    ['d/dx [ 1/x² ] = ?','−2/x³','1/x² = x⁻² → −2·x⁻³ = −2/x³.','power rule','mid'],
+    ['d/dx [ √x ] = ?','1/(2√x)','√x = x^(1/2) → (1/2)·x^(−1/2) = 1/(2√x).','power rule','mid'],
+    ['d/dx [ ⁿ√x ]  (x^(1/n)) = ?','(1/n)·x^(1/n − 1)','Same power rule with the fractional exponent 1/n.','power rule','hard'],
+  ]},
+  { id:'U2', title:'Derivatives · exp, log & trig', cards:[
+    ['d/dx [ eˣ ] = ?','eˣ','The exponential is its own derivative — the defining property of e.','exp','easy'],
+    ['d/dx [ aˣ ] = ?','aˣ·ln a','General exponential; reduces to eˣ when a=e (ln e = 1).','exp','hard'],
+    ['d/dx [ ln x ] = ?','1/x','Natural log; valid for x > 0. (For ln|x| it is also 1/x.)','log','mid'],
+    ['d/dx [ sin x ] = ?','cos x','','trig','easy'],
+    ['d/dx [ cos x ] = ?','−sin x','Note the minus sign.','trig','easy'],
+    ['d/dx [ tan x ] = ?','sec²x  = 1/cos²x','','trig','mid'],
+  ]},
+  { id:'U3', title:'Antiderivatives / integrals · power functions', cards:[
+    ['∫ xⁿ dx = ?   (n ≠ −1)','xⁿ⁺¹/(n+1) + C','Reverse power rule: add one to the exponent, divide by the new exponent. Fails at n=−1 (÷0).','power rule','mid'],
+    ['∫ 1/x dx = ?','ln|x| + C','The n = −1 exception to the power rule. Absolute value covers negative x.','exception','mid'],
+    ['∫ 1 dx = ?','x + C','','basic','easy'],
+    ['∫ x dx = ?','x²/2 + C','Power rule with n=1: x²/2.','power rule','easy'],
+    ['∫ √x dx = ?','(2/3)·x^(3/2) + C','x^(1/2) → x^(3/2)/(3/2) = (2/3)x^(3/2).','power rule','mid'],
+    ['∫ 1/x² dx = ?','−1/x + C','x⁻² → x⁻¹/(−1) = −1/x.','power rule','mid'],
+  ]},
+  { id:'U4', title:'Antiderivatives / integrals · exp, log & trig', cards:[
+    ['∫ eˣ dx = ?','eˣ + C','Antiderivative of itself.','exp','easy'],
+    ['∫ aˣ dx = ?','aˣ/ln a + C','Divide by ln a — the reverse of multiplying by ln a when differentiating.','exp','hard'],
+    ['∫ cos x dx = ?','sin x + C','Reverse of d/dx[sin x] = cos x.','trig','easy'],
+    ['∫ sin x dx = ?','−cos x + C','Reverse of d/dx[cos x] = −sin x, so the sign flips.','trig','easy'],
+    ['∫ 1/x dx, why ln and not the power rule?','Power rule gives x⁰/0 — undefined','At n=−1 the reverse power rule divides by zero, so this one case is ln|x| instead.','concept','hard'],
+  ]},
+];
+
 const CATEGORIES = [
   {id:'finance', label:'Finance'},
+  {id:'math',    label:'Math'},
   {id:'job',     label:'Job'},
   {id:'ai',      label:'AI'},
   {id:'other',   label:'Other'},
@@ -669,6 +711,7 @@ const DECKS = [
   {id:'d8', cat:'ai', lang:'en', title:'AI Model Benchmarks', subtitle:'ChatGPT, Claude, Cursor: effort, benchmarks, token costs · 31 cards', units:UNITS_AI},
   {id:'d9', cat:'ai', lang:'en', title:'Benchmark Category Map', subtitle:'8 categories → benchmark names · 8 cards', units:UNITS_BENCHCAT},
   {id:'d10', cat:'ai', lang:'en', title:'Claude DeepSWE Matrix', subtitle:'DeepSWE <model> <date> <effort> · API cost + score cards · 20 cards', units:UNITS_CLAUDE_DEEPSWE},
+  {id:'d11', cat:'math', lang:'en', title:'Calculus: derivatives & integrals', subtitle:'Power, 1/x, √x, exp, log, trig · derivatives + antiderivatives · 26 cards', units:UNITS_CALCULUS},
 ];
 
 // Build a deck's cards once, with globally-unique ids (deck-prefixed).
